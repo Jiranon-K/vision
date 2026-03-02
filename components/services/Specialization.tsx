@@ -1,6 +1,8 @@
+import Image from "next/image";
+
 const usps = [
   {
-    icon: "🔄",
+    icon: "/as-04.png",
     title: "Real-time Social Sync",
     description:
       "Publish once and Vision instantly pushes your post to Facebook, X, and every connected platform — no third-party scheduler required.",
@@ -8,15 +10,15 @@ const usps = [
     wide: true,
   },
   {
-    icon: "🤖",
-    title: "AI-Driven Writing Insights",
+    icon: "/services/s-1.png",
+    title: "AI Writing Insights",
     description:
-      "Get smart, real-time suggestions on SEO, readability, and tone as you type — so every post performs at its peak before you hit publish.",
+      "Get smart suggestions on SEO, readability, and tone as you type — so every post performs at its peak before you hit publish.",
     highlight: false,
     wide: false,
   },
   {
-    icon: "✍️",
+    icon: "/as-03.png",
     title: "Creator-First Editor",
     description:
       "Beautiful, distraction-free writing built for humans — not developers. Zero plugins, zero setup, 100% focus.",
@@ -24,26 +26,26 @@ const usps = [
     wide: false,
   },
   {
-    icon: "🔒",
-    title: "Your Content, Your Rules",
+    icon: "/as-06.png",
+    title: "Owner-Driven Growth",
     description:
       "Full ownership of everything you write. No algorithm suppression, no hidden feed penalties — your voice, amplified.",
     highlight: true,
     wide: false,
   },
   {
-    icon: "📊",
+    icon: "/services/s-6.png",
     title: "Deep Analytics",
     description:
-      "Understand where your readers come from, what keeps them engaged, and how to grow — all in one intuitive dashboard.",
+      "Understand where your readers come from, what keeps them engaged, and how to scale — all in one dashboard.",
     highlight: false,
     wide: false,
   },
   {
-    icon: "⚡",
-    title: "Lightning-Fast Publishing",
+    icon: "/as-01.png",
+    title: "Fast Publishing",
     description:
-      "From draft to live in seconds. Vision's infrastructure means zero downtime, instant indexing, and a fast experience for every reader.",
+      "From draft to live in seconds. Our infrastructure means zero downtime and instant indexing for every reader.",
     highlight: false,
     wide: false,
   },
@@ -60,7 +62,7 @@ const comparisons = [
 
 const Tick = ({ yes }: { yes: boolean }) =>
   yes ? (
-    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-lime text-brand-dark font-bold text-sm">
+    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand-lime text-brand-dark font-bold text-sm shadow-[0_2px_0_0_#191A23]">
       ✓
     </span>
   ) : (
@@ -71,67 +73,120 @@ const Tick = ({ yes }: { yes: boolean }) =>
 
 const Specialization = () => {
   return (
-    <section className="max-w-7xl mx-auto py-24 px-4 md:px-10 lg:px-20">
+    <section className="max-w-7xl mx-auto py-24 px-4 md:px-10 lg:px-20 overflow-hidden">
       {/* Section header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-16">
-        <div className="bg-brand-lime px-1.5 rounded-[7px] shrink-0">
-          <h2 className="text-3xl md:text-4xl font-medium px-1">Why Vision?</h2>
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-8 mb-20 animate-in fade-in slide-in-from-bottom-5 duration-700">
+        <div className="bg-brand-lime px-3 py-1 rounded-[10px] transform -rotate-1 shadow-[4px_4px_0px_0px_#191A23]">
+          <h2 className="text-3xl md:text-5xl font-bold px-1 text-brand-dark">
+            Why Vision?
+          </h2>
         </div>
-        <p className="text-lg font-normal leading-7 text-brand-dark max-w-[560px]">
+        <p className="text-xl font-normal leading-relaxed text-brand-dark/80 max-w-[620px]">
           The internet is full of blog tools. Vision is the only one built to{" "}
-          <span className="font-semibold">write, sync, and grow</span> — all
-          from one place. Here&apos;s what sets us apart.
+          <span className="font-bold text-brand-dark border-b-2 border-brand-lime">
+            write, sync, and grow
+          </span>{" "}
+          — all from one place.
         </p>
       </div>
 
       {/* USP Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
         {usps.map((usp, i) => (
           <div
             key={i}
             className={`
+              group
               ${usp.highlight ? "bg-brand-dark text-white" : "bg-brand-gray text-brand-dark"}
               ${usp.wide ? "lg:col-span-3 md:col-span-2" : ""}
-              rounded-[36px] border border-brand-dark
-              shadow-[0px_5px_0px_0px_rgba(25,26,35,1)]
-              hover:shadow-none hover:translate-y-1
+              rounded-[42px] border-2 border-brand-dark
+              shadow-[0px_8px_0px_0px_rgba(25,26,35,1)]
+              hover:shadow-none hover:translate-y-1.5
               transition-all duration-300
-              p-8 flex flex-col gap-4
+              relative overflow-hidden
+              ${usp.wide ? "p-4 md:p-12" : "p-10 flex flex-col gap-6"}
             `}
           >
-            {/* Icon */}
-            <span className="text-4xl leading-none">{usp.icon}</span>
+            {usp.wide ? (
+              <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+                <div className="flex-1 space-y-6">
+                  <h3 className="text-3xl md:text-4xl font-black leading-tight">
+                    {usp.title}
+                  </h3>
+                  <div className="h-1.5 w-24 bg-brand-lime rounded-full" />
+                  <p className="text-lg md:text-xl leading-relaxed text-white/80">
+                    {usp.description}
+                  </p>
+                </div>
+                <div className="flex-1 relative w-full aspect-square max-w-[450px] animate-pulse-slow">
+                  <Image
+                    src={usp.icon}
+                    alt={usp.title}
+                    width={500}
+                    height={500}
+                    className="w-full h-full object-contain drop-shadow-[20px_20px_50px_rgba(185,255,102,0.15)]"
+                    priority
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Icon for regular card */}
+                <div className="flex items-center justify-between">
+                  {usp.icon.startsWith("/") ? (
+                    <div className="w-20 h-20 transform group-hover:rotate-6 transition-transform">
+                      <Image
+                        src={usp.icon}
+                        alt={usp.title}
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    <span className="text-5xl filter drop-shadow-sm group-hover:scale-125 transition-transform inline-block">
+                      {usp.icon}
+                    </span>
+                  )}
+                  {usp.highlight && (
+                    <span className="bg-brand-lime/20 text-brand-lime text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-brand-lime/30">
+                      Best choice
+                    </span>
+                  )}
+                </div>
 
-            {/* Title */}
-            <h3
-              className={`text-xl md:text-2xl font-bold leading-snug ${
-                usp.highlight ? "text-white" : "text-brand-dark"
-              }`}
-            >
-              {usp.title}
-            </h3>
+                {/* Title */}
+                <h3
+                  className={`text-2xl font-black leading-snug ${
+                    usp.highlight ? "text-white" : "text-brand-dark"
+                  }`}
+                >
+                  {usp.title}
+                </h3>
 
-            {/* Divider */}
-            <div
-              className={`h-px w-full ${
-                usp.highlight ? "bg-white/20" : "bg-brand-dark/15"
-              }`}
-            />
+                {/* Divider */}
+                <div
+                  className={`h-0.5 w-12 ${
+                    usp.highlight ? "bg-brand-lime" : "bg-brand-dark"
+                  }`}
+                />
 
-            {/* Description */}
-            <p
-              className={`text-base leading-relaxed ${
-                usp.highlight ? "text-white/75" : "text-brand-dark/75"
-              }`}
-            >
-              {usp.description}
-            </p>
+                {/* Description */}
+                <p
+                  className={`text-base md:text-lg leading-relaxed ${
+                    usp.highlight ? "text-white/70" : "text-brand-dark/70"
+                  }`}
+                >
+                  {usp.description}
+                </p>
+              </>
+            )}
           </div>
         ))}
       </div>
 
       {/* Comparison Table */}
-      <div className="bg-brand-gray rounded-[45px] border border-brand-dark shadow-[0px_5px_0px_0px_rgba(25,26,35,1)] p-8 md:p-12">
+      <div className="bg-brand-gray rounded-[45px] border-2 border-brand-dark shadow-[0px_8px_0px_0px_rgba(25,26,35,1)] p-8 md:p-14 mb-12">
         {/* Table header */}
         <div className="grid grid-cols-[1fr_auto_auto] gap-4 pb-4 border-b border-brand-dark/15 mb-2">
           <span className="text-sm font-semibold text-brand-dark/50 uppercase tracking-wider">
