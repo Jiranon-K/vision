@@ -16,6 +16,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   background: var(--background);
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { set, createTimeline } from "animejs";
+import { usePathname } from "next/navigation";
 
 interface AnimationProviderProps {
   children: React.ReactNode;
@@ -9,42 +10,44 @@ interface AnimationProviderProps {
 
 const AnimationProvider = ({ children }: AnimationProviderProps) => {
   const overlayRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!overlayRef.current || !contentRef.current) return;
-    set(contentRef.current, { opacity: 0, translateY: 16 });
+    if (!overlayRef.current || !innerRef.current) return;
+    set(overlayRef.current, { scaleX: 1 });
+    set(innerRef.current, { opacity: 0 });
 
     const tl = createTimeline();
 
     tl.add(overlayRef.current, {
       scaleX: [1, 0],
       transformOrigin: "right center",
-      duration: 900,
-      delay: 120,
+      duration: 1000,
+      easing: "easeInOutExpo",
+      delay: 100,
     });
 
     tl.add(
-      contentRef.current,
+      innerRef.current,
       {
         opacity: [0, 1],
-        translateY: [16, 0],
-        duration: 700,
+        duration: 600,
         easing: "easeOutCubic",
       },
       "-=500",
     );
-  }, []);
+  }, [pathname]);
 
   return (
     <>
       {/* Intro overlay — brand-lime sweep */}
       <div
         ref={overlayRef}
-        style={{ transformOrigin: "right center" }}
         className="fixed inset-0 bg-brand-lime z-[9999] pointer-events-none"
+        style={{ transformOrigin: "right center" }}
       />
-      <div ref={contentRef} className="opacity-0">
+      <div ref={innerRef} className="opacity-0">
         {children}
       </div>
     </>

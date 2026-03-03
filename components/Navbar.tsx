@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   const navLinks = [
     { name: "Services", href: "/services" },
@@ -13,6 +15,13 @@ const Navbar = () => {
   ];
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   return (
     <nav className="relative py-8 px-4 md:px-10 lg:px-20 max-w-7xl mx-auto font-sans">
@@ -40,16 +49,23 @@ const Navbar = () => {
         {/* Desktop Navigation Links & CTA */}
         <div className="hidden lg:flex items-center gap-10">
           <ul className="flex items-center gap-8">
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  href={link.href}
-                  className="text-lg font-normal text-brand-dark hover:bg-brand-dark hover:text-brand-lime px-6 py-2 rounded-full transition-all duration-300 ease-in-out"
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    className={`text-lg font-normal px-6 py-2 rounded-full transition-all duration-300 ease-in-out ${
+                      isActive
+                        ? "bg-brand-dark text-brand-lime shadow-md"
+                        : "text-brand-dark hover:bg-brand-dark/5"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           <button className="border-2 border-brand-dark px-8 py-4 rounded-xl text-lg font-medium hover:bg-brand-dark hover:text-white transition-all duration-300 active:scale-95 shadow-[4px_4px_0px_0px_rgba(25,26,35,1)] hover:shadow-none">
             Get Started
@@ -101,23 +117,30 @@ const Navbar = () => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 bg-white z-40 lg:hidden transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-0 bg-white z-40 lg:hidden transition-transform duration-300 ease-in-out overflow-hidden ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col items-center justify-center h-full gap-8 px-6">
           <ul className="flex flex-col items-center gap-6">
-            {navLinks.map((link) => (
-              <li key={link.name}>
-                <Link
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="text-2xl font-medium text-brand-dark hover:bg-brand-dark hover:text-brand-lime px-8 py-3 rounded-full transition-all duration-300 ease-in-out block text-center"
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`text-2xl font-medium px-8 py-3 rounded-full transition-all duration-300 ease-in-out block text-center ${
+                      isActive
+                        ? "bg-brand-dark text-brand-lime"
+                        : "text-brand-dark"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
           <button
             onClick={() => setIsOpen(false)}
