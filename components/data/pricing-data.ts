@@ -48,6 +48,8 @@ export const pricingFeatures = [
   {
     id: "smart-hub",
     name: "Smart Creator Hub",
+    tooltip:
+      "An AI-powered creator hub that helps you write, edit, and optimize your content.",
     starter: true,
     pro: true,
     business: true,
@@ -55,6 +57,8 @@ export const pricingFeatures = [
   {
     id: "search-visibility",
     name: "Search Visibility",
+    tooltip:
+      "Boost your content's visibility on search engines with automatic SEO optimization.",
     starter: "Basic",
     pro: "Advanced",
     business: "Priority",
@@ -62,6 +66,8 @@ export const pricingFeatures = [
   {
     id: "audience-connect",
     name: "Audience Connect",
+    tooltip:
+      "Connect and build relationships with your followers through audience analysis tools.",
     starter: false,
     pro: true,
     business: true,
@@ -69,6 +75,8 @@ export const pricingFeatures = [
   {
     id: "content-boosting",
     name: "Content Boosting",
+    tooltip:
+      "Expand your content's reach with an automated cross-platform promotion system.",
     starter: false,
     pro: "Limited",
     business: "Unlimited",
@@ -76,6 +84,8 @@ export const pricingFeatures = [
   {
     id: "multi-channel",
     name: "Multi-Channel Sync",
+    tooltip:
+      "Sync and publish content to all social media platforms simultaneously in a single click.",
     starter: false,
     pro: false,
     business: true,
@@ -83,6 +93,8 @@ export const pricingFeatures = [
   {
     id: "growth-analytics",
     name: "Growth Analytics",
+    tooltip:
+      "Real-time growth dashboard with deep reports and AI-driven recommendations.",
     starter: false,
     pro: false,
     business: "Real-time",
@@ -90,6 +102,8 @@ export const pricingFeatures = [
   {
     id: "support",
     name: "Support",
+    tooltip:
+      "A support team ready to help you throughout your journey, from onboarding to growth.",
     starter: "Community",
     pro: "Email",
     business: "24/7 Priority",

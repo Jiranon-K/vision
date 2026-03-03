@@ -1,5 +1,13 @@
-const page = () => {
-  return <div>page</div>;
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/pricing/Hero";
+
+const PricingPage = () => {
+  return (
+    <>
+      <Navbar />
+      <Hero />
+    </>
+  );
 };
 
-export default page;
+export default PricingPage;
