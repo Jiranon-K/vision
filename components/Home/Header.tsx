@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
+import { headerWords } from "@/components/data/header-data";
 
 const Header = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -61,8 +62,6 @@ const Header = () => {
     return () => observer.disconnect();
   }, []);
 
-  const words = ["Share", "Your", "Vision", "Reach", "Every", "Screen"];
-
   return (
     <section
       ref={sectionRef}
@@ -72,7 +71,7 @@ const Header = () => {
         {/* Left Side: Content */}
         <div className="flex flex-col gap-10 order-2 lg:order-1 lg:col-span-7">
           <h1 className="text-5xl md:text-7xl lg:text-[84px] font-bold leading-[1.1] text-brand-dark tracking-tight flex flex-wrap gap-x-5 gap-y-1">
-            {words.map((word, i) => (
+            {headerWords.map((word, i) => (
               <span key={i} className="header-word inline-block opacity-0">
                 {word}
               </span>
