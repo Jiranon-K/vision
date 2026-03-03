@@ -20,3 +20,8 @@ body {
   background: var(--background);
   font-family: var(--font-space-grotesk), Arial, Helvetica, sans-serif;
 }
+
+::selection {
+  background-color: var(--brand-lime);
+  color: var(--brand-dark);
+}

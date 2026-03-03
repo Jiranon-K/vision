@@ -44,7 +44,7 @@ const Navbar = () => {
               <li key={link.name}>
                 <Link
                   href={link.href}
-                  className="text-lg font-normal text-brand-dark hover:text-brand-lime transition-colors duration-200"
+                  className="text-lg font-normal text-brand-dark hover:bg-brand-dark hover:text-brand-lime px-6 py-2 rounded-full transition-all duration-300 ease-in-out"
                 >
                   {link.name}
                 </Link>
@@ -112,7 +112,7 @@ const Navbar = () => {
                 <Link
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="text-2xl font-medium text-brand-dark hover:bg-brand-lime px-4 py-2 rounded-lg transition-colors duration-200"
+                  className="text-2xl font-medium text-brand-dark hover:bg-brand-dark hover:text-brand-lime px-8 py-3 rounded-full transition-all duration-300 ease-in-out block text-center"
                 >
                   {link.name}
                 </Link>

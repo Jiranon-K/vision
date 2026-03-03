@@ -1,4 +1,8 @@
+"use client";
+
 import Image from "next/image";
+import { useEffect, useRef } from "react";
+import { animate, stagger } from "animejs";
 
 const ArrowIcon = ({
   circleFill,
@@ -69,27 +73,83 @@ const servicesData = [
 ];
 
 const Services = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const didAnimate = useRef(false);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !didAnimate.current) {
+            didAnimate.current = true;
+
+            // Section header badge + description
+            if (headerRef.current) {
+              animate(headerRef.current.children, {
+                opacity: [0, 1],
+                translateY: [20, 0],
+                delay: stagger(120),
+                duration: 600,
+                easing: "easeOutCubic",
+              });
+            }
+
+            if (gridRef.current) {
+              animate(Array.from(gridRef.current.children), {
+                opacity: [0, 1],
+                translateY: [40, 0],
+                delay: stagger(90),
+                duration: 650,
+                easing: "easeOutExpo",
+              });
+            }
+
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="max-w-7xl mx-auto py-24 px-4 md:px-10 lg:px-20 overflow-hidden">
+    <section
+      ref={sectionRef}
+      className="max-w-7xl mx-auto py-24 px-4 md:px-10 lg:px-20 overflow-hidden"
+    >
       {/* Header section */}
-      <div className="flex flex-col md:flex-row items-center gap-10">
-        <div className="bg-brand-lime px-1.5 rounded-[7px]">
+      <div
+        ref={headerRef}
+        className="flex flex-col md:flex-row items-center gap-10"
+      >
+        <div className="bg-brand-lime px-1.5 rounded-[7px] opacity-0">
           <h2 className="text-4xl font-medium px-1">Features</h2>
         </div>
-        <div className="max-w-[580px]">
+        <div className="max-w-[580px] opacity-0">
           <p className="text-lg font-normal leading-6">
             Empowering your digital presence with tools designed for creators
-            and businesses alike. Here’s what you can do on Vision:
+            and businesses alike. Here&apos;s what you can do on Vision:
           </p>
         </div>
       </div>
 
       {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-20">
+      <div
+        ref={gridRef}
+        className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-20"
+      >
         {servicesData.map((service, index) => (
           <div
             key={index}
-            className={`${service.bgColor} p-12 rounded-[45px] border border-brand-dark shadow-[0px_5px_0px_0px_rgba(25,26,35,1)] flex justify-between h-[310px] group cursor-pointer transition-all duration-300 hover:shadow-none translate-y-0 hover:translate-y-1`}
+            className={`${service.bgColor} p-12 rounded-[45px] border border-brand-dark shadow-[0px_5px_0px_0px_rgba(25,26,35,1)] flex justify-between h-[310px] group cursor-pointer transition-all duration-300 hover:shadow-none translate-y-0 hover:translate-y-1 opacity-0`}
           >
             {/* Left side content */}
             <div className="flex flex-col justify-between h-full">
@@ -120,7 +180,7 @@ const Services = () => {
               </div>
             </div>
 
-            {/* Right side illustration placeholder */}
+            {/* Right side illustration */}
             <div className="relative flex items-center justify-center w-[210px] h-full overflow-hidden">
               <Image
                 src={service.image}
