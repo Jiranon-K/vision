@@ -11,7 +11,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Services", href: "/services" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Blog", href: "#" },
+    { name: "Blog", href: "/blog" },
   ];
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -146,7 +146,7 @@ const Navbar = () => {
             onClick={() => setIsOpen(false)}
             className="w-full max-w-[280px] border-2 border-brand-dark px-8 py-4 rounded-xl text-xl font-medium hover:bg-brand-dark hover:text-white transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(25,26,35,1)]"
           >
-            Request a quote
+            Get Started
           </button>
         </div>
       </div>
