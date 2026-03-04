@@ -17,12 +17,15 @@ export default function BlogPage() {
   const didAnimateHero = useRef(false);
   const didAnimateGrid = useRef(false);
 
+  const featuredPosts =
+    activeCategory === "All"
+      ? blogPosts.filter((p) => p.featured)
+      : blogPosts.filter((p) => p.category === activeCategory && p.featured);
+
   const filteredPosts =
     activeCategory === "All"
       ? blogPosts.filter((p) => !p.featured)
       : blogPosts.filter((p) => p.category === activeCategory && !p.featured);
-
-  const featuredPosts = blogPosts.filter((p) => p.featured);
 
   /* ── Hero + filter animation ── */
   useEffect(() => {
@@ -92,8 +95,6 @@ export default function BlogPage() {
               duration: 650,
               easing: "easeOutExpo",
             });
-
-            observer.disconnect();
           }
         });
       },
@@ -103,6 +104,39 @@ export default function BlogPage() {
     observer.observe(grid);
     return () => observer.disconnect();
   }, []);
+
+  /*  Re-animate  */
+  useEffect(() => {
+    if (!didAnimateGrid.current) return;
+
+    if (gridRef.current) {
+      const cards = gridRef.current.querySelectorAll(".blog-card");
+      cards.forEach((card) => {
+        (card as HTMLElement).style.opacity = "0";
+      });
+      animate(cards, {
+        opacity: [0, 1],
+        translateY: [40, 0],
+        delay: stagger(60),
+        duration: 650,
+        easing: "easeOutExpo",
+      });
+    }
+
+    if (featuredRef.current) {
+      const fCards = featuredRef.current.querySelectorAll(".featured-card");
+      fCards.forEach((card) => {
+        (card as HTMLElement).style.opacity = "0";
+      });
+      animate(fCards, {
+        opacity: [0, 1],
+        translateY: [40, 0],
+        delay: stagger(100),
+        duration: 800,
+        easing: "easeOutExpo",
+      });
+    }
+  }, [activeCategory]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -147,16 +181,18 @@ export default function BlogPage() {
       </div>
 
       {/* ━━━ Featured Posts ━━━ */}
-      <div
-        ref={featuredRef}
-        className="max-w-7xl mx-auto px-4 md:px-10 lg:px-20 pb-12"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {featuredPosts.map((post) => (
-            <FeaturedCard key={post.id} post={post} />
-          ))}
+      {featuredPosts.length > 0 && (
+        <div
+          ref={featuredRef}
+          className="max-w-7xl mx-auto px-4 md:px-10 lg:px-20 pb-12"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {featuredPosts.map((post) => (
+              <FeaturedCard key={post.id} post={post} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ━━━ All Posts Grid ━━━ */}
       <section className="bg-brand-gray py-16 md:py-24">
@@ -179,7 +215,7 @@ export default function BlogPage() {
             ))}
           </div>
 
-          {filteredPosts.length === 0 && (
+          {filteredPosts.length === 0 && featuredPosts.length === 0 && (
             <div className="text-center py-20">
               <p className="text-brand-dark/40 text-lg">
                 No articles found in this category yet.
