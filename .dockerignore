@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env*
+.vercel
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+Dockerfile
+.dockerignore
