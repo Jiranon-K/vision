@@ -11,6 +11,7 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from '../schemas/auth';
 import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
 
@@ -367,19 +368,31 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { token } = req.body;
+    const validation = verifyEmailSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        error: 'Validation failed',
+        details: getValidationIssues(validation.error),
+      });
+      return;
+    }
+
+    const { token } = validation.data;
+    const hashedToken = hashToken(token);
 
     const user = await User.findOne({
-      verificationToken: token,
+      verificationToken: hashedToken,
+      verificationTokenExpiry: { $gt: new Date() },
     });
 
     if (!user) {
-      res.status(400).json({ error: 'Invalid verification token' });
+      res.status(400).json({ error: 'Invalid or expired verification token' });
       return;
     }
 
     user.emailVerified = true;
     user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
     await user.save();
 
     res.json({ message: 'Email verified successfully' });
