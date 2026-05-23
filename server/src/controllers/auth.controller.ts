@@ -87,18 +87,24 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = new User({
       email,
       password,
       profile: { name: name || '' },
-      verificationToken,
+      verificationToken: hashToken(verificationToken),
+      verificationTokenExpiry,
     });
 
     await user.save();
 
-
-    console.log(`[EMAIL VERIFICATION] For ${email}: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`);
+    try {
+      await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send verification email:', sendErr);
+      // Registration still succeeds; user can request resend later
+    }
 
 
     await respondWithTokens(res, user, false);
