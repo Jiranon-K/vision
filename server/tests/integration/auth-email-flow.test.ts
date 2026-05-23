@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 
-process.env.NODE_ENV = 'test';
+process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
 process.env.RESEND_API_KEY = 'test-key';
 process.env.FRONTEND_URL = 'http://test.local';
