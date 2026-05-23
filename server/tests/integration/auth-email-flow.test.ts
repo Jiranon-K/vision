@@ -125,3 +125,61 @@ describe('Forgot → Reset flow', () => {
     expect(sendResetMock).not.toHaveBeenCalled();
   });
 });
+
+describe('Register → Verify flow', () => {
+  it('verifies email when token matches', async () => {
+    sendVerifyMock.mockClear();
+    await registerUser('verify@test.local');
+    const token = tokenFromVerifyCall();
+
+    const res = await request(app)
+      .post('/api/auth/verify-email')
+      .send({ token });
+    expect(res.status).toBe(200);
+
+    const User = (await import('../../src/models/User')).default;
+    const user = await User.findOne({ email: 'verify@test.local' });
+    expect(user?.emailVerified).toBe(true);
+  });
+
+  it('rejects invalid verify token', async () => {
+    const res = await request(app)
+      .post('/api/auth/verify-email')
+      .send({ token: 'bogus-token' });
+    expect(res.status).toBe(400);
+  });
+});
+
+describe('Resend verification flow', () => {
+  it('sends a new verification email for an authenticated unverified user', async () => {
+    sendVerifyMock.mockClear();
+    const reg = await registerUser('resend@test.local');
+    const cookies = reg.headers['set-cookie'];
+    expect(cookies).toBeTruthy();
+    sendVerifyMock.mockClear();
+
+    const res = await request(app)
+      .post('/api/auth/resend-verification')
+      .set('Cookie', cookies as unknown as string[])
+      .send({});
+    expect(res.status).toBe(200);
+    expect(sendVerifyMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects when user already verified', async () => {
+    const reg = await registerUser('alreadyverified@test.local');
+    const cookies = reg.headers['set-cookie'];
+
+    const User = (await import('../../src/models/User')).default;
+    await User.updateOne(
+      { email: 'alreadyverified@test.local' },
+      { emailVerified: true, verificationToken: undefined, verificationTokenExpiry: undefined }
+    );
+
+    const res = await request(app)
+      .post('/api/auth/resend-verification')
+      .set('Cookie', cookies as unknown as string[])
+      .send({});
+    expect(res.status).toBe(400);
+  });
+});
