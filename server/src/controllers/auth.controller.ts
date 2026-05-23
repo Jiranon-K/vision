@@ -401,3 +401,36 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+export const resendVerification = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.user!.id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.emailVerified) {
+      res.status(400).json({ error: 'Email already verified' });
+      return;
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = hashToken(verificationToken);
+    user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    try {
+      await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send verification email:', sendErr);
+      res.status(500).json({ error: 'Could not send verification email. Please try again later.' });
+      return;
+    }
+
+    res.json({ message: 'Verification email sent' });
+  } catch (error) {
+    console.error('Resend verification error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
