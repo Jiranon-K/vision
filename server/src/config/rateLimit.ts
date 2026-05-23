@@ -46,9 +46,22 @@ export const generalLimiter = rateLimit({
 
 export const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 5,
+  max: 3,
   message: { error: 'Too many password reset requests. Please try again in an hour.' },
   standardHeaders: true,
   legacyHeaders: false,
   store: createStore(),
+});
+
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Too many verification email requests. Please try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(),
+  keyGenerator: (req) => {
+    const user = (req as { user?: { id?: string } }).user;
+    return `${req.ip}-${user?.id || 'anon'}`;
+  },
 });
