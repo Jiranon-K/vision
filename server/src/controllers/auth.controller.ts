@@ -12,6 +12,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
 } from '../schemas/auth';
+import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
 
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const REMEMBER_ME_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
@@ -292,12 +293,16 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = hashToken(resetToken);
     user.resetPasswordExpiry = resetExpiry;
     await user.save();
 
-
-    console.log(`[PASSWORD RESET] For ${email}: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`);
+    try {
+      await sendResetPasswordEmail(user.email, resetToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send reset email:', sendErr);
+      // Intentionally do NOT reveal send failure to client (no enumeration)
+    }
 
     res.json({ message: 'If an account exists with this email, a password reset link has been sent.' });
   } catch (error) {
