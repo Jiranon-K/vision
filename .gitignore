@@ -47,3 +47,6 @@ next-env.d.ts
 
 # claude (local settings - do not commit)
 .claude/
+
+# superpowers (local docs - do not commit)
+docs/superpowers/
