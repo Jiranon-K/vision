@@ -7,7 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "cleanup": "node scripts/remove-comments.mjs"
+    "cleanup": "node scripts/remove-comments.mjs",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "bash -c 'tsc --noEmit'"
+    ],
+    "{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}": [
+      "eslint --fix"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "bash -c 'tsc --noEmit'"
+    ],
+    "server/src/**/*.ts": [
+      "bash -c 'cd server && tsc --noEmit'"
+    ],
+    "**/*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "animejs": "^4.3.6",
@@ -27,6 +47,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9",
+    "lint-staged": "^15",
+    "prettier": "^3",
     "tailwindcss": "^4",
     "typescript": "^5"
   },
