@@ -8,8 +8,11 @@
 - [ ] fix
 - [ ] docs
 - [ ] refactor
-- [ ] chore
 - [ ] perf
+- [ ] style
+- [ ] test
+- [ ] chore
+- [ ] ci
 
 ## Changes
 
