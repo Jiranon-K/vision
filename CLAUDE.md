@@ -9,6 +9,7 @@ Vision is a Next.js 16.1.6 landing page and dashboard application with React 19.
 ## Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js 16.1.6 (App Router)
 - **React**: 19.2.3
 - **Language**: TypeScript 5
@@ -19,6 +20,7 @@ Vision is a Next.js 16.1.6 landing page and dashboard application with React 19.
 - **Fonts**: Space Grotesk and Geist Mono via next/font/google
 
 ### Backend (server/)
+
 - **Runtime**: Node.js
 - **Framework**: Express.js 5.x
 - **Database**: MongoDB with Mongoose ODM
@@ -28,6 +30,7 @@ Vision is a Next.js 16.1.6 landing page and dashboard application with React 19.
 ## Commands
 
 ### Frontend
+
 ```bash
 bun dev          # Start development server (http://localhost:3000)
 bun build        # Production build
@@ -36,6 +39,7 @@ bun lint         # Run ESLint
 ```
 
 ### Backend (server/)
+
 ```bash
 cd server
 bun install      # Install dependencies
@@ -101,36 +105,40 @@ server/                  # Express.js Backend API
 Backend API runs on port 3001. All protected routes require `Authorization: Bearer <token>` header.
 
 ### Authentication (`/api/auth`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register new user |
-| POST | `/api/auth/login` | Login, returns JWT |
-| POST | `/api/auth/logout` | Logout |
-| GET | `/api/auth/me` | Get current user (protected) |
+
+| Method | Endpoint             | Description                  |
+| ------ | -------------------- | ---------------------------- |
+| POST   | `/api/auth/register` | Register new user            |
+| POST   | `/api/auth/login`    | Login, returns JWT           |
+| POST   | `/api/auth/logout`   | Logout                       |
+| GET    | `/api/auth/me`       | Get current user (protected) |
 
 ### Posts (`/api/posts`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/posts` | - | List posts (with filters: category, status, search) |
-| GET | `/api/posts/:id` | - | Get single post |
-| POST | `/api/posts` | JWT | Create post |
-| PUT | `/api/posts/:id` | JWT | Update post |
-| DELETE | `/api/posts/:id` | JWT | Delete post |
+
+| Method | Endpoint         | Auth | Description                                         |
+| ------ | ---------------- | ---- | --------------------------------------------------- |
+| GET    | `/api/posts`     | -    | List posts (with filters: category, status, search) |
+| GET    | `/api/posts/:id` | -    | Get single post                                     |
+| POST   | `/api/posts`     | JWT  | Create post                                         |
+| PUT    | `/api/posts/:id` | JWT  | Update post                                         |
+| DELETE | `/api/posts/:id` | JWT  | Delete post                                         |
 
 ### Analytics (`/api/analytics`)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/analytics` | Get stats (views, posts, subscribers, engagement) |
-| GET | `/api/analytics/views` | Get weekly views data |
+
+| Method | Endpoint               | Description                                       |
+| ------ | ---------------------- | ------------------------------------------------- |
+| GET    | `/api/analytics`       | Get stats (views, posts, subscribers, engagement) |
+| GET    | `/api/analytics/views` | Get weekly views data                             |
 
 ### Settings (`/api/settings`)
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/settings/profile` | JWT | Get user profile |
-| PUT | `/api/settings/profile` | JWT | Update profile |
-| PUT | `/api/settings/password` | JWT | Change password |
-| GET | `/api/settings/notifications` | JWT | Get notification prefs |
-| PUT | `/api/settings/notifications` | JWT | Update notification prefs |
+
+| Method | Endpoint                      | Auth | Description               |
+| ------ | ----------------------------- | ---- | ------------------------- |
+| GET    | `/api/settings/profile`       | JWT  | Get user profile          |
+| PUT    | `/api/settings/profile`       | JWT  | Update profile            |
+| PUT    | `/api/settings/password`      | JWT  | Change password           |
+| GET    | `/api/settings/notifications` | JWT  | Get notification prefs    |
+| PUT    | `/api/settings/notifications` | JWT  | Update notification prefs |
 
 ## Deployment
 
@@ -143,11 +151,50 @@ Backend API runs on port 3001. All protected routes require `Authorization: Bear
 
 The following skills are available for this project:
 
-| Skill | Purpose |
-|-------|---------|
+| Skill                         | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
 | `vercel-react-best-practices` | React/Next.js best practices from Vercel |
-| `tailwind-design-system` | Tailwind CSS design system patterns |
-| `multi-stage-dockerfile` | Multi-stage Dockerfile best practices |
-| `webapp-testing` | Web app testing patterns |
+| `tailwind-design-system`      | Tailwind CSS design system patterns      |
+| `multi-stage-dockerfile`      | Multi-stage Dockerfile best practices    |
+| `webapp-testing`              | Web app testing patterns                 |
 
 Invoke with: `/vercel-react-best-practices`, `/tailwind-design-system`, `/multi-stage-dockerfile`, `/webapp-testing`
+
+## Git Workflow
+
+Trunk-based development. `main` = source of truth. All changes via short-lived feature branches + PR. See [CONTRIBUTING.md](./CONTRIBUTING.md) for full reference.
+
+### Branching
+
+- `feat/<topic>` — new feature
+- `fix/<bug>` — bug fix
+- `chore/<task>` — tooling/config
+- `docs/<topic>` — docs only
+- `refactor/<area>` — refactor
+- kebab-case, target merge within 3 days, delete after merge
+
+### Commits
+
+- Conventional Commits format: `<type>(<scope>): <subject>`
+- Use `/commit` slash command to generate message from staged diff
+- Subject imperative, lowercase, no period, max 72 chars
+
+### Pull Requests
+
+- Use `.github/pull_request_template.md`
+- Self-review with `/code-review` before requesting merge
+- Squash merge to `main` (linear history)
+- Never push to `main` directly
+
+### Pre-commit Hook
+
+- `husky` runs `lint-staged`: `eslint --fix` + `tsc --noEmit` on staged TS/TSX files
+- `prettier --write` on JSON/MD/YAML
+- Never use `--no-verify` to skip unless emergency (document reason in commit body)
+
+### Useful Commands
+
+- `/commit` — AI-generated Conventional Commit
+- `/commit-push-pr` — full flow in one shot
+- `/code-review` — review current diff
+- `/clean_gone` — cleanup stale local branches

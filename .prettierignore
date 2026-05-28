@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+dist
+build
+coverage
+.claude/worktrees
+bun.lock
+package-lock.json
+yarn.lock
+*.min.js
+*.min.css
+public
+server/dist
+server/node_modules
+docs/superpowers
