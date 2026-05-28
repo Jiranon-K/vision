@@ -11,11 +11,11 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "{app,components,lib,types,scripts}/**/*.{ts,tsx}": [
+    "{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}": [
       "eslint --fix",
       "bash -c 'tsc --noEmit'"
     ],
-    "{app,components,lib,types,scripts}/**/*.{js,jsx}": [
+    "{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}": [
       "eslint --fix"
     ],
     "server/src/**/*.ts": [
