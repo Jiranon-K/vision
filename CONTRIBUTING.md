@@ -80,8 +80,9 @@ refactor(server): extract analytics aggregation into service
 | -------------------------------------------------------- | --------------------------------- |
 | `{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}` | `eslint --fix`, `tsc --noEmit`    |
 | `{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}` | `eslint --fix`                    |
+| `*.{ts,tsx}` (root-level)                                | `eslint --fix`, `tsc --noEmit`    |
 | `server/src/**/*.ts`                                     | `tsc --noEmit` (backend tsconfig) |
-| `*.{json,md,yml,yaml}`                                   | `prettier --write`                |
+| `**/*.{json,md,yml,yaml}`                                | `prettier --write`                |
 
 **Bypass**: `--no-verify` only for emergencies. Document the reason in the commit body.
 
