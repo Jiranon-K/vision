@@ -8,9 +8,10 @@ import {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  resendVerification,
 } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter } from '../config/rateLimit';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resendVerificationLimiter } from '../config/rateLimit';
 
 const router = Router();
 
@@ -37,5 +38,7 @@ router.post('/reset-password', resetPassword);
 
 
 router.post('/verify-email', verifyEmail);
+
+router.post('/resend-verification', auth, resendVerificationLimiter, resendVerification);
 
 export default router;

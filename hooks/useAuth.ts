@@ -2,22 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { getCurrentUser, type CurrentUser } from "@/lib/auth";
 
 export function useAuth(redirectToLogin = true) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [user, setUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function check() {
-      const authed = await isAuthenticated();
+      const currentUser = await getCurrentUser();
       if (!cancelled) {
-        setIsAuthed(authed);
+        setUser(currentUser);
+        setIsAuthed(!!currentUser);
         setIsLoading(false);
-        if (!authed && redirectToLogin) {
+        if (!currentUser && redirectToLogin) {
           router.replace("/login");
         }
       }
@@ -29,5 +31,5 @@ export function useAuth(redirectToLogin = true) {
     };
   }, [router, redirectToLogin]);
 
-  return { isLoading, isAuthed };
+  return { isLoading, isAuthed, user };
 }
