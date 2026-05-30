@@ -1,7 +1,34 @@
 import { Request, Response } from 'express';
 import Post from '../models/Post';
 import { AuthRequest } from '../middleware/auth';
-import { postSchema } from '../schemas/posts';
+import { postSchema, updatePostSchema } from '../schemas/posts';
+
+const generateUniqueSlug = async (
+  title: string,
+  excludeId?: string
+): Promise<string> => {
+  let base = title
+    .toLowerCase()
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/(^-|-$)/g, '');
+
+  if (!base) {
+    base = 'post';
+  }
+
+  let slug = base;
+  let counter = 1;
+  while (true) {
+    const existing = await Post.findOne({ slug });
+    if (!existing || (excludeId && String(existing._id) === excludeId)) {
+      break;
+    }
+    slug = `${base}-${counter}`;
+    counter++;
+  }
+  return slug;
+};
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -61,20 +88,7 @@ export const createPost = async (
     const { title, excerpt, content, category, tag, status, readTime, featured } =
       validation.data;
 
-    let slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-
-    
-    let slugExists = await Post.findOne({ slug });
-    let counter = 1;
-    const baseSlug = slug;
-    while (slugExists) {
-      slug = `${baseSlug}-${counter}`;
-      slugExists = await Post.findOne({ slug });
-      counter++;
-    }
+    const slug = await generateUniqueSlug(title);
 
     const post = new Post({
       title,
@@ -105,7 +119,28 @@ export const updatePost = async (
   res: Response
 ): Promise<void> => {
   try {
-    const post = await Post.findByIdAndUpdate(req.params.id, req.body, {
+    const validation = updatePostSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        error: 'Validation failed',
+        details: validation.error.issues.map((e) => ({
+          field: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+      return;
+    }
+
+    const update: Record<string, unknown> = { ...validation.data };
+
+    if (validation.data.title) {
+      update.slug = await generateUniqueSlug(
+        validation.data.title,
+        String(req.params.id)
+      );
+    }
+
+    const post = await Post.findByIdAndUpdate(req.params.id, update, {
       new: true,
       runValidators: true,
     });
@@ -117,6 +152,7 @@ export const updatePost = async (
 
     res.json(post);
   } catch (error) {
+    console.error('Update post error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
