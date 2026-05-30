@@ -1,1 +1,11 @@
+# Skip lint-staged during merge/rebase/cherry-pick: its stash/revert can corrupt
+# files mid-merge, and the staged content is already the resolved merge result.
+if [ -f "$(git rev-parse --git-path MERGE_HEAD)" ] ||
+   [ -d "$(git rev-parse --git-path rebase-merge)" ] ||
+   [ -d "$(git rev-parse --git-path rebase-apply)" ] ||
+   [ -f "$(git rev-parse --git-path CHERRY_PICK_HEAD)" ]; then
+  echo "pre-commit: merge/rebase/cherry-pick in progress — skipping lint-staged."
+  exit 0
+fi
+
 bunx lint-staged
