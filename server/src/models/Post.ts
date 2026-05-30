@@ -6,6 +6,7 @@ export interface IPost extends Document {
   content: string;
   category: string;
   status: 'Published' | 'Draft';
+  owner: mongoose.Types.ObjectId;
   author: {
     name: string;
     role: string;
@@ -29,6 +30,7 @@ const PostSchema = new Schema<IPost>(
       enum: ['Published', 'Draft'],
       default: 'Draft',
     },
+    owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     author: {
       name: { type: String, required: true },
       role: { type: String, required: true },
@@ -46,5 +48,6 @@ const PostSchema = new Schema<IPost>(
 PostSchema.index({ status: 1, createdAt: -1 });
 PostSchema.index({ category: 1 });
 PostSchema.index({ featured: 1 });
+PostSchema.index({ owner: 1, createdAt: -1 });
 
 export default mongoose.model<IPost>('Post', PostSchema);

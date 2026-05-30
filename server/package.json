@@ -8,7 +8,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "promote-admin": "tsx scripts/promote-admin.ts",
+    "backfill-owner": "tsx scripts/backfill-owner.ts"
   },
   "dependencies": {
     "@react-email/components": "^1.0.12",

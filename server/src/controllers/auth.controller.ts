@@ -14,6 +14,7 @@ import {
   verifyEmailSchema,
 } from '../schemas/auth';
 import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
+import { isAdminEmail } from '../utils/roles';
 
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const REMEMBER_ME_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
@@ -31,7 +32,12 @@ async function respondWithTokens(
   user: InstanceType<typeof User>,
   rememberMe: boolean
 ): Promise<void> {
-  const tokenPayload = { id: user._id.toString(), email: user.email, name: user.profile.name };
+  const tokenPayload = {
+    id: user._id.toString(),
+    email: user.email,
+    name: user.profile.name,
+    role: user.role,
+  };
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload, rememberMe);
 
@@ -51,6 +57,7 @@ function sanitizeUser(user: InstanceType<typeof User>) {
   return {
     id: user._id,
     email: user.email,
+    role: user.role,
     profile: user.profile,
     emailVerified: user.emailVerified,
   };
@@ -93,6 +100,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const user = new User({
       email,
       password,
+      role: isAdminEmail(email) ? 'admin' : 'author',
       profile: { name: name || '' },
       verificationToken: hashToken(verificationToken),
       verificationTokenExpiry,
@@ -160,6 +168,13 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     await resetFailedLogin(email);
 
+
+    // Self-heal admin role from ADMIN_EMAILS so promotions take effect on next
+    // login without a manual DB edit. Only persist when the role actually changes.
+    if (isAdminEmail(user.email) && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
 
     await respondWithTokens(res, user, rememberMe || false);
 
@@ -244,10 +259,11 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     }
 
 
-    const tokenPayload = { 
-      id: user._id.toString(), 
+    const tokenPayload = {
+      id: user._id.toString(),
       email: user.email,
-      name: user.profile.name 
+      name: user.profile.name,
+      role: user.role,
     };
     const accessToken = generateAccessToken(tokenPayload);
 

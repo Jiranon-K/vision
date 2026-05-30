@@ -23,6 +23,7 @@ export const getRememberMe = (): boolean => {
 export interface CurrentUser {
   id: string;
   email: string;
+  role: "admin" | "author";
   emailVerified: boolean;
   profile: {
     name: string;

@@ -8,18 +8,18 @@ import {
   deletePost,
   incrementViews,
 } from '../controllers/posts.controller';
-import { auth } from '../middleware/auth';
-import { validateBody } from '../middleware/validate';
-import { postSchema, updatePostSchema } from '../schemas/posts';
+import { auth, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', getPosts);
+router.get('/', optionalAuth, getPosts);
 router.get('/slug/:slug', getPostBySlug);
-router.get('/:id', getPost);
+router.get('/:id', optionalAuth, getPost);
 router.post('/:id/view', incrementViews);
-router.post('/', auth, validateBody(postSchema), createPost);
-router.put('/:id', auth, validateBody(updatePostSchema), updatePost);
+// Body validation happens in the controllers via safeParse (their {field,message}
+// error shape is what the frontend consumes), so no validateBody middleware here.
+router.post('/', auth, createPost);
+router.put('/:id', auth, updatePost);
 router.delete('/:id', auth, deletePost);
 
 export default router;

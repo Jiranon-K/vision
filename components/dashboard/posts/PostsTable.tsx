@@ -3,11 +3,13 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import type { PostRow as PostRowType } from "@/types/types";
+import type { CurrentUser } from "@/lib/auth";
 import PostRow from "./PostRow";
 
 interface PostsTableProps {
   posts: PostRowType[];
   onDelete?: (id: string) => void;
+  currentUser?: CurrentUser | null;
 }
 
 function EmptyState() {
@@ -26,7 +28,7 @@ function EmptyState() {
   );
 }
 
-export default function PostsTable({ posts, onDelete }: PostsTableProps) {
+export default function PostsTable({ posts, onDelete, currentUser }: PostsTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
 
@@ -70,7 +72,14 @@ export default function PostsTable({ posts, onDelete }: PostsTableProps) {
   return (
     <div ref={tableRef} className="space-y-3">
       {posts.map((post) => (
-        <PostRow key={post.id} post={post} onDelete={onDelete} />
+        <PostRow
+          key={post.id}
+          post={post}
+          onDelete={onDelete}
+          canEdit={
+            currentUser?.role === "admin" || post.owner === currentUser?.id
+          }
+        />
       ))}
     </div>
   );

@@ -21,6 +21,7 @@ export interface PostRow {
   date: string;
   views: number;
   readTime: string;
+  owner: string;
 }
 
 export interface DashboardStat {
@@ -74,6 +75,7 @@ export interface EngagementData {
 export interface AuthUser {
   id: string;
   email: string;
+  role: "admin" | "author";
   profile: {
     name: string;
     bio: string;

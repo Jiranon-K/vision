@@ -5,6 +5,8 @@ export interface MetadataFormProps {
   onStatusChange: (status: "Draft" | "Published") => void;
   coverImage: string;
   onCoverImageChange: (coverImage: string) => void;
+  excerpt: string;
+  onExcerptChange: (excerpt: string) => void;
 }
 
 export interface ToolbarButton {

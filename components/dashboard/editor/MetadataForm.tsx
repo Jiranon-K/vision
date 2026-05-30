@@ -12,6 +12,8 @@ export default function MetadataForm({
   onStatusChange,
   coverImage,
   onCoverImageChange,
+  excerpt,
+  onExcerptChange,
 }: MetadataFormProps) {
   const statusOptions = ["Draft", "Published"] as const;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -83,6 +85,23 @@ export default function MetadataForm({
             </p>
           </div>
         </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-brand-dark/60 mb-2">
+          Excerpt
+        </label>
+        <textarea
+          value={excerpt}
+          onChange={(e) => onExcerptChange(e.target.value)}
+          maxLength={500}
+          rows={3}
+          placeholder="เว้นว่างเพื่อสร้างอัตโนมัติจากเนื้อหา"
+          className="w-full px-4 py-3 rounded-[12px] border-2 border-brand-dark bg-white resize-none focus:outline-none focus:border-brand-dark text-sm leading-relaxed text-brand-dark placeholder:text-brand-dark/30"
+        />
+        <p className="mt-1 text-right text-xs text-brand-dark/40">
+          {excerpt.length}/500
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-4 items-end">
