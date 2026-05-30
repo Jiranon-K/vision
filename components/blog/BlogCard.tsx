@@ -13,7 +13,6 @@ const BlogCard = ({ post }: { post: BlogPost }) => (
           <span className="bg-brand-gray text-brand-dark text-xs font-semibold px-3.5 py-1.5 rounded-full transition-colors duration-300 group-hover:bg-brand-lime">
             {post.category}
           </span>
-          <span className="text-brand-dark/40 text-xs">{post.tag}</span>
         </div>
 
         <h3 className="text-xl font-bold text-brand-dark leading-snug mb-3 group-hover:text-brand-dark transition-colors duration-300">

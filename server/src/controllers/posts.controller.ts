@@ -48,7 +48,9 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
       filter.title = { $regex: search, $options: 'i' };
     }
 
-    const posts = await Post.find(filter).sort({ createdAt: -1 });
+    const posts = await Post.find(filter)
+      .select('-coverImage')
+      .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -104,8 +106,16 @@ export const createPost = async (
       return;
     }
 
-    const { title, excerpt, content, category, tag, status, readTime, featured } =
-      validation.data;
+    const {
+      title,
+      excerpt,
+      content,
+      category,
+      status,
+      readTime,
+      featured,
+      coverImage,
+    } = validation.data;
 
     const slug = await generateUniqueSlug(title);
 
@@ -114,10 +124,10 @@ export const createPost = async (
       excerpt,
       content,
       category,
-      tag,
       status,
       readTime,
       featured: featured || false,
+      coverImage,
       slug,
       author: {
         name: req.user?.name || 'Unknown Author',
@@ -173,6 +183,18 @@ export const updatePost = async (
   } catch (error) {
     console.error('Update post error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const incrementViews = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    await Post.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
+    res.status(204).end();
+  } catch {
+    res.status(400).json({ error: 'Invalid id' });
   }
 };
 

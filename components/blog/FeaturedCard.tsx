@@ -14,7 +14,6 @@ const FeaturedCard = ({ post }: { post: BlogPost }) => (
           <span className="bg-brand-lime text-brand-dark text-sm font-semibold px-4 py-1.5 rounded-full">
             {post.category}
           </span>
-          <span className="text-white/50 text-sm">{post.tag}</span>
         </div>
 
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight mb-4 group-hover:text-brand-lime transition-colors duration-300">

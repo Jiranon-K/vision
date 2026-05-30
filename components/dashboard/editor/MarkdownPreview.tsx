@@ -1,7 +1,6 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
-import { markdownComponents } from "@/components/markdown/MarkdownComponents";
+import Markdown from "@/components/markdown/Markdown";
 import type { MarkdownPreviewProps } from "./types";
 
 export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
@@ -16,7 +15,7 @@ export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
   return (
     <div className="h-full overflow-auto p-4 bg-white rounded-[16px] border-2 border-brand-dark">
       <div className="prose prose-brand max-w-none">
-        <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+        <Markdown content={content} />
       </div>
     </div>
   );

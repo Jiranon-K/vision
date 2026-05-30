@@ -1,12 +1,10 @@
 export interface MetadataFormProps {
   category: string;
   onCategoryChange: (category: string) => void;
-  tag: string;
-  onTagChange: (tag: string) => void;
-  status: "Draft" | "Scheduled" | "Published";
-  onStatusChange: (status: "Draft" | "Scheduled" | "Published") => void;
-  scheduledDate: string;
-  onScheduledDateChange: (date: string) => void;
+  status: "Draft" | "Published";
+  onStatusChange: (status: "Draft" | "Published") => void;
+  coverImage: string;
+  onCoverImageChange: (coverImage: string) => void;
 }
 
 export interface ToolbarButton {

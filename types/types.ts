@@ -3,7 +3,6 @@ export interface BlogPost {
   title: string;
   excerpt: string;
   category: string;
-  tag: string;
   slug: string;
   author: {
     name: string;
@@ -18,7 +17,7 @@ export interface PostRow {
   id: string;
   title: string;
   category: string;
-  status: "Published" | "Draft" | "Scheduled";
+  status: "Published" | "Draft";
   date: string;
   views: number;
   readTime: string;
@@ -35,7 +34,7 @@ export interface DashboardStat {
 export interface DashboardPost {
   id: string;
   title: string;
-  status: "Published" | "Draft" | "Scheduled";
+  status: "Published" | "Draft";
   views: number;
   date: string;
   category: string;

@@ -23,4 +23,4 @@ export const categories = [
   "Branding",
 ];
 
-export const statusFilters = ["All", "Published", "Draft", "Scheduled"] as const;
+export const statusFilters = ["All", "Published", "Draft"] as const;

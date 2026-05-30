@@ -18,9 +18,8 @@ export default function NewPostPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("");
-  const [tag, setTag] = useState("");
-  const [status, setStatus] = useState<"Draft" | "Scheduled" | "Published">("Draft");
-  const [scheduledDate, setScheduledDate] = useState("");
+  const [status, setStatus] = useState<"Draft" | "Published">("Draft");
+  const [coverImage, setCoverImage] = useState("");
   const [saving, setSaving] = useState(false);
 
   const { isLoading, isAuthed } = useAuth();
@@ -91,9 +90,8 @@ export default function NewPostPage() {
           title,
           content,
           category,
-          tag,
           status,
-          scheduledDate: scheduledDate || undefined,
+          coverImage,
           excerpt: content.slice(0, 150) + "...",
           readTime: `${Math.ceil(content.split(" ").length / 200) + 1} min read`,
         }),
@@ -158,12 +156,10 @@ export default function NewPostPage() {
           <MetadataForm
             category={category}
             onCategoryChange={setCategory}
-            tag={tag}
-            onTagChange={setTag}
             status={status}
             onStatusChange={setStatus}
-            scheduledDate={scheduledDate}
-            onScheduledDateChange={setScheduledDate}
+            coverImage={coverImage}
+            onCoverImageChange={setCoverImage}
           />
         </div>
       </div>

@@ -9,8 +9,7 @@ export interface Post {
   excerpt: string;
   content: string;
   category: string;
-  tag: string;
-  status: "Published" | "Draft" | "Scheduled";
+  status: "Published" | "Draft";
   author: {
     name: string;
     role: string;
@@ -20,6 +19,7 @@ export interface Post {
   featured: boolean;
   views: number;
   slug: string;
+  coverImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,7 +30,6 @@ interface RawPost {
   excerpt: string;
   content: string;
   category: string;
-  tag: string;
   status: Post["status"];
   author: { name: string; role: string };
   date: string;
@@ -38,6 +37,7 @@ interface RawPost {
   featured: boolean;
   views: number;
   slug: string;
+  coverImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,4 +77,17 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 
   const data: RawPost = await res.json();
   return normalize(data);
+}
+
+// Fire-and-forget view counter (client-side beacon). Swallows all errors —
+// a failed view ping must never surface to the reader.
+export async function incrementPostViews(id: string): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/api/posts/${encodeURIComponent(id)}/view`, {
+      method: "POST",
+      keepalive: true,
+    });
+  } catch {
+    // ignore
+  }
 }

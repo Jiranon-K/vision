@@ -28,7 +28,6 @@ export default function RecentPostCard({ post }: RecentPostCardProps) {
   const statusStyles = {
     Published: "bg-brand-lime text-brand-dark",
     Draft: "bg-brand-gray text-brand-dark/50",
-    Scheduled: "bg-brand-dark text-brand-lime",
   };
 
   return (
