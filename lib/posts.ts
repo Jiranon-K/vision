@@ -1,4 +1,7 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+// Fall back to the local backend rather than "" — an empty base produces a
+// relative URL, which server-side fetch (RSC/sitemap/build) rejects.
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export interface Post {
   id: string;
