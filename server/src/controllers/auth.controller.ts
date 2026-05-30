@@ -11,7 +11,9 @@ import {
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from '../schemas/auth';
+import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
 
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const REMEMBER_ME_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
@@ -29,7 +31,7 @@ async function respondWithTokens(
   user: InstanceType<typeof User>,
   rememberMe: boolean
 ): Promise<void> {
-  const tokenPayload = { id: user._id.toString(), email: user.email };
+  const tokenPayload = { id: user._id.toString(), email: user.email, name: user.profile.name };
   const accessToken = generateAccessToken(tokenPayload);
   const refreshToken = generateRefreshToken(tokenPayload, rememberMe);
 
@@ -86,18 +88,24 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = new User({
       email,
       password,
       profile: { name: name || '' },
-      verificationToken,
+      verificationToken: hashToken(verificationToken),
+      verificationTokenExpiry,
     });
 
     await user.save();
 
-
-    console.log(`[EMAIL VERIFICATION] For ${email}: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`);
+    try {
+      await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send verification email:', sendErr);
+      // Registration still succeeds; user can request resend later
+    }
 
 
     await respondWithTokens(res, user, false);
@@ -292,12 +300,16 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = hashToken(resetToken);
     user.resetPasswordExpiry = resetExpiry;
     await user.save();
 
-
-    console.log(`[PASSWORD RESET] For ${email}: ${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`);
+    try {
+      await sendResetPasswordEmail(user.email, resetToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send reset email:', sendErr);
+      // Intentionally do NOT reveal send failure to client (no enumeration)
+    }
 
     res.json({ message: 'If an account exists with this email, a password reset link has been sent.' });
   } catch (error) {
@@ -356,24 +368,69 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
 export const verifyEmail = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { token } = req.body;
+    const validation = verifyEmailSchema.safeParse(req.body);
+    if (!validation.success) {
+      res.status(400).json({
+        error: 'Validation failed',
+        details: getValidationIssues(validation.error),
+      });
+      return;
+    }
+
+    const { token } = validation.data;
+    const hashedToken = hashToken(token);
 
     const user = await User.findOne({
-      verificationToken: token,
+      verificationToken: hashedToken,
+      verificationTokenExpiry: { $gt: new Date() },
     });
 
     if (!user) {
-      res.status(400).json({ error: 'Invalid verification token' });
+      res.status(400).json({ error: 'Invalid or expired verification token' });
       return;
     }
 
     user.emailVerified = true;
     user.verificationToken = undefined;
+    user.verificationTokenExpiry = undefined;
     await user.save();
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
     console.error('Verify email error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const resendVerification = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = await User.findById(req.user!.id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (user.emailVerified) {
+      res.status(400).json({ error: 'Email already verified' });
+      return;
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.verificationToken = hashToken(verificationToken);
+    user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    try {
+      await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
+    } catch (sendErr) {
+      console.error('Failed to send verification email:', sendErr);
+      res.status(500).json({ error: 'Could not send verification email. Please try again later.' });
+      return;
+    }
+
+    res.json({ message: 'Verification email sent' });
+  } catch (error) {
+    console.error('Resend verification error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

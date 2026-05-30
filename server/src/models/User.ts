@@ -28,6 +28,7 @@ export interface IUser extends Document {
   refreshTokenExpiry?: Date;
   emailVerified: boolean;
   verificationToken?: string;
+  verificationTokenExpiry?: Date;
   resetPasswordToken?: string;
   resetPasswordExpiry?: Date;
   failedLoginAttempts: number;
@@ -69,6 +70,7 @@ const UserSchema = new Schema<IUser>(
     refreshTokenExpiry: { type: Date },
     emailVerified: { type: Boolean, default: false },
     verificationToken: { type: String, select: false },
+    verificationTokenExpiry: { type: Date },
     resetPasswordToken: { type: String, select: false },
     resetPasswordExpiry: { type: Date },
     failedLoginAttempts: { type: Number, default: 0 },

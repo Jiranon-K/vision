@@ -10,7 +10,7 @@ import postsRoutes from './routes/posts';
 import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 3001;
 
 
@@ -35,9 +35,11 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  connectDB();
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    connectDB();
+  });
+}
 
 export default app;

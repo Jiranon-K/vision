@@ -46,6 +46,10 @@ export const resetPasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(1, 'Verification token is required'),
+});
+
 export const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   bio: z.string().max(500).optional(),
