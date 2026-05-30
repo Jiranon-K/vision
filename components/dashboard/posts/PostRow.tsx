@@ -9,9 +9,10 @@ import { EditIcon, DeleteIcon } from "@/components/ui/Icons";
 interface PostRowProps {
   post: PostRowType;
   onDelete?: (id: string) => void;
+  canEdit?: boolean;
 }
 
-export default function PostRow({ post, onDelete }: PostRowProps) {
+export default function PostRow({ post, onDelete, canEdit = true }: PostRowProps) {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -57,20 +58,26 @@ export default function PostRow({ post, onDelete }: PostRowProps) {
             {post.views > 0 ? post.views.toLocaleString() : "-"} views
           </span>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleEdit}
-              className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-brand-dark/60 hover:border-brand-dark hover:text-brand-dark transition-all duration-200"
-            >
-              <EditIcon />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-red-500 hover:border-red-500 hover:text-red-600 transition-all duration-200"
-            >
-              <DeleteIcon />
-            </button>
-          </div>
+          {canEdit ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleEdit}
+                className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-brand-dark/60 hover:border-brand-dark hover:text-brand-dark transition-all duration-200"
+              >
+                <EditIcon />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-red-500 hover:border-red-500 hover:text-red-600 transition-all duration-200"
+              >
+                <DeleteIcon />
+              </button>
+            </div>
+          ) : (
+            <span className="text-xs font-medium text-brand-dark/30 italic whitespace-nowrap">
+              read-only
+            </span>
+          )}
         </div>
       </div>
 

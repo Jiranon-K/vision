@@ -17,12 +17,14 @@ export interface TokenPayload {
   id: string;
   email: string;
   name: string;
+  role: 'admin' | 'author';
 }
 
 export interface RefreshTokenPayload {
   id: string;
   email: string;
   name: string;
+  role: 'admin' | 'author';
   type: 'refresh';
 }
 

@@ -10,7 +10,18 @@ interface UsePostsReturn {
   deletePost: (id: string) => Promise<boolean>;
 }
 
-export function usePosts() {
+interface RawPostListItem {
+  _id: string;
+  title: string;
+  category: string;
+  status: PostRow["status"];
+  date: string | number | Date;
+  views: number;
+  readTime: string;
+  owner?: string;
+}
+
+export function usePosts(): UsePostsReturn {
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +36,7 @@ export function usePosts() {
       const postsRaw = await res.json();
       const postsArr = Array.isArray(postsRaw) ? postsRaw : [];
       
-      const normalized = postsArr.map((post: any) => ({
+      const normalized = postsArr.map((post: RawPostListItem) => ({
         id: post._id,
         title: post.title,
         category: post.category,
@@ -33,6 +44,7 @@ export function usePosts() {
         date: typeof post.date === 'string' ? post.date : new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         views: post.views,
         readTime: post.readTime,
+        owner: String(post.owner ?? ''),
       }));
       
       setPosts(normalized);

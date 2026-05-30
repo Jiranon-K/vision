@@ -17,7 +17,7 @@ export default function PostsPage() {
   const [activeCategory, setActiveCategory] = useState("All");
   const pageRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
-  const { isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading, user } = useAuth();
 
   const showSkeleton = isAuthLoading || (isDataLoading && posts.length === 0);
 
@@ -106,7 +106,7 @@ export default function PostsPage() {
           {Array(5).fill(0).map((_, i) => <PostRowSkeleton key={i} />)}
         </div>
       ) : (
-        <PostsTable posts={filteredPosts} onDelete={handleDelete} />
+        <PostsTable posts={filteredPosts} onDelete={handleDelete} currentUser={user} />
       )}
     </div>
   );
