@@ -1,8 +1,11 @@
+import Link from "next/link";
 import type { BlogPost } from "@/types/types";
 
 const FeaturedCard = ({ post }: { post: BlogPost }) => (
-  <article className="featured-card group relative bg-brand-dark rounded-[32px] p-8 md:p-12 cursor-pointer overflow-hidden transition-all duration-500 hover:shadow-2xl opacity-0">
-    
+  <Link
+    href={`/blog/${post.slug}`}
+    className="featured-card group relative block h-full bg-brand-dark rounded-[32px] p-8 md:p-12 overflow-hidden transition-all duration-500 hover:shadow-2xl opacity-0"
+  >
     <div className="absolute top-0 left-0 w-full h-1.5 bg-brand-lime transition-all duration-500 group-hover:h-2" />
 
     <div className="flex flex-col gap-6 h-full justify-between">
@@ -24,7 +27,6 @@ const FeaturedCard = ({ post }: { post: BlogPost }) => (
 
       <div className="flex items-center justify-between pt-4 border-t border-white/10">
         <div className="flex items-center gap-4">
-          
           <div className="w-10 h-10 rounded-full bg-brand-lime/20 flex items-center justify-center text-brand-lime font-bold text-sm">
             {post.author.name
               .split(" ")
@@ -43,7 +45,7 @@ const FeaturedCard = ({ post }: { post: BlogPost }) => (
         </div>
       </div>
     </div>
-  </article>
+  </Link>
 );
 
 export default FeaturedCard;

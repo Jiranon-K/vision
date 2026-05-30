@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getPosts,
   getPost,
+  getPostBySlug,
   createPost,
   updatePost,
   deletePost,
@@ -13,6 +14,7 @@ import { postSchema, updatePostSchema } from '../schemas/posts';
 const router = Router();
 
 router.get('/', getPosts);
+router.get('/slug/:slug', getPostBySlug);
 router.get('/:id', getPost);
 router.post('/', auth, validateBody(postSchema), createPost);
 router.put('/:id', auth, validateBody(updatePostSchema), updatePost);

@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Hero from "@/components/services/Hero";
 import Process from "@/components/services/Process";
 import Specialization from "@/components/services/Specialization";
+import Footer from "@/components/Footer";
 
 export default function ServicesPage() {
   return (
@@ -10,6 +11,7 @@ export default function ServicesPage() {
       <Hero />
       <Process />
       <Specialization />
+      <Footer />
     </main>
   );
 }
