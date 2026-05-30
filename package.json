@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "concurrently -n FE,BE -c cyan,magenta \"bun dev\" \"cd server && bun dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -45,6 +46,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "husky": "^9",

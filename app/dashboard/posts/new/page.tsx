@@ -8,6 +8,7 @@ import SplitEditor from "@/components/dashboard/editor/SplitEditor";
 import MetadataForm from "@/components/dashboard/editor/MetadataForm";
 import { useAuth } from "@/hooks/useAuth";
 import { authFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function NewPostPage() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      alert("กรุณาใส่หัวข้อ post");
+      toast.error("กรุณาใส่หัวข้อ post");
       return;
     }
     setSaving(true);
@@ -102,10 +103,10 @@ export default function NewPostPage() {
         router.replace("/dashboard/posts");
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to save post");
+        toast.error(data.error || "Failed to save post");
       }
     } catch {
-      alert("Something went wrong");
+      toast.error("Something went wrong");
     } finally {
       setSaving(false);
     }
