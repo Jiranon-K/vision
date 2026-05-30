@@ -1,11 +1,10 @@
 "use client";
 
-import ReactMarkdown from "react-markdown";
-import { markdownComponents } from "@/components/markdown/MarkdownComponents";
+import Markdown from "@/components/markdown/Markdown";
 
 const PostContent = ({ content }: { content: string }) => (
   <div className="max-w-none">
-    <ReactMarkdown components={markdownComponents}>{content}</ReactMarkdown>
+    <Markdown content={content} />
   </div>
 );
 

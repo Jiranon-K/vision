@@ -18,7 +18,6 @@ export default function PostRow({ post, onDelete }: PostRowProps) {
   const statusStyles = {
     Published: "bg-brand-lime text-brand-dark",
     Draft: "bg-brand-gray text-brand-dark/50",
-    Scheduled: "bg-brand-dark text-brand-lime",
   };
 
   const handleEdit = () => {

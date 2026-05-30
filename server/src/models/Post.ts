@@ -5,8 +5,7 @@ export interface IPost extends Document {
   excerpt: string;
   content: string;
   category: string;
-  tag: string;
-  status: 'Published' | 'Draft' | 'Scheduled';
+  status: 'Published' | 'Draft';
   author: {
     name: string;
     role: string;
@@ -16,6 +15,7 @@ export interface IPost extends Document {
   featured: boolean;
   views: number;
   slug: string;
+  coverImage?: string;
 }
 
 const PostSchema = new Schema<IPost>(
@@ -24,10 +24,9 @@ const PostSchema = new Schema<IPost>(
     excerpt: { type: String, required: true },
     content: { type: String, required: true },
     category: { type: String, required: true },
-    tag: { type: String, required: true },
     status: {
       type: String,
-      enum: ['Published', 'Draft', 'Scheduled'],
+      enum: ['Published', 'Draft'],
       default: 'Draft',
     },
     author: {
@@ -39,6 +38,7 @@ const PostSchema = new Schema<IPost>(
     featured: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     slug: { type: String, required: true, unique: true },
+    coverImage: { type: String },
   },
   { timestamps: true }
 );

@@ -5,10 +5,10 @@ export const postSchema = z.object({
   excerpt: z.string().min(1, 'Excerpt is required').max(500, 'Excerpt is too long'),
   content: z.string().min(1, 'Content is required'),
   category: z.string().min(1, 'Category is required'),
-  tag: z.string().min(1, 'Tag is required'),
-  status: z.enum(['Published', 'Draft', 'Scheduled']),
+  status: z.enum(['Published', 'Draft']),
   readTime: z.string().min(1, 'Read time is required'),
   featured: z.boolean().optional(),
+  coverImage: z.string().optional(),
 });
 
 export const updatePostSchema = postSchema.partial();

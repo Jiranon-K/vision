@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PostContent from "@/components/blog/PostContent";
-import { getPostBySlug } from "@/lib/posts";
+import ReadingProgress from "@/components/blog/ReadingProgress";
+import Breadcrumbs from "@/components/blog/Breadcrumbs";
+import TableOfContents from "@/components/blog/TableOfContents";
+import ShareButtons from "@/components/blog/ShareButtons";
+import RelatedPosts from "@/components/blog/RelatedPosts";
+import ViewTracker from "@/components/blog/ViewTracker";
+import { getPostBySlug, getPublishedPosts, type Post } from "@/lib/posts";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 300;
@@ -19,6 +24,16 @@ function formatDate(value: string): string {
   });
 }
 
+// Next.js delivers non-ASCII dynamic segments percent-encoded. Decode once here
+// so the API client doesn't double-encode (which 404s slugs with Thai/unicode).
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -28,7 +43,7 @@ export async function generateMetadata({
 
   let post = null;
   try {
-    post = await getPostBySlug(slug);
+    post = await getPostBySlug(safeDecode(slug));
   } catch {
     post = null;
   }
@@ -37,7 +52,7 @@ export async function generateMetadata({
     return { title: "Post not found" };
   }
 
-  const url = `${SITE_URL}/blog/${post.slug}`;
+  const url = `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`;
   return {
     title: post.title,
     description: post.excerpt,
@@ -69,7 +84,7 @@ export default async function BlogPostPage({
 
   let post = null;
   try {
-    post = await getPostBySlug(slug);
+    post = await getPostBySlug(safeDecode(slug));
   } catch {
     post = null;
   }
@@ -78,12 +93,28 @@ export default async function BlogPostPage({
     notFound();
   }
 
-  const url = `${SITE_URL}/blog/${post.slug}`;
+  // Related: prefer same category, fall back to latest. coverImage is excluded
+  // from the list endpoint, so this payload stays lean.
+  let related: Post[] = [];
+  try {
+    const others = (await getPublishedPosts()).filter(
+      (p) => p.slug !== post.slug,
+    );
+    const sameCategory = others.filter((p) => p.category === post.category);
+    related = (sameCategory.length > 0 ? sameCategory : others).slice(0, 3);
+  } catch {
+    related = [];
+  }
+
+  const url = `${SITE_URL}/blog/${encodeURIComponent(post.slug)}`;
+  // base64 cover images can't be used as crawler og:image; point the schema
+  // image at the site's dynamic OG image instead.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: post.title,
     description: post.excerpt,
+    image: `${SITE_URL}/opengraph-image`,
     datePublished: post.createdAt,
     dateModified: post.updatedAt,
     author: { "@type": "Person", name: post.author.name },
@@ -93,7 +124,9 @@ export default async function BlogPostPage({
 
   return (
     <main className="min-h-screen bg-white">
+      <ReadingProgress />
       <Navbar />
+      <ViewTracker id={post.id} />
 
       <script
         type="application/ld+json"
@@ -102,34 +135,22 @@ export default async function BlogPostPage({
         }}
       />
 
-      <article className="max-w-3xl mx-auto px-4 md:px-10 lg:px-0 py-12 md:py-16">
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-2 text-brand-dark/50 hover:text-brand-dark text-sm font-medium mb-8 transition-colors"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M19 12H5M5 12L12 19M5 12L12 5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back to blog
-        </Link>
+      <div className="max-w-5xl mx-auto px-4 md:px-10 lg:px-8 py-12 md:py-16">
+        <Breadcrumbs title={post.title} />
+
+        {post.coverImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.coverImage}
+            alt={post.title}
+            className="w-full aspect-[16/9] object-cover rounded-3xl border-2 border-brand-dark mb-10"
+          />
+        )}
 
         <div className="flex items-center gap-3 mb-6">
           <span className="bg-brand-lime text-brand-dark text-sm font-semibold px-4 py-1.5 rounded-full">
             {post.category}
           </span>
-          <span className="text-brand-dark/40 text-sm">{post.tag}</span>
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold text-brand-dark leading-[1.1] tracking-tight mb-6">
@@ -153,8 +174,21 @@ export default async function BlogPostPage({
           </div>
         </div>
 
-        <PostContent content={post.content} />
-      </article>
+        <TableOfContents collapsible className="lg:hidden mb-8" />
+
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12">
+          <article className="min-w-0">
+            <PostContent content={post.content} />
+            <ShareButtons url={url} />
+          </article>
+
+          <aside className="hidden lg:block">
+            <TableOfContents className="sticky top-24" />
+          </aside>
+        </div>
+
+        <RelatedPosts posts={related} />
+      </div>
 
       <Footer />
     </main>
