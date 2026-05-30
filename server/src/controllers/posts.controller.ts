@@ -68,6 +68,25 @@ export const getPost = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const getPostBySlug = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const post = await Post.findOne({
+      slug: req.params.slug,
+      status: 'Published',
+    });
+    if (!post) {
+      res.status(404).json({ error: 'Post not found' });
+      return;
+    }
+    res.json(post);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 export const createPost = async (
   req: AuthRequest,
   res: Response

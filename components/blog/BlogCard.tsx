@@ -1,8 +1,12 @@
+import Link from "next/link";
 import type { BlogPost } from "@/types/types";
 import ArrowIcon from "./ArrowIcon";
 
 const BlogCard = ({ post }: { post: BlogPost }) => (
-  <article className="blog-card group bg-white rounded-[28px] border-2 border-brand-dark/10 p-7 cursor-pointer transition-all duration-400 hover:border-brand-lime hover:-translate-y-2 hover:shadow-[0px_8px_24px_rgba(185,255,102,0.15)] opacity-0">
+  <Link
+    href={`/blog/${post.slug}`}
+    className="blog-card group block h-full bg-white rounded-[28px] border-2 border-brand-dark/10 p-7 transition-all duration-400 hover:border-brand-lime hover:-translate-y-2 hover:shadow-[0px_8px_24px_rgba(185,255,102,0.15)] opacity-0"
+  >
     <div className="flex flex-col gap-5 h-full justify-between">
       <div>
         <div className="flex items-center gap-3 mb-4">
@@ -41,7 +45,7 @@ const BlogCard = ({ post }: { post: BlogPost }) => (
         </div>
       </div>
     </div>
-  </article>
+  </Link>
 );
 
 export default BlogCard;
