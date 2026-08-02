@@ -1,11 +1,6 @@
 import Link from "next/link";
 import SocialLinks from "@/components/SocialLinks";
-
-const productLinks = [
-  { name: "Services", href: "/services" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "Blog", href: "/blog" },
-];
+import FooterProductLinks from "@/components/FooterProductLinks";
 
 const Footer = () => (
   <footer className="bg-brand-dark text-white rounded-t-[45px] mt-20">
@@ -41,18 +36,7 @@ const Footer = () => (
           <h3 className="text-brand-lime text-sm font-semibold uppercase tracking-widest">
             Product
           </h3>
-          <ul className="flex flex-col gap-3">
-            {productLinks.map((l) => (
-              <li key={l.name}>
-                <Link
-                  href={l.href}
-                  className="text-white/60 hover:text-white transition-colors duration-200"
-                >
-                  {l.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <FooterProductLinks />
         </div>
       </div>
 

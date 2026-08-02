@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { setRememberMe, getRememberMe, isAuthenticated } from "@/lib/auth";
 import Image from "next/image";
 import { toast } from "sonner";
+import { usePasswordToggle } from "@/hooks/usePasswordToggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [serviceError, setServiceError] = useState(false);
+  const passwordToggle = usePasswordToggle();
 
   useEffect(() => {
 
@@ -208,14 +210,17 @@ export default function LoginPage() {
                   <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">
                     Password
                   </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-4 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={passwordToggle.type}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="block w-full px-4 py-4 pr-14 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
+                      placeholder="••••••••"
+                    />
+                    {passwordToggle.toggle}
+                  </div>
                 </div>
 
                 <div className="flex items-center">

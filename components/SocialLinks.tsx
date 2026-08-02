@@ -1,6 +1,6 @@
 "use client";
 
-import { toast } from "sonner";
+import { comingSoonToast } from "@/lib/toast";
 
 const socials = [
   {
@@ -25,9 +25,7 @@ const socials = [
 
 const SocialLinks = () => {
   const notReady = (name: string) =>
-    toast.info(`${name} ยังไม่พร้อมใช้งาน`, {
-      description: "เรากำลังเชื่อมต่อช่องทางนี้ เร็ว ๆ นี้",
-    });
+    comingSoonToast(name, "We're connecting this channel soon.");
 
   return (
     <div className="flex items-center gap-3">

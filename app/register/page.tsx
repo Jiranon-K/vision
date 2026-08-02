@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { isAuthenticated } from "@/lib/auth";
 import Image from "next/image";
 import { toast } from "sonner";
+import { usePasswordToggle } from "@/hooks/usePasswordToggle";
 
 const PASSWORD_REQUIREMENTS = [
   { id: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
@@ -26,6 +27,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const passwordToggle = usePasswordToggle();
+  const confirmToggle = usePasswordToggle();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -235,15 +238,18 @@ export default function RegisterPage() {
                   <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">
                     Create Password
                   </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
-                    placeholder="••••••••"
-                  />
-                  
+                  <div className="relative">
+                    <input
+                      type={passwordToggle.type}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="block w-full px-4 py-3 pr-14 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
+                      placeholder="••••••••"
+                    />
+                    {passwordToggle.toggle}
+                  </div>
+
                   {password && (
                     <div className="mt-4 p-4 bg-brand-dark text-white border-[3px] border-black shadow-[4px_4px_0px_0px_#D4FF3F] rotate-1">
                       <p className="text-[10px] font-black uppercase mb-2 text-brand-lime">Security Checklist:</p>
@@ -270,14 +276,17 @@ export default function RegisterPage() {
                   <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">
                     Repeat Password
                   </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={confirmToggle.type}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="block w-full px-4 py-3 pr-14 border-[3px] border-black bg-white text-brand-dark placeholder:text-brand-dark/30 focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] transition-all font-bold"
+                      placeholder="••••••••"
+                    />
+                    {confirmToggle.toggle}
+                  </div>
                 </div>
 
                 <button
