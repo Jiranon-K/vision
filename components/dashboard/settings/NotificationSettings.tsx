@@ -6,6 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { getNotificationsRequest, updateNotificationsRequest } from "@/lib/api";
 import { toast } from "sonner";
 
+interface NotificationSnapshot {
+  email: {
+    newComments: boolean;
+    newFollowers: boolean;
+    weeklyDigest: boolean;
+    marketingEmails: boolean;
+  };
+  push: {
+    enabled: boolean;
+    postUpdates: boolean;
+    systemAlerts: boolean;
+  };
+  frequency: "daily" | "weekly" | "monthly";
+}
+
 interface ToggleProps {
   enabled: boolean;
   onChange: (enabled: boolean) => void;
@@ -57,7 +72,7 @@ export default function NotificationSettings() {
   });
 
   const [emailFrequency, setEmailFrequency] = useState<"daily" | "weekly" | "monthly">("weekly");
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<NotificationSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 

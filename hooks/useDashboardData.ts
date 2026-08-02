@@ -2,6 +2,16 @@ import { useState, useEffect, useCallback } from "react";
 import { authFetch } from "@/lib/api";
 import type { DashboardStat, ViewsDataPoint, DashboardPost } from "@/types/types";
 
+interface RawDashboardPost {
+  _id: string;
+  title: string;
+  category: string;
+  status: DashboardPost["status"];
+  date: string | number | Date;
+  views: number;
+  readTime: string;
+}
+
 interface DashboardData {
   stats: DashboardStat[];
   posts: DashboardPost[];
@@ -42,7 +52,7 @@ export function useDashboardData(isAuthed: boolean) {
       ]);
 
       const postsArr = Array.isArray(postsRaw) ? postsRaw : [];
-      const normalizedPosts: DashboardPost[] = postsArr.map((post: any) => ({
+      const normalizedPosts: DashboardPost[] = postsArr.map((post: RawDashboardPost) => ({
         id: post._id,
         title: post.title,
         category: post.category,
