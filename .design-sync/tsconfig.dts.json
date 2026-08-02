@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "incremental": false,
+    "outDir": "../dist/types",
+    "rootDir": "..",
+    "plugins": []
+  },
+  "include": ["../components/ui/**/*.ts", "../components/ui/**/*.tsx", "../lib/utils.ts"],
+  "exclude": ["../node_modules", "../server", "../harness"]
+}
