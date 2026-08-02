@@ -1,39 +1,297 @@
 @import "tailwindcss";
 
+/* Tailwind only emits utilities it finds in source, so the semantic layer
+   below would ship only the slice this app happens to use today. These are
+   the design system's public vocabulary — anything documented in
+   docs/design-system.md must resolve for code that hasn't been written yet,
+   including designs built against the synced bundle. */
+@source inline("{hover:,focus-visible:,active:,dark:,}{bg,text,border}-{background,surface,surface-muted,surface-sunken,surface-inverse,foreground,text-secondary,text-muted,text-faint,text-inverse,text-on-brand,brand-text,brand-border,border,border-subtle,border-strong,ring}");
+@source inline("{hover:,active:,dark:,}{bg,text,border}-{primary,primary-foreground,primary-hover,secondary,secondary-foreground,accent,accent-foreground,muted,muted-foreground,card,card-foreground,destructive,destructive-foreground}");
+@source inline("{hover:,dark:,}{bg,text,border}-{success,warning,error,info}{,-subtle,-strong,-on}");
+@source inline("{hover:,dark:,}{bg,text,border}-{brand-lime,brand-dark,brand-gray}");
+@source inline("{hover:,active:,}bg-{state-hover,state-active,state-selected}");
+@source inline("shadow-{hard-sm,hard,hard-lg,soft,panel,none}");
+@source inline("rounded-pill");
 
+/* ============================================================
+   1. PRIMITIVES — raw palette. Never reference these from a
+   component; go through the semantic layer in section 2.
+   ============================================================ */
 
 :root {
-  
-  --brand-lime: #b9ff66;
-  --brand-dark: #191a23;
-  --brand-gray: #f3f3f3;
-  --brand-success: #22c55e;
-  --brand-warning: #f59e0b;
-  --brand-error: #ef4444;
-  --brand-accent-blue: #38bdf8;
+  /* Lime — the brand accent. 400 is the canonical brand value.
+     900 is the lightest step that clears 4.5:1 on white, so it is
+     the only lime allowed for text on a light surface. */
+  --lime-50: #f6ffe8;
+  --lime-100: #ecffd0;
+  --lime-200: #d9ffa2;
+  --lime-300: #c9ff7f;
+  --lime-400: #b9ff66;
+  --lime-500: #9ff23d;
+  --lime-600: #7fd11c;
+  --lime-700: #60a316;
+  --lime-800: #4c7d16;
+  --lime-900: #3f5c14;
+  --lime-950: #21330a;
 
-  
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --primary: 240 10% 3.9%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --ring: 240 10% 3.9%;
+  /* Ink — the neutral ramp, hue-matched to the brand dark. */
+  --ink-50: #f7f7f8;
+  --ink-100: #ececee;
+  --ink-200: #d6d7dc;
+  --ink-300: #b3b5bf;
+  --ink-400: #8a8d9c;
+  --ink-500: #6b6e7f;
+  --ink-600: #555767;
+  --ink-700: #454754;
+  --ink-800: #2f3039;
+  --ink-900: #23242e;
+  --ink-950: #191a23;
+  --ink-975: #101119;
+
+  /* Legacy brand aliases — ~640 call sites depend on these names. */
+  --brand-lime: var(--lime-400);
+  --brand-dark: var(--ink-950);
+  --brand-gray: #f3f3f3;
+  --brand-success: var(--success);
+  --brand-warning: var(--warning);
+  --brand-error: var(--error);
+  --brand-accent-blue: var(--info);
+}
+
+/* ============================================================
+   2. SEMANTIC — what components consume. Light theme.
+   ============================================================ */
+
+:root {
+  /* Status — semantic, not primitive: `success` is a meaning, and every
+     step here flips with the theme. Each tone carries subtle (fill),
+     base (marks), strong (text), and on (content sitting on the base).
+     Every base is a mid-tone, so `on` is dark for all four — white on
+     the green and the red lands at 2.3:1 and 3.8:1. */
+  --success-subtle: #dcfce7;
+  --success: #22c55e;
+  --success-strong: #15803d;
+  --success-on: var(--ink-950);
+
+  --warning-subtle: #fef3c7;
+  --warning: #f59e0b;
+  --warning-strong: #b45309;
+  --warning-on: var(--ink-950);
+
+  --error-subtle: #fee2e2;
+  --error: #ef4444;
+  --error-strong: #b91c1c;
+  --error-on: var(--ink-950);
+
+  --info-subtle: #e0f2fe;
+  --info: #38bdf8;
+  --info-strong: #0369a1;
+  --info-on: var(--ink-950);
+
+  /* Surfaces */
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-muted: #f3f3f3;
+  --surface-sunken: var(--ink-100);
+  --surface-inverse: var(--ink-950);
+
+  /* Text */
+  --foreground: var(--ink-950);
+  --text-secondary: var(--ink-700);
+  --text-muted: var(--ink-600);
+  /* The lightest text step still allowed on a surface — placeholders
+     are body text as far as WCAG is concerned, so ink-400 is too light. */
+  --text-faint: var(--ink-500);
+  --text-inverse: #ffffff;
+  --text-on-brand: var(--ink-950);
+  /* Lime as ink rather than as fill. Must flip with the theme —
+     lime-900 on a dark surface is 2.3:1. */
+  --brand-text: var(--lime-900);
+  --brand-border: var(--lime-600);
+
+  /* Lines. --border-strong is the 2px outline the brutalist
+     surfaces are built from; --border is the quiet hairline. */
+  --border: var(--ink-200);
+  --border-subtle: var(--ink-100);
+  --border-strong: var(--ink-950);
+
+  --ring: var(--ink-950);
+
+  /* shadcn-compatible aliases, kept so existing call sites read
+     the same names. These are plain colors now — the previous
+     `oklch(<hsl triplet>)` wrapping produced invalid CSS. */
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary: var(--ink-950);
+  --primary-foreground: #ffffff;
+  /* Must differ from --primary in BOTH themes, or the primary control
+     has no hover feedback in whichever theme they collide. */
+  --primary-hover: var(--lime-400);
+  --secondary: var(--lime-400);
+  --secondary-foreground: var(--ink-950);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--lime-400);
+  --accent-foreground: var(--ink-950);
+  /* A destructive control is not a status fill: it carries white text,
+     so it points at the strong step rather than the base. */
+  --destructive: var(--error-strong);
+  --destructive-foreground: #ffffff;
   --radius: 0.75rem;
 }
 
+/* ============================================================
+   3. STATE — interaction is a token, not a per-component guess.
+   Overlays are transparent so they compose over any surface.
+   ============================================================ */
+
+:root {
+  --state-hover: color-mix(in oklab, var(--foreground) 8%, transparent);
+  --state-active: color-mix(in oklab, var(--foreground) 14%, transparent);
+  --state-selected: color-mix(in oklab, var(--lime-400) 32%, transparent);
+  --state-disabled-opacity: 0.5;
+
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+  /* The offset puts the ring on the page, not the control, so it
+     tracks the page background rather than the control's fill. */
+  --focus-ring-color: var(--ring);
+
+  /* Elevation. The hard shadows are the brand signature; the soft
+     ones are for overlays that must not read as a pressable card. */
+  --elevation-hard-sm: 2px 2px 0px 0px var(--border-strong);
+  --elevation-hard: 4px 4px 0px 0px var(--border-strong);
+  --elevation-hard-lg: 6px 6px 0px 0px var(--border-strong);
+  --elevation-soft: 0 1px 2px rgba(25, 26, 35, 0.12);
+  --elevation-panel: 0 10px 40px rgba(25, 26, 35, 0.09);
+
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ============================================================
+   4. DARK THEME — remaps sections 2 and 3 only. Primitives never
+   change; anything that reads a primitive directly will not
+   respond to the theme, which is why components must not.
+   ============================================================ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --background: var(--ink-950);
+  --surface: var(--ink-900);
+  --surface-muted: var(--ink-800);
+  --surface-sunken: var(--ink-975);
+  --surface-inverse: #ffffff;
+
+  --foreground: var(--ink-50);
+  --text-secondary: var(--ink-200);
+  /* One step lighter than the light theme's equivalents: ink-500 on
+     the dark surface lands at 3.4:1, under AA for placeholder text. */
+  --text-muted: var(--ink-300);
+  --text-faint: var(--ink-400);
+  --text-inverse: var(--ink-950);
+  --text-on-brand: var(--ink-950);
+  --brand-text: var(--lime-300);
+  --brand-border: var(--lime-500);
+
+  --border: var(--ink-700);
+  --border-subtle: var(--ink-800);
+  --border-strong: var(--ink-50);
+
+  --ring: var(--lime-400);
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  /* Mirrors the light theme's pairing rather than inverting it: primary
+     stays the high-contrast neutral so it reads apart from the lime
+     secondary, and hover is lime in both themes. */
+  --primary: var(--ink-50);
+  --primary-foreground: var(--ink-950);
+  --primary-hover: var(--lime-400);
+  --secondary: var(--ink-800);
+  --secondary-foreground: var(--ink-50);
+  --muted: var(--surface-muted);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--lime-400);
+  --accent-foreground: var(--ink-950);
+  --destructive: var(--error-strong);
+  --destructive-foreground: var(--ink-950);
+
+  /* Status inverts on a dark surface: the subtle fill darkens, and
+     `strong` — which is always the text step — has to lighten with it. */
+  --success-subtle: #0d3b21;
+  --success-strong: #4ade80;
+  --warning-subtle: #442a06;
+  --warning-strong: #fbbf24;
+  --error-subtle: #46171a;
+  --error-strong: #f87171;
+  --info-subtle: #0b3550;
+  --info-strong: #7dd3fc;
+
+  --state-hover: color-mix(in oklab, #ffffff 10%, transparent);
+  --state-active: color-mix(in oklab, #ffffff 18%, transparent);
+  --state-selected: color-mix(in oklab, var(--lime-400) 24%, transparent);
+
+  --elevation-soft: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --elevation-panel: 0 10px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* ============================================================
+   5. THEME BINDING — expose the layers above as utilities.
+   `inline` keeps the var() references intact so `.dark` works.
+   ============================================================ */
+
 @theme inline {
-  
+  --color-lime-50: var(--lime-50);
+  --color-lime-100: var(--lime-100);
+  --color-lime-200: var(--lime-200);
+  --color-lime-300: var(--lime-300);
+  --color-lime-400: var(--lime-400);
+  --color-lime-500: var(--lime-500);
+  --color-lime-600: var(--lime-600);
+  --color-lime-700: var(--lime-700);
+  --color-lime-800: var(--lime-800);
+  --color-lime-900: var(--lime-900);
+  --color-lime-950: var(--lime-950);
+
+  --color-ink-50: var(--ink-50);
+  --color-ink-100: var(--ink-100);
+  --color-ink-200: var(--ink-200);
+  --color-ink-300: var(--ink-300);
+  --color-ink-400: var(--ink-400);
+  --color-ink-500: var(--ink-500);
+  --color-ink-600: var(--ink-600);
+  --color-ink-700: var(--ink-700);
+  --color-ink-800: var(--ink-800);
+  --color-ink-900: var(--ink-900);
+  --color-ink-950: var(--ink-950);
+  --color-ink-975: var(--ink-975);
+
+  --color-success-subtle: var(--success-subtle);
+  --color-success: var(--success);
+  --color-success-strong: var(--success-strong);
+  --color-success-on: var(--success-on);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning: var(--warning);
+  --color-warning-strong: var(--warning-strong);
+  --color-warning-on: var(--warning-on);
+  --color-error-subtle: var(--error-subtle);
+  --color-error: var(--error);
+  --color-error-strong: var(--error-strong);
+  --color-error-on: var(--error-on);
+  --color-info-subtle: var(--info-subtle);
+  --color-info: var(--info);
+  --color-info-strong: var(--info-strong);
+  --color-info-on: var(--info-on);
+
   --color-brand-lime: var(--brand-lime);
   --color-brand-dark: var(--brand-dark);
   --color-brand-gray: var(--brand-gray);
@@ -42,35 +300,68 @@
   --color-brand-error: var(--brand-error);
   --color-brand-accent-blue: var(--brand-accent-blue);
 
-  
-  --color-background: oklch(var(--background));
-  --color-foreground: oklch(var(--foreground));
-  --color-card: oklch(var(--card));
-  --color-card-foreground: oklch(var(--card-foreground));
-  --color-primary: oklch(var(--primary));
-  --color-primary-foreground: oklch(var(--primary-foreground));
-  --color-secondary: oklch(var(--secondary));
-  --color-secondary-foreground: oklch(var(--secondary-foreground));
-  --color-muted: oklch(var(--muted));
-  --color-muted-foreground: oklch(var(--muted-foreground));
-  --color-accent: oklch(var(--accent));
-  --color-accent-foreground: oklch(var(--accent-foreground));
-  --color-destructive: oklch(var(--destructive));
-  --color-destructive-foreground: oklch(var(--destructive-foreground));
-  --color-border: oklch(var(--border));
-  --color-ring: oklch(var(--ring));
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inverse: var(--surface-inverse);
 
-  
+  --color-foreground: var(--foreground);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-inverse: var(--text-inverse);
+  --color-text-on-brand: var(--text-on-brand);
+  --color-brand-text: var(--brand-text);
+  --color-brand-border: var(--brand-border);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-ring: var(--ring);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-state-hover: var(--state-hover);
+  --color-state-active: var(--state-active);
+  --color-state-selected: var(--state-selected);
+
   --font-sans: var(--font-space-grotesk);
   --font-mono: var(--font-geist-mono);
 
-  
+  /* Binds the motion tokens to bare `transition-*`, so a component gets
+     the system's timing without naming a duration. */
+  --default-transition-duration: var(--duration-base);
+  --default-transition-timing-function: var(--ease-standard);
+
+  /* Matches Tailwind's own scale — redefining these would move
+     every existing rounded-* call site. Only `pill` is new. */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
+  --radius-pill: 9999px;
 
-  
+  --shadow-hard-sm: var(--elevation-hard-sm);
+  --shadow-hard: var(--elevation-hard);
+  --shadow-hard-lg: var(--elevation-hard-lg);
+  --shadow-soft: var(--elevation-soft);
+  --shadow-panel: var(--elevation-panel);
+
   --animate-fade-in: fade-in 0.2s ease-out;
   --animate-fade-out: fade-out 0.2s ease-in;
   --animate-slide-in: slide-in 0.3s ease-out;
@@ -97,29 +388,9 @@
   }
 }
 
-
-@custom-variant dark (&:where(.dark, .dark *));
-
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 10% 3.9%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 50.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
-}
-
-
+/* ============================================================
+   6. BASE
+   ============================================================ */
 
 html {
   overflow: hidden;
@@ -140,7 +411,20 @@ body {
   color: var(--brand-dark);
 }
 
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
+  *:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+/* ============================================================
+   7. DECORATIVE — marketing background treatment
+   ============================================================ */
 
 .bg-blobs {
   position: relative;
@@ -167,7 +451,6 @@ body {
   pointer-events: none;
 }
 
-
 .bg-blobs::before {
   width: 500px;
   height: 500px;
@@ -175,7 +458,6 @@ body {
   left: -150px;
   opacity: 0.6;
 }
-
 
 .bg-blobs::after {
   width: 400px;
@@ -185,7 +467,6 @@ body {
   opacity: 0.5;
 }
 
-
 .bg-blobs .blob-1 {
   width: 300px;
   height: 300px;
@@ -193,7 +474,6 @@ body {
   right: 10%;
   opacity: 0.4;
 }
-
 
 .bg-blobs .blob-2 {
   width: 200px;
@@ -203,7 +483,6 @@ body {
   opacity: 0.35;
 }
 
-
 .bg-blobs .blob-3 {
   width: 150px;
   height: 150px;
@@ -211,16 +490,4 @@ body {
   right: 30%;
   opacity: 0.3;
   background: var(--brand-lime);
-}
-
-
-@layer base {
-  * {
-    border-color: var(--border);
-  }
-
-  *:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
 }

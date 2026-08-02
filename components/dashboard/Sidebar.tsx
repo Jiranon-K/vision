@@ -47,7 +47,7 @@ export default function Sidebar() {
       
       <div className="p-6 border-b border-white/10">
         <Link href="/" className="flex items-center gap-2">
-          <LogoIcon />
+          <LogoIcon className="text-brand-lime" />
           <span className="text-2xl font-bold text-white">Vision</span>
         </Link>
       </div>
