@@ -25,8 +25,8 @@ const socials = [
 
 const SocialLinks = () => {
   const notReady = (name: string) =>
-    toast.info(`${name} ยังไม่พร้อมใช้งาน`, {
-      description: "เรากำลังเชื่อมต่อช่องทางนี้ เร็ว ๆ นี้",
+    toast.info(`${name} isn't available yet`, {
+      description: "We're connecting this channel soon.",
     });
 
   return (
