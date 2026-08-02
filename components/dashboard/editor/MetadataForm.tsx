@@ -106,11 +106,15 @@ export default function MetadataForm({
 
       <div className="flex flex-wrap gap-4 items-end">
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-brand-dark/60 mb-2">
+          <label
+            htmlFor="post-category"
+            className="block text-sm font-medium text-brand-dark/60 mb-2"
+          >
             Category
           </label>
           <div className="relative">
             <select
+              id="post-category"
               value={category}
               onChange={(e) => onCategoryChange(e.target.value)}
               className="w-full appearance-none px-4 py-3 rounded-[12px] border-2 border-brand-dark bg-white focus:outline-none focus:border-brand-dark font-medium text-brand-dark cursor-pointer pr-10"
@@ -144,11 +148,15 @@ export default function MetadataForm({
         </div>
 
         <div className="flex-1 min-w-[160px]">
-          <label className="block text-sm font-medium text-brand-dark/60 mb-2">
+          <label
+            htmlFor="post-status"
+            className="block text-sm font-medium text-brand-dark/60 mb-2"
+          >
             Status
           </label>
           <div className="relative">
             <select
+              id="post-status"
               value={status}
               onChange={(e) =>
                 onStatusChange(e.target.value as "Draft" | "Published")

@@ -8,13 +8,26 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "typecheck:server": "cd server && bunx tsc --noEmit",
+    "typecheck:harness": "cd harness && bunx tsc --noEmit",
+    "test:server": "cd server && bun run test",
+    "test:harness": "cd harness && bun run test",
+    "test:e2e": "playwright test",
+    "agent": "bun run harness/src/index.ts",
+    "verify:fast": "bun run typecheck && bun run typecheck:server && bun run typecheck:harness && bun run lint && bun run test:server && bun run test:harness",
+    "verify:full": "bun run verify:fast && bun run build && bun run test:e2e",
     "cleanup": "node scripts/remove-comments.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
-    "{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}": [
+    "{app,components,hooks,lib,types,scripts,e2e}/**/*.{ts,tsx}": [
       "eslint --fix",
       "bash -c 'tsc --noEmit'"
+    ],
+    "harness/**/*.ts": [
+      "eslint --fix",
+      "bash -c 'cd harness && tsc --noEmit'"
     ],
     "{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}": [
       "eslint --fix"
@@ -45,6 +58,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -54,6 +68,7 @@
     "eslint-config-next": "16.1.6",
     "husky": "^9",
     "lint-staged": "^15",
+    "mongodb": "^7.5.0",
     "prettier": "^3",
     "tailwindcss": "^4",
     "typescript": "^5"
