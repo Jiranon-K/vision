@@ -5,6 +5,12 @@ import { AuthRequest } from '../middleware/auth';
 import { postSchema, updatePostSchema } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
 
+// $regex compiles its input as a pattern, so a search term must be escaped or the
+// Creator's own text becomes syntax: `c++` is a malformed pattern MongoDB rejects,
+// and `.*` would match every Post.
+const escapeRegex = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const generateUniqueSlug = async (
   title: string,
   excludeId?: string
@@ -55,8 +61,8 @@ export const getPosts = async (
       filter.status = 'Published';
     }
 
-    if (search) {
-      filter.title = { $regex: search, $options: 'i' };
+    if (typeof search === 'string' && search) {
+      filter.title = { $regex: escapeRegex(search), $options: 'i' };
     }
 
     const posts = await Post.find(filter)
