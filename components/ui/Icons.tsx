@@ -61,7 +61,7 @@ export function SettingsIcon({ className }: IconProps) {
 export function LogoIcon({ className }: IconProps) {
   return (
     <svg className={className} width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 2L17.5 10.5L26 14L17.5 17.5L14 26L10.5 17.5L2 14L10.5 10.5L14 2Z" fill="#b9ff66" />
+      <path d="M14 2L17.5 10.5L26 14L17.5 17.5L14 26L10.5 17.5L2 14L10.5 10.5L14 2Z" fill="currentColor" />
     </svg>
   );
 }
