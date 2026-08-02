@@ -2,6 +2,70 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// Two rules written here rather than pulled from a plugin. They are small, and
+// the supply chain for a lint plugin is not worth two regexes.
+const local = {
+  rules: {
+    // An eslint-disable without a reason is a decision nobody can review later.
+    // ESLint's own `--`-suffix convention is the description.
+    "disable-needs-reason": {
+      meta: {
+        type: "suggestion",
+        docs: { description: "require a `-- reason` on every eslint-disable" },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Program() {
+            for (const comment of context.sourceCode.getAllComments()) {
+              const text = comment.value.trim();
+              if (!/^eslint-disable(-next-line|-line)?\b/.test(text)) continue;
+              if (text.includes("--")) continue;
+              context.report({
+                loc: comment.loc,
+                message:
+                  "Explain the disable: `// eslint-disable-next-line rule -- why this is correct here`.",
+              });
+            }
+          },
+        };
+      },
+    },
+
+    // A TODO with no issue behind it is a note to nobody. With one, it is a
+    // tracked decision that survives the person who wrote it.
+    "todo-needs-issue": {
+      meta: {
+        type: "suggestion",
+        docs: { description: "require an issue reference on TODO/FIXME" },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Program() {
+            for (const comment of context.sourceCode.getAllComments()) {
+              // Only a marker counts — one that opens a line, optionally after
+              // a block-comment asterisk. Prose that happens to contain the
+              // word is not a marker, and flagging it would teach people to
+              // contort sentences instead of opening issues.
+              const marker = comment.value
+                .split("\n")
+                .map((line) => /^[\s*]*(TODO|FIXME|HACK|XXX)\b/.exec(line))
+                .find(Boolean);
+              if (!marker) continue;
+              if (/#\d+/.test(comment.value)) continue;
+              context.report({
+                loc: comment.loc,
+                message: `${marker[1]} needs an issue reference, e.g. \`${marker[1]}(#42): ...\`. Open one with \`gh issue create\`.`,
+              });
+            }
+          },
+        };
+      },
+    },
+  },
+};
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -14,6 +78,34 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    linterOptions: {
+      // A disable that no longer suppresses anything is stale context.
+      reportUnusedDisableDirectives: "error",
+    },
+    plugins: { local },
+    rules: {
+      "local/disable-needs-reason": "error",
+      "local/todo-needs-issue": "error",
+    },
+  },
+  {
+    // Data fetching lives in hooks/ and lib/. Everything else consumes it.
+    // Without this, components grow their own fetches one at a time and the
+    // credential and caching decisions in lib/api.ts and lib/posts.ts quietly
+    // stop being the only ones.
+    files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.name='fetch']",
+          message:
+            "Call the API through hooks/ or lib/, not directly. They own credentials, caching, and the 401 refresh.",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

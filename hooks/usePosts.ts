@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch, authFetch } from "@/lib/api";
+import { asWireList, toPostRow } from "@/lib/post-contract";
 import type { PostRow } from "@/types/types";
 
 interface UsePostsReturn {
@@ -8,17 +9,6 @@ interface UsePostsReturn {
   error: string | null;
   refresh: () => Promise<void>;
   deletePost: (id: string) => Promise<boolean>;
-}
-
-interface RawPostListItem {
-  _id: string;
-  title: string;
-  category: string;
-  status: PostRow["status"];
-  date: string | number | Date;
-  views: number;
-  readTime: string;
-  owner?: string;
 }
 
 export function usePosts(): UsePostsReturn {
@@ -33,21 +23,7 @@ export function usePosts(): UsePostsReturn {
       const res = await apiFetch("/api/posts");
       if (!res.ok) throw new Error("Failed to fetch posts");
       
-      const postsRaw = await res.json();
-      const postsArr = Array.isArray(postsRaw) ? postsRaw : [];
-      
-      const normalized = postsArr.map((post: RawPostListItem) => ({
-        id: post._id,
-        title: post.title,
-        category: post.category,
-        status: post.status,
-        date: typeof post.date === 'string' ? post.date : new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        views: post.views,
-        readTime: post.readTime,
-        owner: String(post.owner ?? ''),
-      }));
-      
-      setPosts(normalized);
+      setPosts(asWireList(await res.json()).map(toPostRow));
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setPosts([]);

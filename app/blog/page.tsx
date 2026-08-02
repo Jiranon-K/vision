@@ -3,7 +3,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewsletterCta from "@/components/blog/NewsletterCta";
 import BlogList from "@/components/blog/BlogList";
-import { getPublishedPosts, type Post } from "@/lib/posts";
+import { getPublishedPosts } from "@/lib/posts";
+import type { Post } from "@/lib/post-contract";
 
 export const metadata: Metadata = {
   title: "Blog",
