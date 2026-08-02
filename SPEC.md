@@ -55,13 +55,16 @@ expressed in code rather than in a prompt.
 ```
 harness/            committed. Own package.json, so SDK deps stay out of the web app.
   src/
+    index.ts        CLI: ad-hoc mode and the GitHub issue queue
     runTask.ts      the unit of work: one issue in, one outcome out
-    queue.ts        GitHub issue polling (Phase 3)
-    gate/           verification commands and result parsing
-    worktree.ts     reset, branch, commit, push, rebase
+    session.ts      one SDK session, driven turn by turn
+    gate.ts         verification tiers, fingerprinting, red-test classification
+    worktree.ts     reset, branch, commit, push, rebase, test-weakening detection
     permissions.ts  the forbidden-action list
-    prompt/         system prompt assembly from committed repo files
-    report/         terminal renderer + run artifacts
+    prompt.ts       system prompt assembly from committed repo files
+    review.ts       the second, read-only session
+    report.ts       terminal renderer + run artifacts
+  tests/            unit tests for the denylist and gate classification
 .agents/            gitignored. Run artifacts.
   runs/<ts>-issue-<n>/
 ../vision-agent      the agent's git worktree, outside the repo

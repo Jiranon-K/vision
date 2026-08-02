@@ -91,13 +91,14 @@ running `bun run dev:all`.
 
 `husky` runs `lint-staged` on every commit:
 
-| Files                                                    | Checks                            |
-| -------------------------------------------------------- | --------------------------------- |
-| `{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}` | `eslint --fix`, `tsc --noEmit`    |
-| `{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}` | `eslint --fix`                    |
-| `*.{ts,tsx}` (root-level)                                | `eslint --fix`, `tsc --noEmit`    |
-| `server/src/**/*.ts`                                     | `tsc --noEmit` (backend tsconfig) |
-| `**/*.{json,md,yml,yaml}`                                | `prettier --write`                |
+| Files                                                        | Checks                                            |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `{app,components,hooks,lib,types,scripts,e2e}/**/*.{ts,tsx}` | `eslint --fix`, `tsc --noEmit`                    |
+| `{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}`     | `eslint --fix`                                    |
+| `harness/**/*.ts`                                            | `eslint --fix`, `tsc --noEmit` (harness tsconfig) |
+| `*.{ts,tsx}` (root-level)                                    | `eslint --fix`, `tsc --noEmit`                    |
+| `server/src/**/*.ts`                                         | `tsc --noEmit` (backend tsconfig)                 |
+| `**/*.{json,md,yml,yaml}`                                    | `prettier --write`                                |
 
 **Bypass**: `--no-verify` only for emergencies. Document the reason in the commit body.
 
