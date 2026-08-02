@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { resetPasswordRequest } from "@/lib/api";
+import { usePasswordToggle } from "@/hooks/usePasswordToggle";
 
 function ResetPasswordInner() {
   const router = useRouter();
@@ -14,6 +15,8 @@ function ResetPasswordInner() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const passwordToggle = usePasswordToggle();
+  const confirmToggle = usePasswordToggle();
 
   if (!token) {
     return (
@@ -63,27 +66,33 @@ function ResetPasswordInner() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">New password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            data-testid="reset-password"
-            className="w-full px-4 py-4 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-cyan-50 focus:shadow-[4px_4px_0px_0px_#22d3ee] font-bold"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <input
+              type={passwordToggle.type}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              data-testid="reset-password"
+              className="block w-full px-4 py-4 pr-14 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-cyan-50 focus:shadow-[4px_4px_0px_0px_#22d3ee] font-bold"
+              placeholder="••••••••"
+            />
+            {passwordToggle.toggle}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">Confirm password</label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-            data-testid="reset-confirm"
-            className="w-full px-4 py-4 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] font-bold"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <input
+              type={confirmToggle.type}
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+              data-testid="reset-confirm"
+              className="block w-full px-4 py-4 pr-14 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] font-bold"
+              placeholder="••••••••"
+            />
+            {confirmToggle.toggle}
+          </div>
         </div>
         <button
           type="submit"
