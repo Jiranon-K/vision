@@ -117,8 +117,8 @@ running `bun run dev:all`.
 ## Agent Harness
 
 `harness/` runs issues labelled `ready-for-agent` to a pull request without
-supervision. See [`harness/README.md`](harness/README.md) for usage and
-[`SPEC.md`](SPEC.md) for the design.
+supervision. See [`harness/README.md`](harness/README.md) for usage, the
+verification tiers, the boundaries it enforces, and why.
 
 ```bash
 bun run agent --task "describe the change"   # one-off, no GitHub
