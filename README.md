@@ -47,28 +47,28 @@ A modern landing page, blog, and dashboard built with Next.js 16, React 19, and 
 
 ### Frontend
 
-| Layer | Technology |
-| --- | --- |
-| Framework | Next.js 16.1.6 (App Router) |
-| UI | React 19.2.3 + TypeScript 5 |
-| Styling | Tailwind CSS 4 |
-| Animation | Anime.js 4 |
-| Markdown | react-markdown |
-| Toasts | sonner |
-| Fonts | Space Grotesk, Geist Mono (`next/font/google`) |
-| Package Manager | Bun |
+| Layer           | Technology                                     |
+| --------------- | ---------------------------------------------- |
+| Framework       | Next.js 16.1.6 (App Router)                    |
+| UI              | React 19.2.3 + TypeScript 5                    |
+| Styling         | Tailwind CSS 4                                 |
+| Animation       | Anime.js 4                                     |
+| Markdown        | react-markdown                                 |
+| Toasts          | sonner                                         |
+| Fonts           | Space Grotesk, Geist Mono (`next/font/google`) |
+| Package Manager | Bun                                            |
 
 ### Backend (`server/`)
 
-| Layer | Technology |
-| --- | --- |
-| Runtime | Node.js / Bun |
-| Framework | Express 5 |
-| Database | MongoDB + Mongoose 8 |
-| Auth | JWT (`jsonwebtoken`) + bcryptjs |
-| Validation | Zod |
-| Security | express-rate-limit, CORS, cookie-parser |
-| Dev Runner | tsx (watch mode) |
+| Layer      | Technology                              |
+| ---------- | --------------------------------------- |
+| Runtime    | Node.js / Bun                           |
+| Framework  | Express 5                               |
+| Database   | MongoDB + Mongoose 8                    |
+| Auth       | JWT (`jsonwebtoken`) + bcryptjs         |
+| Validation | Zod                                     |
+| Security   | express-rate-limit, CORS, cookie-parser |
+| Dev Runner | tsx (watch mode)                        |
 
 ## Project Structure
 
@@ -151,20 +151,20 @@ cd server && bun dev
 
 ### Frontend — `.env.local`
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `NEXT_PUBLIC_API_URL` | yes | Base URL of the backend API (e.g. `http://localhost:3001`) |
+| Variable              | Required | Description                                                |
+| --------------------- | -------- | ---------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL` | yes      | Base URL of the backend API (e.g. `http://localhost:3001`) |
 
 ### Backend — `server/.env`
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `PORT` | no | API port (default `3001`) |
-| `MONGODB_URI` | yes | MongoDB connection string |
-| `JWT_SECRET` | yes | Secret used to sign JWTs |
-| `JWT_EXPIRES_IN` | no | Token TTL (default `7d`) |
-| `CORS_ORIGIN` | yes | Allowed origin for CORS (e.g. `http://localhost:3000`) |
-| `NODE_ENV` | no | `development` \| `production` |
+| Variable         | Required | Description                                            |
+| ---------------- | -------- | ------------------------------------------------------ |
+| `PORT`           | no       | API port (default `3001`)                              |
+| `MONGODB_URI`    | yes      | MongoDB connection string                              |
+| `JWT_SECRET`     | yes      | Secret used to sign JWTs                               |
+| `JWT_EXPIRES_IN` | no       | Token TTL (default `7d`)                               |
+| `CORS_ORIGIN`    | yes      | Allowed origin for CORS (e.g. `http://localhost:3000`) |
+| `NODE_ENV`       | no       | `development` \| `production`                          |
 
 > Never commit `.env` or `.env.local`. Both are gitignored.
 
@@ -172,21 +172,22 @@ cd server && bun dev
 
 ### Frontend
 
-| Command | Description |
-| --- | --- |
-| `bun dev` | Start the Next.js dev server on `:3000` |
-| `bun build` | Production build (standalone output) |
-| `bun start` | Start the production server |
-| `bun lint` | Run ESLint |
-| `bun run cleanup` | Strip comments from source files (`scripts/remove-comments.mjs`) |
+| Command               | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| `bun dev`             | Start the Next.js dev server on `:3000`               |
+| `bun build`           | Production build (standalone output)                  |
+| `bun start`           | Start the production server                           |
+| `bun lint`            | Run ESLint                                            |
+| `bun run verify:fast` | Typechecks, lint, and unit tests                      |
+| `bun run verify:full` | `verify:fast` plus the production build and E2E suite |
 
 ### Backend (`server/`)
 
-| Command | Description |
-| --- | --- |
-| `bun dev` | Start the API with `tsx watch` on `:3001` |
-| `bun build` | Compile TypeScript to `dist/` |
-| `bun start` | Run the compiled production build |
+| Command     | Description                               |
+| ----------- | ----------------------------------------- |
+| `bun dev`   | Start the API with `tsx watch` on `:3001` |
+| `bun build` | Compile TypeScript to `dist/`             |
+| `bun start` | Run the compiled production build         |
 
 ## API Reference
 
@@ -194,39 +195,39 @@ Base URL: `http://localhost:3001`. Protected routes require an `Authorization: B
 
 ### Authentication — `/api/auth`
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| POST | `/register` | — | Register a new user |
-| POST | `/login` | — | Authenticate and receive a JWT |
-| POST | `/logout` | — | Log out |
-| GET | `/me` | JWT | Return the current user |
+| Method | Endpoint    | Auth | Description                    |
+| ------ | ----------- | ---- | ------------------------------ |
+| POST   | `/register` | —    | Register a new user            |
+| POST   | `/login`    | —    | Authenticate and receive a JWT |
+| POST   | `/logout`   | —    | Log out                        |
+| GET    | `/me`       | JWT  | Return the current user        |
 
 ### Posts — `/api/posts`
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/` | — | List posts (`category`, `status`, `search` filters) |
-| GET | `/:id` | — | Get a single post |
-| POST | `/` | JWT | Create a post |
-| PUT | `/:id` | JWT | Update a post |
-| DELETE | `/:id` | JWT | Delete a post |
+| Method | Endpoint | Auth | Description                                         |
+| ------ | -------- | ---- | --------------------------------------------------- |
+| GET    | `/`      | —    | List posts (`category`, `status`, `search` filters) |
+| GET    | `/:id`   | —    | Get a single post                                   |
+| POST   | `/`      | JWT  | Create a post                                       |
+| PUT    | `/:id`   | JWT  | Update a post                                       |
+| DELETE | `/:id`   | JWT  | Delete a post                                       |
 
 ### Analytics — `/api/analytics`
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| GET | `/` | Aggregate stats (views, posts, subscribers, engagement) |
-| GET | `/views` | Weekly view counts |
+| Method | Endpoint | Description                                             |
+| ------ | -------- | ------------------------------------------------------- |
+| GET    | `/`      | Aggregate stats (views, posts, subscribers, engagement) |
+| GET    | `/views` | Weekly view counts                                      |
 
 ### Settings — `/api/settings`
 
-| Method | Endpoint | Auth | Description |
-| --- | --- | --- | --- |
-| GET | `/profile` | JWT | Get user profile |
-| PUT | `/profile` | JWT | Update user profile |
-| PUT | `/password` | JWT | Change password |
-| GET | `/notifications` | JWT | Get notification preferences |
-| PUT | `/notifications` | JWT | Update notification preferences |
+| Method | Endpoint         | Auth | Description                     |
+| ------ | ---------------- | ---- | ------------------------------- |
+| GET    | `/profile`       | JWT  | Get user profile                |
+| PUT    | `/profile`       | JWT  | Update user profile             |
+| PUT    | `/password`      | JWT  | Change password                 |
+| GET    | `/notifications` | JWT  | Get notification preferences    |
+| PUT    | `/notifications` | JWT  | Update notification preferences |
 
 ## Deployment
 

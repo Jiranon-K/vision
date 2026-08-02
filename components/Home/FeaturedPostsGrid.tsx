@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import BlogCard from "@/components/blog/BlogCard";
-import type { Post } from "@/lib/posts";
+import type { Post } from "@/lib/post-contract";
 
 const FeaturedPostsGrid = ({ posts }: { posts: Post[] }) => {
   const gridRef = useRef<HTMLDivElement>(null);

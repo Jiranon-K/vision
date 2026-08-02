@@ -9,7 +9,8 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import ShareButtons from "@/components/blog/ShareButtons";
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import ViewTracker from "@/components/blog/ViewTracker";
-import { getPostBySlug, getPublishedPosts, type Post } from "@/lib/posts";
+import { getPostBySlug, getPublishedPosts } from "@/lib/posts";
+import type { Post } from "@/lib/post-contract";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 300;
@@ -139,7 +140,7 @@ export default async function BlogPostPage({
         <Breadcrumbs title={post.title} />
 
         {post.coverImage && (
-          // eslint-disable-next-line @next/next/no-img-element
+          // eslint-disable-next-line @next/next/no-img-element -- cover images are arbitrary Creator-supplied URLs, so next/image would need remotePatterns for hosts we cannot enumerate
           <img
             src={post.coverImage}
             alt={post.title}

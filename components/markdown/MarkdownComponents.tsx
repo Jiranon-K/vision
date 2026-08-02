@@ -127,7 +127,7 @@ export const markdownComponents: Components = {
     </pre>
   ),
   img: ({ src, alt }) => (
-    // eslint-disable-next-line @next/next/no-img-element
+    // eslint-disable-next-line @next/next/no-img-element -- images come from Post markdown and can point anywhere, so next/image has no host list to work from
     <img
       src={typeof src === "string" ? src : ""}
       alt={alt || ""}
