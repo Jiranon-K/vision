@@ -62,12 +62,14 @@ export default function PostRow({ post, onDelete, canEdit = true }: PostRowProps
             <div className="flex items-center gap-2">
               <button
                 onClick={handleEdit}
+                aria-label={`Edit ${post.title}`}
                 className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-brand-dark/60 hover:border-brand-dark hover:text-brand-dark transition-all duration-200"
               >
                 <EditIcon />
               </button>
               <button
                 onClick={handleDelete}
+                aria-label={`Delete ${post.title}`}
                 className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-red-500 hover:border-red-500 hover:text-red-600 transition-all duration-200"
               >
                 <DeleteIcon />

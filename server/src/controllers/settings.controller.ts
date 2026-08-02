@@ -4,6 +4,13 @@ import { AuthRequest } from '../middleware/auth';
 import { validatePasswordStrength } from '../utils/password';
 import { changePasswordSchema } from '../schemas/auth';
 
+// `profile` is a nested path, so Mongoose hands back a subdocument on some
+// query shapes and a plain object on others. Normalize before spreading.
+function plainProfile(profile: unknown): Record<string, unknown> {
+  const maybeDoc = profile as { toObject?: () => Record<string, unknown> };
+  return maybeDoc?.toObject?.() ?? (profile as Record<string, unknown>);
+}
+
 export const getProfile = async (
   req: AuthRequest,
   res: Response
@@ -15,7 +22,7 @@ export const getProfile = async (
       return;
     }
     res.json({
-      ...(user.profile as any).toObject?.() || user.profile,
+      ...plainProfile(user.profile),
       email: user.email,
     });
   } catch {
@@ -46,7 +53,7 @@ export const updateProfile = async (
     }
 
     res.json({
-      ...(user.profile as any).toObject?.() || user.profile,
+      ...plainProfile(user.profile),
       email: user.email,
     });
   } catch {

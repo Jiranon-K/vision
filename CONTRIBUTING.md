@@ -9,6 +9,7 @@ git checkout main
 git pull
 git checkout -b feat/<your-topic>
 # make changes
+bun run verify:full # typecheck + lint + tests + build + E2E
 /commit            # AI generates Conventional Commit message
 git push -u origin feat/<your-topic>
 gh pr create        # PR template auto-loads
@@ -72,17 +73,32 @@ refactor(server): extract analytics aggregation into service
 
 **Never** push to `main` directly.
 
+## Verification
+
+One set of scripts, run by humans and by the agent harness alike — so "green for
+the agent" means "green for you".
+
+| Script        | Runs                                                                                        |
+| ------------- | ------------------------------------------------------------------------------------------- |
+| `verify:fast` | `typecheck`, `typecheck:server`, `typecheck:harness`, `lint`, `test:server`, `test:harness` |
+| `verify:full` | `verify:fast` + `build` + `test:e2e`                                                        |
+
+`test:e2e` needs a local `mongod`. It uses its own database (`vision_e2e`), its
+own ports (3100/3101), and its own build directory, so it never collides with a
+running `bun run dev:all`.
+
 ## Pre-commit Hook
 
 `husky` runs `lint-staged` on every commit:
 
-| Files                                                    | Checks                            |
-| -------------------------------------------------------- | --------------------------------- |
-| `{app,components,hooks,lib,types,scripts}/**/*.{ts,tsx}` | `eslint --fix`, `tsc --noEmit`    |
-| `{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}` | `eslint --fix`                    |
-| `*.{ts,tsx}` (root-level)                                | `eslint --fix`, `tsc --noEmit`    |
-| `server/src/**/*.ts`                                     | `tsc --noEmit` (backend tsconfig) |
-| `**/*.{json,md,yml,yaml}`                                | `prettier --write`                |
+| Files                                                        | Checks                                            |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `{app,components,hooks,lib,types,scripts,e2e}/**/*.{ts,tsx}` | `eslint --fix`, `tsc --noEmit`                    |
+| `{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}`     | `eslint --fix`                                    |
+| `harness/**/*.ts`                                            | `eslint --fix`, `tsc --noEmit` (harness tsconfig) |
+| `*.{ts,tsx}` (root-level)                                    | `eslint --fix`, `tsc --noEmit`                    |
+| `server/src/**/*.ts`                                         | `tsc --noEmit` (backend tsconfig)                 |
+| `**/*.{json,md,yml,yaml}`                                    | `prettier --write`                                |
 
 **Bypass**: `--no-verify` only for emergencies. Document the reason in the commit body.
 
@@ -97,3 +113,16 @@ refactor(server): extract analytics aggregation into service
 | `/review`          | Review a specific PR                          |
 | `/ultrareview`     | Multi-agent cloud review (billed)             |
 | `/clean_gone`      | Delete local branches whose remotes are gone  |
+
+## Agent Harness
+
+`harness/` runs issues labelled `ready-for-agent` to a pull request without
+supervision. See [`harness/README.md`](harness/README.md) for usage, the
+verification tiers, the boundaries it enforces, and why.
+
+```bash
+bun run agent --task "describe the change"   # one-off, no GitHub
+bun run agent                                # drain the ready-for-agent queue
+```
+
+It opens pull requests; it never merges.

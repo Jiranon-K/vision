@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { animate, stagger } from "animejs";
 import type { ViewsDataPoint } from "@/types/types";
 
@@ -21,7 +21,14 @@ const defaultData: ViewsDataPoint[] = [
 export default function AnalyticsChart({ data }: AnalyticsChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
-  const [mounted, setMounted] = useState(false);
+  // Reads false during SSR and true after hydration, without a setState-in-effect
+  // round trip. The static branch below must render on the server so the chart
+  // has no hydration mismatch before the animation takes over.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const chartData = data && data.length > 0 ? data : defaultData;
   const maxValue = useMemo(
@@ -29,10 +36,6 @@ export default function AnalyticsChart({ data }: AnalyticsChartProps) {
     [chartData]
   );
 
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (!mounted) return;
