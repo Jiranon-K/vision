@@ -25,8 +25,24 @@ Next itself compiles (`.next/static/chunks/*.css`) and splits it in two:
 - `.cache/vision-compiled.css` → `cfg.cssEntry`
 - `.cache/fonts/fonts.css` + the `.woff2` files → `cfg.extraFonts`
 
-**Run `bun run build` before it** — that is why `cfg.buildCmd` is
-`bun run build && node .design-sync/prepare-css.mjs`.
+**Run `bun run build` before it** — that is the first half of `cfg.buildCmd`.
+
+## Type declarations are generated, not shipped
+
+The app never emitted `.d.ts`, so every component contract came out as
+`[key: string]: unknown` — the design agent got the components but none of their
+props. `.design-sync/tsconfig.dts.json` emits real declarations for
+`components/ui/` into `dist/types/`, which the converter finds ahead of the
+repo's own `types/` directory (it scans `build/ts` → `dist/types` → `types`).
+
+That is the third stage of `cfg.buildCmd`:
+
+```
+bun run build && node .design-sync/prepare-css.mjs && bunx tsc -p .design-sync/tsconfig.dts.json
+```
+
+`dist/` is gitignored and excluded from ESLint — it is build output, regenerated
+every sync.
 
 Two details worth keeping:
 
