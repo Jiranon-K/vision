@@ -1,51 +1,14 @@
+import {
+  asWireList,
+  toPost,
+  type Post,
+  type WirePost,
+} from "@/lib/post-contract";
+
 // Fall back to the local backend rather than "" — an empty base produces a
 // relative URL, which server-side fetch (RSC/sitemap/build) rejects.
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
-export interface Post {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  status: "Published" | "Draft";
-  author: {
-    name: string;
-    role: string;
-  };
-  date: string;
-  readTime: string;
-  featured: boolean;
-  views: number;
-  slug: string;
-  coverImage?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface RawPost {
-  _id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  category: string;
-  status: Post["status"];
-  author: { name: string; role: string };
-  date: string;
-  readTime: string;
-  featured: boolean;
-  views: number;
-  slug: string;
-  coverImage?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-function normalize(raw: RawPost): Post {
-  const { _id, ...rest } = raw;
-  return { id: _id, ...rest };
-}
 
 // Server-side public fetch — no credentials, ISR-cached.
 export async function getPublishedPosts(): Promise<Post[]> {
@@ -57,9 +20,7 @@ export async function getPublishedPosts(): Promise<Post[]> {
     throw new Error(`Failed to fetch posts: ${res.status}`);
   }
 
-  const data = await res.json();
-  const arr: RawPost[] = Array.isArray(data) ? data : [];
-  return arr.map(normalize);
+  return asWireList<WirePost>(await res.json()).map(toPost);
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -75,8 +36,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     throw new Error(`Failed to fetch post: ${res.status}`);
   }
 
-  const data: RawPost = await res.json();
-  return normalize(data);
+  return toPost((await res.json()) as WirePost);
 }
 
 // Fire-and-forget view counter (client-side beacon). Swallows all errors —

@@ -71,9 +71,10 @@ fetches in `app/sitemap.ts` and `app/opengraph-image.tsx`.
 The gate stops at the first failing command, so the agent sees one problem rather
 than a pile.
 
-`scripts/remove-comments.mjs` is deliberately **not** in the gate. It is a
-regex-based stripper that removes every comment indiscriminately, including the
-deliberate "why" comments this codebase relies on.
+Two locally-defined lint rules carry the comment policy, so it is enforced the
+same way for the agent as for a human: an `eslint-disable` must state its reason
+after `--`, and a `TODO`/`FIXME` marker must reference an issue. See
+`docs/adr/0001-code-standards.md`.
 
 ## Budgets
 

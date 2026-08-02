@@ -21,9 +21,7 @@ export default function TableOfContents({
     const els = Array.from(
       document.querySelectorAll<HTMLElement>("h2[id], h3[id]"),
     );
-    // One-shot read of the rendered article headings on mount (an external DOM
-    // source), so a single setState in the effect is intentional here.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot read of the rendered article headings on mount, an external DOM source with no other hook to observe it
     setHeadings(
       els.map((el) => ({
         id: el.id,

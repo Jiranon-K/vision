@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { authFetch } from "@/lib/api";
+import { asWireList, toDashboardPost } from "@/lib/post-contract";
 import type { DashboardStat, ViewsDataPoint, DashboardPost } from "@/types/types";
-
-interface RawDashboardPost {
-  _id: string;
-  title: string;
-  category: string;
-  status: DashboardPost["status"];
-  date: string | number | Date;
-  views: number;
-  readTime: string;
-}
 
 interface DashboardData {
   stats: DashboardStat[];
@@ -51,15 +42,7 @@ export function useDashboardData(isAuthed: boolean) {
         viewsRes.json(),
       ]);
 
-      const postsArr = Array.isArray(postsRaw) ? postsRaw : [];
-      const normalizedPosts: DashboardPost[] = postsArr.map((post: RawDashboardPost) => ({
-        id: post._id,
-        title: post.title,
-        category: post.category,
-        status: post.status,
-        date: typeof post.date === 'string' ? post.date : new Date(post.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        views: post.views,
-      }));
+      const normalizedPosts = asWireList(postsRaw).map(toDashboardPost);
 
       setData({
         stats: stats || [],

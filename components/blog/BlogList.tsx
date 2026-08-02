@@ -5,7 +5,7 @@ import { animate, stagger } from "animejs";
 import FeaturedCard from "@/components/blog/FeaturedCard";
 import BlogCard from "@/components/blog/BlogCard";
 import { categories } from "@/lib/constants";
-import type { Post } from "@/lib/posts";
+import type { Post } from "@/lib/post-contract";
 
 const BlogList = ({ posts }: { posts: Post[] }) => {
   const [activeCategory, setActiveCategory] = useState("All");

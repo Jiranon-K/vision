@@ -43,7 +43,7 @@ export default function MetadataForm({
         <div className="flex items-center gap-4">
           <div className="w-32 h-20 rounded-[12px] border-2 border-brand-dark bg-brand-gray overflow-hidden flex items-center justify-center shrink-0">
             {coverImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
+              // eslint-disable-next-line @next/next/no-img-element -- previews a cover URL the Creator just typed, which next/image cannot optimize without a configured host
               <img
                 src={coverImage}
                 alt="Cover preview"
