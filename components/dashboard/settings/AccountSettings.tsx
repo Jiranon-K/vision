@@ -21,7 +21,7 @@ interface PasswordInputProps {
 function PasswordInput({ id, value, onChange, placeholder, error, disabled }: PasswordInputProps) {
   // Pinned to the Input's own h-12 box: its error text renders inside the same
   // wrapper, so full-height centering would drift once an error is showing.
-  const { type, toggle } = usePasswordToggle("inset-y-auto top-0 h-12");
+  const { type, toggle } = usePasswordToggle("bottom-auto h-12");
 
   return (
     <div className="relative">

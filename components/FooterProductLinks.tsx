@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { toast } from "sonner";
+import { comingSoonToast } from "@/lib/toast";
 
 // href: null = page doesn't exist yet — renders a button that toasts instead of a dead link.
 const productLinks: { name: string; href: string | null }[] = [
@@ -15,9 +15,7 @@ const linkClass =
 
 const FooterProductLinks = () => {
   const notReady = (name: string) =>
-    toast.info(`${name} isn't available yet`, {
-      description: "This page is coming soon.",
-    });
+    comingSoonToast(name, "This page is coming soon.");
 
   return (
     <ul className="flex flex-col gap-3">

@@ -16,9 +16,9 @@ export function usePasswordToggle(buttonClassName?: string) {
       type="button"
       onClick={() => setVisible((v) => !v)}
       aria-label={visible ? "Hide password" : "Show password"}
-      aria-pressed={visible}
       className={cn(
-        "absolute right-4 inset-y-0 flex items-center text-brand-dark/40 hover:text-brand-dark transition-colors cursor-pointer",
+        // top/bottom rather than inset-y so twMerge can actually override them.
+        "absolute right-4 top-0 bottom-0 flex items-center text-brand-dark/40 hover:text-brand-dark transition-colors cursor-pointer",
         buttonClassName
       )}
     >
