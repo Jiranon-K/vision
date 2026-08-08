@@ -52,8 +52,12 @@ export interface Post {
 }
 
 export function formatPostDate(date: string | number | Date): string {
-  if (typeof date === "string") return date;
-  return new Date(date).toLocaleDateString("en-US", {
+  const parsed = new Date(date);
+  // The wire always carries an ISO string, so this must parse rather than pass
+  // strings through — doing that shipped raw timestamps onto every Post card.
+  // Anything unparseable is returned as-is instead of rendering "Invalid Date".
+  if (Number.isNaN(parsed.getTime())) return String(date);
+  return parsed.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
