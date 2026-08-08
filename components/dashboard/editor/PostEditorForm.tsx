@@ -568,6 +568,10 @@ export default function PostEditorForm({
       <div className="pt-[60px] md:pt-16">
         <div
           ref={contentRef}
+          // The entrance animates this element's opacity from a ref, so there
+          // is no class a screenshot run can wait on. This attribute is that
+          // hook — see e2e/readme-shots.spec.ts.
+          data-editor-surface
           className="mx-auto flex min-h-[calc(100vh-60px)] max-w-5xl flex-col p-8 opacity-0 md:min-h-[calc(100vh-4rem)]"
         >
           {!canEdit && (

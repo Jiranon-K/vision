@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { EditorMode } from "./types";
 
@@ -33,27 +34,44 @@ export default function EditorModeSwitchSlot({
   const options = splitAvailable ? OPTIONS : OPTIONS.filter((o) => o.id !== "split");
   const activeIndex = options.findIndex((o) => o.id === mode);
 
+  // The labels are different lengths, so an equal-share thumb sits under the
+  // wrong words — it has to be measured from the button it belongs to.
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [thumb, setThumb] = useState<{ left: number; width: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = buttonRefs.current[activeIndex];
+      if (el) setThumb({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    measure();
+    // Fonts land after first paint and change every label's width with them.
+    document.fonts?.ready.then(measure).catch(() => {});
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [activeIndex, options.length]);
+
   return (
     <div
       role="radiogroup"
       aria-label="Editor view"
       className={`relative inline-flex shrink-0 items-center rounded-pill border border-border bg-surface-muted p-1 text-sm font-medium ${className}`}
     >
-      {/* The thumb — position driven purely by index, so hiding/showing the
-          Split option never resizes it, only moves where it lands. */}
-      <div
-        aria-hidden="true"
-        className={`absolute inset-y-1 rounded-pill bg-surface shadow-hard-sm transition-transform ${
-          prefersReducedMotion ? "duration-[0ms]" : ""
-        }`}
-        style={{
-          width: `calc((100% - 0.5rem) / ${options.length})`,
-          transform: `translateX(calc(${activeIndex} * 100%))`,
-        }}
-      />
+      {thumb && (
+        <div
+          aria-hidden="true"
+          className={`absolute inset-y-1 rounded-pill bg-surface shadow-hard-sm transition-[transform,width] ${
+            prefersReducedMotion ? "duration-[0ms]" : ""
+          }`}
+          style={{ width: thumb.width, transform: `translateX(${thumb.left}px)`, left: 0 }}
+        />
+      )}
       {options.map((option) => (
         <button
           key={option.id}
+          ref={(el) => {
+            buttonRefs.current[options.indexOf(option)] = el;
+          }}
           type="button"
           role="radio"
           aria-checked={mode === option.id}
