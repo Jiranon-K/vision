@@ -417,6 +417,7 @@ export default function PostEditorForm({
             excerpt={excerpt}
             onExcerptChange={setExcerpt}
             content={content}
+            postId={mode === "edit" ? postId : undefined}
           />
         </div>
       </div>

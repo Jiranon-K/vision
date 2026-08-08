@@ -8,6 +8,9 @@ export interface MetadataFormProps {
   excerpt: string;
   onExcerptChange: (excerpt: string) => void;
   content: string;
+  // Present once the Post has been saved, so an issued suggestion can be
+  // attributed to it. Absent for a Post that has never been saved.
+  postId?: string;
 }
 
 export interface ToolbarButton {

@@ -22,4 +22,11 @@ export const suggestExcerptSchema = z.object({
     .string()
     .min(1, 'Content is required')
     .max(50_000, 'Content is too long'),
+  // Present once the Post has been saved — lets the recorded suggestion be
+  // joined back to the Post for the adoption query. Absent for a Post that
+  // has never been saved.
+  postId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid post id')
+    .optional(),
 });

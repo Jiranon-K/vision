@@ -22,6 +22,7 @@ export default function MetadataForm({
   excerpt,
   onExcerptChange,
   content,
+  postId,
 }: MetadataFormProps) {
   const statusOptions = ["Draft", "Published"] as const;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,7 +55,7 @@ export default function MetadataForm({
       const res = await authFetch("/api/posts/suggest-excerpt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify(postId ? { content, postId } : { content }),
       });
 
       if (res.status === 429) {

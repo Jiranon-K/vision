@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
+import ExcerptSuggestion from '../models/ExcerptSuggestion';
 import { AuthRequest } from '../middleware/auth';
 import { postSchema, updatePostSchema, suggestExcerptSchema } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
@@ -116,6 +117,35 @@ export const getPostBySlug = async (
   }
 };
 
+// A Creator asks for a suggestion while writing, which is before the Post
+// exists — so the record has no Post to point at, and both thresholds in
+// docs/excerpt-suggestion-metrics.md would read near zero no matter how many
+// Creators used the button. Claiming those orphans for the Post the same
+// Creator just created is what keeps the numbers answerable.
+//
+// This is a write to the measurement collection, not a provider call, so ADR
+// 0002 still holds: creating a Post reaches no provider. It must never fail a
+// save either — the Post is already persisted by the time this runs.
+const ORPHAN_CLAIM_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+async function attachOrphanSuggestions(
+  creatorId: string,
+  postId: mongoose.Types.ObjectId
+): Promise<void> {
+  try {
+    await ExcerptSuggestion.updateMany(
+      {
+        creator: creatorId,
+        post: null,
+        createdAt: { $gte: new Date(Date.now() - ORPHAN_CLAIM_WINDOW_MS) },
+      },
+      { $set: { post: postId } }
+    );
+  } catch (error) {
+    console.error('Failed to attach orphan excerpt suggestions:', error);
+  }
+}
+
 export const createPost = async (
   req: AuthRequest,
   res: Response
@@ -156,6 +186,7 @@ export const createPost = async (
     });
 
     await post.save();
+    await attachOrphanSuggestions(req.user!.id, post._id as mongoose.Types.ObjectId);
     res.status(201).json(post);
   } catch (error) {
     console.error('Create post error:', error);
@@ -255,6 +286,28 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
+// Records that a suggestion was issued so the adoption and kept-unedited
+// thresholds (docs/excerpt-suggestion-metrics.md) can later be answered.
+// Never lets a write failure surface to the Creator — a lost measurement is
+// cheaper than a broken button.
+async function recordExcerptSuggestion(params: {
+  creatorId: string;
+  postId?: string;
+  text: string;
+  source: 'provider' | 'fallback';
+}): Promise<void> {
+  try {
+    await ExcerptSuggestion.create({
+      creator: params.creatorId,
+      post: params.postId,
+      text: params.text,
+      source: params.source,
+    });
+  } catch (error) {
+    console.error('Failed to record excerpt suggestion:', error);
+  }
+}
+
 export const suggestPostExcerpt = async (
   req: AuthRequest,
   res: Response
@@ -271,6 +324,8 @@ export const suggestPostExcerpt = async (
     return;
   }
 
+  const { content, postId } = validation.data;
+
   const generateText = resolveGenerateText();
   if (!generateText) {
     res.status(503).json({ error: 'Excerpt suggestions are not available' });
@@ -279,9 +334,15 @@ export const suggestPostExcerpt = async (
 
   try {
     const excerpt = await withTimeout(
-      suggestExcerpt(validation.data.content, generateText),
+      suggestExcerpt(content, generateText),
       SUGGESTION_TIMEOUT_MS
     );
+    await recordExcerptSuggestion({
+      creatorId: req.user!.id,
+      postId,
+      text: excerpt,
+      source: 'provider',
+    });
     // "provider": this suggestion came from the injected provider call, as
     // opposed to the derived fallback below.
     res.json({ excerpt, source: 'provider' });
@@ -291,7 +352,13 @@ export const suggestPostExcerpt = async (
     // mechanical derivation the save path uses, and say so via "source" so
     // the editor never passes a truncated string off as the AI's work.
     console.error('Suggest excerpt error, falling back to derived excerpt:', error);
-    const excerpt = deriveExcerpt(validation.data.content);
+    const excerpt = deriveExcerpt(content);
+    await recordExcerptSuggestion({
+      creatorId: req.user!.id,
+      postId,
+      text: excerpt,
+      source: 'fallback',
+    });
     res.json({ excerpt, source: 'fallback' });
   }
 };

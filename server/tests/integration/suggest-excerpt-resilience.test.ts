@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vites
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
+import ExcerptSuggestion from '../../src/models/ExcerptSuggestion';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
@@ -62,6 +63,13 @@ describe('POST /api/posts/suggest-excerpt — degraded provider', () => {
     expect(res.body.source).toBe('fallback');
     expect(typeof res.body.excerpt).toBe('string');
     expect(res.body.excerpt.length).toBeGreaterThan(0);
+
+    // The recorded source is the domain-level provenance of what was actually
+    // returned — "fallback" here, since the provider failed.
+    const records = await ExcerptSuggestion.find({});
+    expect(records).toHaveLength(1);
+    expect(records[0].source).toBe('fallback');
+    expect(records[0].text).toBe(res.body.excerpt);
   });
 
   it('succeeds with the derived excerpt when the provider hangs past the timeout', async () => {
@@ -89,6 +97,28 @@ describe('POST /api/posts/suggest-excerpt — degraded provider', () => {
     expect(res.status).toBe(200);
     expect(res.body.source).toBe('provider');
     expect(JSON.stringify(res.body)).not.toMatch(/google|stub|gemini/i);
+  });
+});
+
+describe('POST /api/posts/suggest-excerpt — recording never blocks the response', () => {
+  it('still returns the suggestion when the usage write fails', async () => {
+    generateTextMock.mockResolvedValue('A provider-made summary.');
+    const cookies = await register('record-write-fails@test.local');
+
+    const createSpy = vi
+      .spyOn(ExcerptSuggestion, 'create')
+      .mockRejectedValueOnce(new Error('write failed'));
+
+    const res = await request(app)
+      .post('/api/posts/suggest-excerpt')
+      .set('Cookie', cookies)
+      .send({ content: 'Content whose usage record fails to write.' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.source).toBe('provider');
+    expect(typeof res.body.excerpt).toBe('string');
+
+    createSpy.mockRestore();
   });
 });
 

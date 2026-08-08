@@ -67,13 +67,14 @@ cp server/.env.example server/.env
 
 ### `server/`
 
-| Command                         | Description                                     |
-| ------------------------------- | ----------------------------------------------- |
-| `bun dev`                       | API with `tsx watch` on `:3001`                 |
-| `bun run build` / `bun start`   | Compile to `dist/` / run the compiled build     |
-| `bun run test`                  | Vitest, against `mongodb-memory-server`         |
-| `bun run promote-admin <email>` | Promote an existing Creator to `admin`          |
-| `bun run backfill-owner`        | Assign `owner` to legacy Posts (needs an admin) |
+| Command                                          | Description                                                                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun dev`                                        | API with `tsx watch` on `:3001`                                                                                                          |
+| `bun run build` / `bun start`                    | Compile to `dist/` / run the compiled build                                                                                              |
+| `bun run test`                                   | Vitest, against `mongodb-memory-server`                                                                                                  |
+| `bun run promote-admin <email>`                  | Promote an existing Creator to `admin`                                                                                                   |
+| `bun run backfill-owner`                         | Assign `owner` to legacy Posts (needs an admin)                                                                                          |
+| `bun run excerpt-suggestion-metrics [--days=30]` | Report the Excerpt Suggestion adoption and kept-unedited thresholds — see [excerpt-suggestion-metrics.md](excerpt-suggestion-metrics.md) |
 
 ### `harness/`
 

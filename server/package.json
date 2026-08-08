@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "promote-admin": "tsx scripts/promote-admin.ts",
-    "backfill-owner": "tsx scripts/backfill-owner.ts"
+    "backfill-owner": "tsx scripts/backfill-owner.ts",
+    "excerpt-suggestion-metrics": "tsx scripts/excerpt-suggestion-metrics.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.39",
