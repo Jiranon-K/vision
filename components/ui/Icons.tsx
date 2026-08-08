@@ -188,3 +188,63 @@ export function ListIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+// The four that follow are the slash menu's icon set (ticket 07) — same
+// grid and weight as the toolbar's seven, fill=currentColor for the glyphs
+// that need a numeral rather than a stroke shape (LogoIcon and ListIcon's
+// dots already mix fill and stroke in this file, so this isn't a new idiom).
+
+export function Heading1Icon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor">
+        H1
+      </text>
+    </svg>
+  );
+}
+
+export function Heading2Icon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor">
+        H2
+      </text>
+    </svg>
+  );
+}
+
+export function Heading3Icon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="10" y="14.5" textAnchor="middle" fontSize="11" fontWeight="700" fill="currentColor">
+        H3
+      </text>
+    </svg>
+  );
+}
+
+export function OrderedListIcon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="1" y="7.5" fontSize="5" fontWeight="700" fill="currentColor">
+        1
+      </text>
+      <text x="1" y="12" fontSize="5" fontWeight="700" fill="currentColor">
+        2
+      </text>
+      <text x="1" y="16.5" fontSize="5" fontWeight="700" fill="currentColor">
+        3
+      </text>
+      <path d="M7 5.5h9.5M7 10h9.5M7 14.5h9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function HorizontalRuleIcon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 10h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}

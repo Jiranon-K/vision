@@ -49,3 +49,46 @@ export function applyHeading(value: string, cursorPos: number, level: 1 | 2 | 3)
 
   return { text, selectionStart: newPos, selectionEnd: newPos };
 }
+
+export interface SlashQuery {
+  lineStart: number;
+  query: string;
+}
+
+// Letters only: a space or punctuation is the Creator writing a path or a
+// sentence, not narrowing a menu, so it ends the query rather than filtering
+// on it.
+const SLASH_QUERY_CHARS = /^[a-zA-Z]*$/;
+
+// True only at the start of an otherwise-empty line: the slash must be the
+// line's first character, and the caret must sit at the end of the line
+// (nothing typed after it) so a `/` in the middle of a sentence never
+// triggers the menu.
+export function detectSlashQuery(value: string, cursorPos: number): SlashQuery | null {
+  const lineStart = value.lastIndexOf("\n", cursorPos - 1) + 1;
+  const lineEndIdx = value.indexOf("\n", cursorPos);
+  const lineEnd = lineEndIdx === -1 ? value.length : lineEndIdx;
+
+  if (cursorPos !== lineEnd) return null;
+  if (value[lineStart] !== "/") return null;
+
+  const query = value.slice(lineStart + 1, cursorPos);
+  if (!SLASH_QUERY_CHARS.test(query)) return null;
+
+  return { lineStart, query };
+}
+
+export interface BlockInsertion {
+  before: string;
+  after: string;
+}
+
+// Replaces the `/query` on the line (from lineStart through the caret) with
+// a block insertion. The caret lands at the end of `before`, which is where
+// a Creator continues typing for every option in the menu, including the
+// code block whose `after` closes the fence below them.
+export function applyBlockInsert(value: string, lineStart: number, cursorPos: number, insertion: BlockInsertion): TextEdit {
+  const text = value.slice(0, lineStart) + insertion.before + insertion.after + value.slice(cursorPos);
+  const pos = lineStart + insertion.before.length;
+  return { text, selectionStart: pos, selectionEnd: pos };
+}

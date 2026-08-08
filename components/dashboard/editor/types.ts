@@ -28,6 +28,17 @@ export interface MarkdownEditorProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
+export interface SlashMenuOption {
+  id: string;
+  label: string;
+  // Lowercased text the query is matched against — usually just the label,
+  // but gives room for a synonym (e.g. "hr" for Horizontal rule) without
+  // changing what's displayed.
+  keywords: string;
+  icon: React.ComponentType<{ className?: string }>;
+  insertion: { before: string; after: string };
+}
+
 export interface MarkdownPreviewProps {
   content: string;
 }

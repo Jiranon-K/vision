@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, type KeyboardEvent } from "react";
-import { applyHeading } from "./markdownOps";
-import type { MarkdownEditorProps } from "./types";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
+import { applyHeading, applyBlockInsert, detectSlashQuery, type SlashQuery } from "./markdownOps";
+import { getCaretCoordinates } from "./caretCoordinates";
+import SlashMenu, { filterSlashOptions, type SlashMenuAnchor } from "./SlashMenu";
+import type { MarkdownEditorProps, SlashMenuOption } from "./types";
 
 // Keyed by `code`, not `key`: holding Alt changes the character a digit row
 // key produces on several layouts, so `key` would be "1" for some Creators
@@ -18,12 +20,32 @@ const HEADING_LEVELS = { Digit1: 1, Digit2: 2, Digit3: 3 } as const;
 // Ctrl/Cmd+Alt+1..3 is what Google Docs and Notion bind headings to, for the
 // same reason.
 const HEADING_SHORTCUT_HINT =
-  "Ctrl+Alt+1, Ctrl+Alt+2 or Ctrl+Alt+3 (Cmd+Alt on Mac) applies a heading level to the current line. Typing # at the start of a line also works.";
+  "Ctrl+Alt+1, Ctrl+Alt+2 or Ctrl+Alt+3 (Cmd+Alt on Mac) applies a heading level to the current line. Typing # at the start of a line also works. Typing / at the start of an empty line opens a menu of block insertions.";
+
+const SLASH_LISTBOX_ID = "markdown-slash-menu";
+const optionId = (id: string) => `markdown-slash-option-${id}`;
 
 export default function MarkdownEditor({ value, onChange, textareaRef }: MarkdownEditorProps) {
   // Same pattern as MarkdownToolbar: onChange is a controlled update, so the
   // caret can only be repositioned once React has committed the new value.
   const pendingSelection = useRef<{ start: number; end: number } | null>(null);
+
+  const [slashQuery, setSlashQuery] = useState<SlashQuery | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [anchor, setAnchor] = useState<SlashMenuAnchor | null>(null);
+
+  const filteredOptions = useMemo(() => (slashQuery ? filterSlashOptions(slashQuery.query) : []), [slashQuery]);
+
+  // The filter narrowing the list is exactly when the previous activeIndex
+  // can point past the end of it (or at an option that scrolled away), so it
+  // resets to the top on every query change. Done during render (React's
+  // sanctioned pattern for resetting state derived from a changing value)
+  // rather than in an effect, which would cost an extra commit.
+  const lastQueryRef = useRef<string | undefined>(undefined);
+  if (slashQuery?.query !== lastQueryRef.current) {
+    lastQueryRef.current = slashQuery?.query;
+    if (activeIndex !== 0) setActiveIndex(0);
+  }
 
   useLayoutEffect(() => {
     const pending = pendingSelection.current;
@@ -34,8 +56,107 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
     textarea.setSelectionRange(pending.start, pending.end);
   }, [value, textareaRef]);
 
+  // Recomputes the menu's anchor (the caret's viewport position) whenever
+  // the slash query changes and while the window resizes or the textarea's
+  // own content scrolls under it — a stale anchor would leave the menu
+  // pinned to where the caret used to be.
+  useLayoutEffect(() => {
+    // Nothing to reposition when the menu is closed — `anchor` is only ever
+    // read while `slashQuery` is truthy (see the render below), so a stale
+    // value left in state here is inert rather than reset.
+    if (!slashQuery) return;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const updateAnchor = () => {
+      const rect = textarea.getBoundingClientRect();
+      const caret = getCaretCoordinates(textarea, slashQuery.lineStart);
+      setAnchor({ top: rect.top + caret.top, left: rect.left + caret.left, height: caret.height });
+    };
+
+    updateAnchor();
+    window.addEventListener("resize", updateAnchor);
+    window.addEventListener("scroll", updateAnchor, true);
+    return () => {
+      window.removeEventListener("resize", updateAnchor);
+      window.removeEventListener("scroll", updateAnchor, true);
+    };
+  }, [slashQuery, textareaRef]);
+
+  const syncSlashQuery = useCallback((text: string, cursorPos: number) => {
+    setSlashQuery(detectSlashQuery(text, cursorPos));
+  }, []);
+
+  const insertBlock = useCallback(
+    (option: SlashMenuOption) => {
+      const textarea = textareaRef.current;
+      if (!textarea || !slashQuery) return;
+
+      const { text, selectionStart, selectionEnd } = applyBlockInsert(
+        value,
+        slashQuery.lineStart,
+        textarea.selectionStart,
+        option.insertion
+      );
+
+      pendingSelection.current = { start: selectionStart, end: selectionEnd };
+      setSlashQuery(null);
+      onChange(text);
+    },
+    [slashQuery, value, onChange, textareaRef]
+  );
+
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLTextAreaElement>) => {
+      onChange(e.target.value);
+      syncSlashQuery(e.target.value, e.target.selectionStart);
+    },
+    [onChange, syncSlashQuery]
+  );
+
+  const handleSelect = useCallback(
+    (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+      // Fires on clicks and arrow-key moves too, not just typing — a Creator
+      // clicking away from the slash line closes the menu the same way
+      // Escape does, without touching what they typed.
+      syncSlashQuery(e.currentTarget.value, e.currentTarget.selectionStart);
+    },
+    [syncSlashQuery]
+  );
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // The menu's own keys are handled first and return early; anything
+      // else (letters, Backspace, punctuation) falls through untouched so
+      // the textarea keeps handling ordinary typing and the filter keeps
+      // seeing every keystroke. Mod+Alt+1-3 below never collides with these,
+      // so the two handlers can share one function without either
+      // swallowing the other.
+      if (slashQuery) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          e.preventDefault();
+          if (filteredOptions.length > 0) {
+            const delta = e.key === "ArrowDown" ? 1 : -1;
+            setActiveIndex((i) => (i + delta + filteredOptions.length) % filteredOptions.length);
+          }
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const option = filteredOptions[activeIndex];
+          if (option) insertBlock(option);
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          // Closes the popup only. The `/` and whatever follows it are
+          // already in the text as ordinary characters — a Creator writing
+          // about a file path types `/` and means it.
+          setSlashQuery(null);
+          return;
+        }
+      }
+
       const isMod = (e.metaKey || e.ctrlKey) && e.altKey && !e.shiftKey;
       if (!isMod || !(e.code in HEADING_LEVELS)) return;
 
@@ -47,8 +168,10 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
       pendingSelection.current = { start: selectionStart, end: selectionEnd };
       onChange(text);
     },
-    [value, onChange]
+    [slashQuery, filteredOptions, activeIndex, insertBlock, value, onChange]
   );
+
+  const activeOption = slashQuery ? filteredOptions[activeIndex] : undefined;
 
   return (
     <div className="h-full flex flex-col">
@@ -56,11 +179,15 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
         <textarea
           ref={textareaRef}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
+          onSelect={handleSelect}
           onKeyDown={handleKeyDown}
           placeholder="Write your post content in Markdown..."
           aria-describedby="markdown-heading-shortcuts"
           aria-keyshortcuts="Control+Alt+1 Control+Alt+2 Control+Alt+3 Meta+Alt+1 Meta+Alt+2 Meta+Alt+3"
+          aria-haspopup={slashQuery ? "listbox" : undefined}
+          aria-controls={slashQuery ? SLASH_LISTBOX_ID : undefined}
+          aria-activedescendant={activeOption ? optionId(activeOption.id) : undefined}
           className="w-full h-full min-h-[400px] p-4 rounded-2xl border-2 border-border-strong bg-surface resize-none focus:outline-none focus:border-border-strong font-mono text-sm leading-relaxed text-foreground placeholder:text-text-faint"
           spellCheck={false}
         />
@@ -68,6 +195,17 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
           {HEADING_SHORTCUT_HINT}
         </p>
       </div>
+      {slashQuery && anchor && (
+        <SlashMenu
+          options={filteredOptions}
+          activeIndex={activeIndex}
+          anchor={anchor}
+          onSelect={insertBlock}
+          onHover={setActiveIndex}
+          listboxId={SLASH_LISTBOX_ID}
+          getOptionId={optionId}
+        />
+      )}
     </div>
   );
 }
