@@ -8,6 +8,7 @@ import SplitEditor from "@/components/dashboard/editor/SplitEditor";
 import PostTitleField from "@/components/dashboard/editor/PostTitleField";
 import MetadataForm from "@/components/dashboard/editor/MetadataForm";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
+import PublishSheet from "@/components/dashboard/editor/PublishSheet";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -53,6 +54,12 @@ const EMPTY: PostDraftState = {
 // the token's *value* is duplicated here rather than its name.
 const ENTRANCE_DURATION = 300;
 const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
+
+// How long a Draft -> Published save holds on the editor, playing the top
+// bar's crossfade and accent wash, before leaving for the posts list.
+// Deliberately the slowest thing on this screen (ticket 04) — mirrored in
+// EditorTopBar's PUBLISH_WASH_MS since animejs there can't read this value.
+const PUBLISH_TRANSITION_HOLD_MS = 900;
 
 // Human-readable age for the restore dialog's "how old is this Draft"
 // requirement — coarser than AutosaveStatusSlot's live "Xs ago" clock since
@@ -112,6 +119,10 @@ export default function PostEditorForm({
 
   const [showRestore, setShowRestore] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [publishSheetOpen, setPublishSheetOpen] = useState(false);
+  // True for one brief window right after a Draft -> Published save lands —
+  // see handlePublishConfirm and PUBLISH_TRANSITION_HOLD_MS above.
+  const [statusAccent, setStatusAccent] = useState(false);
   // Gates the top bar's entrance — it waits for the writing surface's own
   // animation to start, so the arrival order is never a race.
   const [enterAnimation, setEnterAnimation] = useState(false);
@@ -145,6 +156,19 @@ export default function PostEditorForm({
   const isDirty = useMemo(
     () => ready && canEdit && !sameDraft(formState, baseline),
     [ready, canEdit, formState, baseline],
+  );
+
+  // What the Publish sheet's checklist reports, in the Creator's own terms
+  // rather than a field name — the server requires all three regardless of
+  // Draft or Published, so this is the same gate stated plainly instead of
+  // left for the confirm button's disabled state to imply (ticket 04).
+  const publishChecklist = useMemo(
+    () => [
+      { id: "title", label: "Give the Post a title", done: title.trim().length > 0 },
+      { id: "content", label: "Write something in the Post", done: content.trim().length > 0 },
+      { id: "category", label: "Choose a Category", done: category.trim().length > 0 },
+    ],
+    [title, content, category],
   );
 
   // The chip's "last commit" is the more recent of the local autosave and
@@ -341,10 +365,15 @@ export default function PostEditorForm({
   }, [enterAnimation, prefersReducedMotion]);
 
   // --- Save -------------------------------------------------------------------
-  const handleSave = async () => {
+  // Writes the Post exactly as it stands right now. Shared by the top bar's
+  // plain Save and the Publish sheet's confirm — the two never fire the same
+  // request for different reasons, they fire the same request for whatever
+  // `status` currently holds. What differs is only what each caller does
+  // once it resolves (see handleSave / handlePublishConfirm below).
+  const persist = async (): Promise<boolean> => {
     if (!canEdit) {
       toast.error("You don't have permission to edit this Post.");
-      return;
+      return false;
     }
 
     const parsed = postFormSchema.safeParse({
@@ -356,7 +385,7 @@ export default function PostEditorForm({
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง");
-      return;
+      return false;
     }
 
     setSaving(true);
@@ -371,10 +400,12 @@ export default function PostEditorForm({
       });
 
       if (res.ok) {
-        skipUnload.current = true;
         clearDraft();
-        router.replace("/dashboard/posts");
-        return;
+        // Keeps `isDirty` (and the beforeunload guard) honest for the
+        // animated Publish path below, which stays on this page briefly
+        // instead of navigating away the instant the request resolves.
+        setBaseline({ title, content, category, status, excerpt, coverImage });
+        return true;
       }
 
       const data = await res.json().catch(() => ({}));
@@ -382,10 +413,49 @@ export default function PostEditorForm({
         data.error ||
           (mode === "edit" ? "Failed to update post" : "Failed to save post"),
       );
+      return false;
     } catch {
       toast.error("Something went wrong");
+      return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const leaveForPostsList = () => {
+    skipUnload.current = true;
+    router.replace("/dashboard/posts");
+  };
+
+  // The top bar's plain Save — persists a Draft (or re-saves a Published
+  // Post) without touching status and without ever opening the Publish
+  // sheet. This is what makes "save a Draft to the server" and "Publish"
+  // two different controls rather than the same one pressed twice.
+  const handleSave = async () => {
+    if (await persist()) leaveForPostsList();
+  };
+
+  // The Publish sheet's confirm. Always just persists — Category and
+  // Draft/Published were already decided by the sheet's own controls,
+  // which write straight into `category` / `status` above. The only thing
+  // this function decides is whether the save that just landed was a real
+  // Draft -> Published transition, which is the one case that earns the
+  // top bar's slow crossfade before leaving.
+  const handlePublishConfirm = async () => {
+    const wasPublished = baseline.status === "Published";
+    if (!(await persist())) return;
+
+    setPublishSheetOpen(false);
+    const justPublished = !wasPublished && status === "Published";
+
+    if (justPublished) {
+      setStatusAccent(true);
+      window.setTimeout(() => {
+        setStatusAccent(false);
+        leaveForPostsList();
+      }, PUBLISH_TRANSITION_HOLD_MS);
+    } else {
+      leaveForPostsList();
     }
   };
 
@@ -458,15 +528,28 @@ export default function PostEditorForm({
     );
   }
 
+  // What the sheet's confirm button says: "Publish" only when this save
+  // would actually be the Draft -> Published transition, "Save" when a
+  // Published Post is simply being re-saved, "Save Draft" otherwise — so
+  // choosing Draft in the sheet never reads as an act of publishing.
+  const publishConfirmLabel =
+    status === "Published"
+      ? baseline.status === "Published"
+        ? "Save"
+        : "Publish"
+      : "Save Draft";
+
   return (
     <div ref={pageRef} className="min-h-screen bg-surface-muted">
       <EditorTopBar
         entering={enterAnimation}
         onBack={handleBack}
-        saveLabel={saving ? "Saving..." : mode === "edit" ? "Update Post" : "Save Post"}
+        status={status}
+        statusAccent={statusAccent}
         saving={saving}
         showSave={canEdit}
         onSave={handleSave}
+        onOpenPublish={() => setPublishSheetOpen(true)}
         mode={editorMode}
         onModeChange={setEditorMode}
         splitAvailable={splitAvailable}
@@ -518,10 +601,6 @@ export default function PostEditorForm({
               <div className="rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-hard">
                 <h3 className="mb-4 text-lg font-bold text-foreground">Post Settings</h3>
                 <MetadataForm
-                  category={category}
-                  onCategoryChange={setCategory}
-                  status={status}
-                  onStatusChange={setStatus}
                   coverImage={coverImage}
                   onCoverImageChange={setCoverImage}
                   excerpt={excerpt}
@@ -559,6 +638,19 @@ export default function PostEditorForm({
         danger
         onConfirm={confirmBack}
         onCancel={() => setShowBackConfirm(false)}
+      />
+
+      <PublishSheet
+        open={publishSheetOpen}
+        onClose={() => setPublishSheetOpen(false)}
+        category={category}
+        onCategoryChange={setCategory}
+        status={status}
+        onStatusChange={setStatus}
+        checklist={publishChecklist}
+        confirmLabel={publishConfirmLabel}
+        pending={saving}
+        onConfirm={handlePublishConfirm}
       />
     </div>
   );

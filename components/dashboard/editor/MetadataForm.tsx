@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { categories } from "@/lib/constants";
 import { apiFetch, authFetch } from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -13,10 +12,6 @@ import type { MetadataFormProps } from "./types";
 const MIN_SUGGESTION_CONTENT_LENGTH = 40;
 
 export default function MetadataForm({
-  category,
-  onCategoryChange,
-  status,
-  onStatusChange,
   coverImage,
   onCoverImageChange,
   excerpt,
@@ -24,7 +19,6 @@ export default function MetadataForm({
   content,
   postId,
 }: MetadataFormProps) {
-  const statusOptions = ["Draft", "Published"] as const;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Single source of truth for whether this deployment has the capability at
@@ -193,91 +187,6 @@ export default function MetadataForm({
         <p className="mt-1 text-right text-xs text-brand-dark/40">
           {excerpt.length}/500
         </p>
-      </div>
-
-      <div className="flex flex-wrap gap-4 items-end">
-        <div className="flex-1 min-w-[160px]">
-          <label
-            htmlFor="post-category"
-            className="block text-sm font-medium text-brand-dark/60 mb-2"
-          >
-            Category
-          </label>
-          <div className="relative">
-            <select
-              id="post-category"
-              value={category}
-              onChange={(e) => onCategoryChange(e.target.value)}
-              className="w-full appearance-none px-4 py-3 rounded-[12px] border-2 border-brand-dark bg-white focus:outline-none focus:border-brand-dark font-medium text-brand-dark cursor-pointer pr-10"
-            >
-              <option value="">Select category</option>
-              {categories
-                .filter((c) => c !== "All")
-                .map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-            </select>
-            <svg
-              className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand-dark/60"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
-
-        <div className="flex-1 min-w-[160px]">
-          <label
-            htmlFor="post-status"
-            className="block text-sm font-medium text-brand-dark/60 mb-2"
-          >
-            Status
-          </label>
-          <div className="relative">
-            <select
-              id="post-status"
-              value={status}
-              onChange={(e) =>
-                onStatusChange(e.target.value as "Draft" | "Published")
-              }
-              className="w-full appearance-none px-4 py-3 rounded-[12px] border-2 border-brand-dark bg-white focus:outline-none focus:border-brand-dark font-medium text-brand-dark cursor-pointer pr-10"
-            >
-              {statusOptions.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-            <svg
-              className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-brand-dark/60"
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M4 6L8 10L12 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </div>
       </div>
 
       <ConfirmDialog

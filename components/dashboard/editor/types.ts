@@ -1,8 +1,4 @@
 export interface MetadataFormProps {
-  category: string;
-  onCategoryChange: (category: string) => void;
-  status: "Draft" | "Published";
-  onStatusChange: (status: "Draft" | "Published") => void;
   coverImage: string;
   onCoverImageChange: (coverImage: string) => void;
   excerpt: string;

@@ -3,32 +3,19 @@
 import { Button } from "@/components/ui/button";
 
 export interface PublishActionProps {
-  label: string;
-  pending: boolean;
   onClick: () => void;
 }
 
-// Named for what ticket 04 ("Publishing becomes a decision") turns this
-// into — a control that opens the Publish slide-over. Until that lands, it
-// keeps today's behaviour exactly: it saves the Post, full stop. `secondary`
-// carries --elevation-hard because this is the one control on the bar whose
-// press has a real effect on the Post. Ticket 08: a Creator who can't save
-// doesn't get this control at all — EditorTopBar simply doesn't render it —
-// so there is no `disabled` state to represent here.
-export default function PublishAction({
-  label,
-  pending,
-  onClick,
-}: PublishActionProps) {
+// Ticket 04: Publish no longer saves anything itself — it opens the sheet
+// where Category and Draft/Published are actually decided. `secondary`
+// still carries --elevation-hard: the design's elevation rule reserves the
+// hard shadow for surfaces that do something irreversible or modal, and
+// opening that sheet is the modal half of that pair. Ticket 08: a Creator
+// who can't save doesn't get this control at all — EditorTopBar simply
+// doesn't render it — so there is no `disabled` state to represent here.
+export default function PublishAction({ onClick }: PublishActionProps) {
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      size="sm"
-      onClick={onClick}
-      loading={pending}
-      loadingText="Saving..."
-    >
+    <Button type="button" variant="secondary" size="sm" onClick={onClick}>
       <svg
         width="18"
         height="18"
@@ -52,7 +39,7 @@ export default function PublishAction({
           strokeLinejoin="round"
         />
       </svg>
-      {label}
+      Publish
     </Button>
   );
 }

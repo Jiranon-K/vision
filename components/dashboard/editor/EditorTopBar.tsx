@@ -1,13 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import PublishAction from "./PublishAction";
+import SaveAction from "./SaveAction";
+import PostStatusSlot from "./PostStatusSlot";
 import AutosaveStatusSlot, { type AutosaveStatus } from "./AutosaveStatusSlot";
 import EditorMeterSlot from "./EditorMeterSlot";
 import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
 import SaveNowAction from "./SaveNowAction";
 import type { EditorMode } from "./types";
+
+// Mirrors the hold PostEditorForm gives a Draft -> Published transition
+// before it navigates away — the value (not the token) has to be duplicated
+// because animejs can't read app/globals.css's custom properties. Kept
+// deliberately the longest-running motion in the bar: ticket 04 calls this
+// out as the one action here with consequences outside the screen.
+const PUBLISH_WASH_MS = 900;
 
 export interface EditorTopBarProps {
   /** Flips true once the writing surface has started its own entrance —
@@ -16,13 +26,21 @@ export interface EditorTopBarProps {
   entering: boolean;
   onBack: () => void;
   backLabel?: string;
-  saveLabel: string;
+  status: "Draft" | "Published";
+  /** True for one brief window right after a Draft -> Published save lands
+   *  — drives the crossfade's accent wash (or, under reduced motion, the
+   *  static accent rule) across the bar. PostEditorForm owns the timer. */
+  statusAccent: boolean;
   saving: boolean;
-  /** Whether Publish appears at all. A Creator who can't save gets no
-   *  Publish control rather than a disabled one — a control that can never
+  /** Whether Save and Publish appear at all. A Creator who can't save gets
+   *  neither control rather than a disabled one — a control that can never
    *  be used shouldn't occupy the eye (ticket 08). */
   showSave: boolean;
+  /** Persists the Post exactly as it stands, status untouched — distinct
+   *  from `onOpenPublish` so a Draft can be saved to the server without
+   *  ever reaching the Publish sheet (ticket 04). */
   onSave: () => void;
+  onOpenPublish: () => void;
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
   splitAvailable: boolean;
@@ -70,10 +88,12 @@ export default function EditorTopBar({
   entering,
   onBack,
   backLabel = "Back to Posts",
-  saveLabel,
+  status,
+  statusAccent,
   saving,
   showSave,
   onSave,
+  onOpenPublish,
   mode,
   onModeChange,
   splitAvailable,
@@ -86,6 +106,17 @@ export default function EditorTopBar({
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(false);
   const [entered, setEntered] = useState(false);
+  const washRef = useRef<HTMLDivElement>(null);
+
+  // The accent wash itself — a translucent sweep, not the static reduced-
+  // motion rule below. Runs once per `statusAccent` pulse from false -> true.
+  useEffect(() => {
+    if (!statusAccent || prefersReducedMotion) return;
+    const el = washRef.current;
+    if (!el) return;
+    set(el, { opacity: 0 });
+    animate(el, { opacity: [0, 0.35, 0], duration: PUBLISH_WASH_MS, ease: "linear" });
+  }, [statusAccent, prefersReducedMotion]);
 
   // Entrance: opacity only, no translate, ~120ms after the writing surface
   // starts (or instantly, at final opacity, under reduced motion).
@@ -157,6 +188,15 @@ export default function EditorTopBar({
           : "duration-[var(--duration-slow)] ease-[var(--ease-out)]"
       } ${visible ? "opacity-100" : "pointer-events-none opacity-0"}`}
     >
+      {statusAccent &&
+        (prefersReducedMotion ? (
+          // The reduced-motion state: no sweep, just a held rule at the
+          // bar's lower edge for the same window the full wash would run.
+          <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-accent" />
+        ) : (
+          <div ref={washRef} aria-hidden="true" className="absolute inset-0 bg-accent opacity-0" />
+        ))}
+
       <button
         type="button"
         onClick={onBack}
@@ -183,6 +223,7 @@ export default function EditorTopBar({
       </button>
 
       <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+        <PostStatusSlot status={status} />
         <AutosaveStatusSlot status={autosaveStatus} lastSavedAt={autosaveLastSavedAt} />
         <EditorMeterSlot content={content} />
       </div>
@@ -194,7 +235,12 @@ export default function EditorTopBar({
           splitAvailable={splitAvailable}
         />
         <SaveNowAction visible={autosaveDirty && !saving} onClick={onSaveNow} />
-        {showSave && <PublishAction label={saveLabel} pending={saving} onClick={onSave} />}
+        {showSave && (
+          <>
+            <SaveAction saving={saving} onClick={onSave} />
+            <PublishAction onClick={onOpenPublish} />
+          </>
+        )}
       </div>
     </div>
   );
