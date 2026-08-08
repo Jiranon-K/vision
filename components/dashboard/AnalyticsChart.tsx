@@ -74,13 +74,15 @@ export default function AnalyticsChart({ data }: AnalyticsChartProps) {
     return (
       <div className="bg-white rounded-[28px] border-2 border-brand-dark p-8 shadow-[6px_6px_0px_0px_#191A23]">
         <h3 className="text-lg font-bold text-brand-dark mb-6">Weekly Views Trend</h3>
-        <div className="flex items-end justify-between gap-3 h-40">
+        <div className="flex justify-between gap-3 h-40">
           {chartData.map((day, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-1">
-              <div
-                className="w-full bg-brand-lime border-2 border-brand-dark rounded-t-lg"
-                style={{ height: `${(day.value / maxValue) * 100}%` }}
-              />
+            <div key={i} className="flex flex-col items-center gap-2 flex-1 h-full">
+              <div className="w-full flex-1 flex items-end">
+                <div
+                  className="w-full bg-brand-lime border-2 border-brand-dark rounded-t-lg"
+                  style={{ height: `${(day.value / maxValue) * 100}%` }}
+                />
+              </div>
               <span className="text-xs text-brand-dark/50 font-medium">{day.label}</span>
             </div>
           ))}
@@ -95,13 +97,18 @@ export default function AnalyticsChart({ data }: AnalyticsChartProps) {
       className="analytics-chart bg-white rounded-[28px] border-2 border-brand-dark p-8 shadow-[6px_6px_0px_0px_#191A23]"
     >
       <h3 className="text-lg font-bold text-brand-dark mb-6">Weekly Views Trend</h3>
-      <div className="flex items-end justify-between gap-3 h-40">
+      <div className="flex justify-between gap-3 h-40">
         {chartData.map((day, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 flex-1">
-            <div
-              className="chart-bar w-full bg-brand-lime border-2 border-brand-dark rounded-t-lg"
-              style={{ height: `${(day.value / maxValue) * 100}%` }}
-            />
+          <div key={i} className="flex flex-col items-center gap-2 flex-1 h-full">
+            {/* The bar sizes itself as a percentage, so its parent needs a
+                definite height — a bare `items-end` column collapses to the
+                bar's border and the chart renders flat. */}
+            <div className="w-full flex-1 flex items-end">
+              <div
+                className="chart-bar w-full bg-brand-lime border-2 border-brand-dark rounded-t-lg"
+                style={{ height: `${(day.value / maxValue) * 100}%` }}
+              />
+            </div>
             <span className="text-xs text-brand-dark/50 font-medium">{day.label}</span>
           </div>
         ))}
