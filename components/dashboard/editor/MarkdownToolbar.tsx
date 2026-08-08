@@ -1,55 +1,84 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
+import { BoldIcon, ItalicIcon, LinkIcon, ImageIcon, CodeIcon, QuoteIcon, ListIcon } from "@/components/ui/Icons";
+import { applyWrap } from "./markdownOps";
 import type { ToolbarButton, MarkdownToolbarProps } from "./types";
 
+// Ten buttons become seven under direction 1b's rule: a slot is earned only
+// by Markdown that needs a second value the Creator can't type in flow (a
+// URL, a path) or that wraps a selection. Headings fail that test — `#` is
+// faster to type than a button is to aim at — so they move to the keyboard
+// (see the Ctrl/Cmd+1-3 handler in MarkdownEditor).
 const toolbarButtons: ToolbarButton[] = [
-  { id: "bold", label: "Bold", icon: "B", syntax: { prefix: "**", suffix: "**", placeholder: "bold text" } },
-  { id: "italic", label: "Italic", icon: "I", syntax: { prefix: "*", suffix: "*", placeholder: "italic text" } },
-  { id: "h1", label: "Heading 1", icon: "H1", syntax: { prefix: "# ", suffix: "", placeholder: "Heading" } },
-  { id: "h2", label: "Heading 2", icon: "H2", syntax: { prefix: "## ", suffix: "", placeholder: "Heading" } },
-  { id: "h3", label: "Heading 3", icon: "H3", syntax: { prefix: "### ", suffix: "", placeholder: "Heading" } },
-  { id: "link", label: "Link", icon: "🔗", syntax: { prefix: "[", suffix: "](url)", placeholder: "link text" } },
-  { id: "image", label: "Image", icon: "🖼", syntax: { prefix: "![", suffix: "](url)", placeholder: "alt text" } },
-  { id: "code", label: "Code", icon: "<>", syntax: { prefix: "`", suffix: "`", placeholder: "code" } },
-  { id: "quote", label: "Quote", icon: '"', syntax: { prefix: "> ", suffix: "", placeholder: "quote" } },
-  { id: "list", label: "List", icon: "•", syntax: { prefix: "- ", suffix: "", placeholder: "list item" } },
+  { id: "bold", label: "Bold", icon: BoldIcon, syntax: { prefix: "**", suffix: "**", placeholder: "bold text" } },
+  { id: "italic", label: "Italic", icon: ItalicIcon, syntax: { prefix: "*", suffix: "*", placeholder: "italic text" } },
+  { id: "link", label: "Link", icon: LinkIcon, syntax: { prefix: "[", suffix: "](url)", placeholder: "link text" } },
+  { id: "image", label: "Image", icon: ImageIcon, syntax: { prefix: "![", suffix: "](url)", placeholder: "alt text" } },
+  { id: "code", label: "Code", icon: CodeIcon, syntax: { prefix: "`", suffix: "`", placeholder: "code" } },
+  { id: "quote", label: "Quote", icon: QuoteIcon, syntax: { prefix: "> ", suffix: "", placeholder: "quote" } },
+  { id: "list", label: "List", icon: ListIcon, syntax: { prefix: "- ", suffix: "", placeholder: "list item" } },
 ];
 
-export default function MarkdownToolbar({ textareaRef }: MarkdownToolbarProps) {
-  const insertSyntax = useCallback((prefix: string, suffix: string, placeholder: string) => {
+export default function MarkdownToolbar({ textareaRef, value, onChange }: MarkdownToolbarProps) {
+  // The insertion is a controlled update (onChange), not a direct DOM
+  // mutation — but setSelectionRange has to run *after* React commits the
+  // new value to the textarea, or it lands on the pre-edit text. This ref
+  // carries the target selection across that gap to the layout effect below.
+  const pendingSelection = useRef<{ start: number; end: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const pending = pendingSelection.current;
+    if (!pending) return;
+    pendingSelection.current = null;
     const textarea = textareaRef.current;
     if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const selectedText = text.substring(start, end) || placeholder;
-
-    const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
-    textarea.value = newText;
-
-    const newCursorPos = start + prefix.length + selectedText.length;
-    textarea.setSelectionRange(start + prefix.length, start + prefix.length + selectedText.length);
+    textarea.setSelectionRange(pending.start, pending.end);
     textarea.focus();
+  }, [value, textareaRef]);
 
-    const event = new Event("input", { bubbles: true });
-    textarea.dispatchEvent(event);
-  }, [textareaRef]);
+  const insertSyntax = useCallback(
+    (prefix: string, suffix: string, placeholder: string) => {
+      const textarea = textareaRef.current;
+      if (!textarea) return;
+
+      const { text, selectionStart, selectionEnd } = applyWrap(
+        value,
+        textarea.selectionStart,
+        textarea.selectionEnd,
+        prefix,
+        suffix,
+        placeholder
+      );
+
+      pendingSelection.current = { start: selectionStart, end: selectionEnd };
+      onChange(text);
+    },
+    [textareaRef, value, onChange]
+  );
 
   return (
-    <div className="flex flex-wrap gap-1 p-2 bg-brand-gray rounded-[12px] border-2 border-brand-dark/20 mb-2">
-      {toolbarButtons.map((btn) => (
-        <button
-          key={btn.id}
-          type="button"
-          onClick={() => insertSyntax(btn.syntax.prefix, btn.syntax.suffix, btn.syntax.placeholder || "")}
-          title={btn.label}
-          className="w-9 h-9 flex items-center justify-center rounded-[8px] bg-white border-2 border-brand-dark/20 text-brand-dark font-bold text-sm hover:border-brand-dark hover:bg-brand-lime transition-all duration-200"
-        >
-          {btn.icon}
-        </button>
-      ))}
+    // flex-nowrap + overflow-x-auto instead of flex-wrap: at mobile widths
+    // this scrolls sideways rather than dropping to a second row of
+    // half-width targets, which is what the ticket rules out.
+    <div className="mb-2 flex flex-nowrap items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface-muted p-1.5">
+      {toolbarButtons.map((btn) => {
+        const Icon = btn.icon;
+        return (
+          <button
+            key={btn.id}
+            type="button"
+            onClick={() => insertSyntax(btn.syntax.prefix, btn.syntax.suffix, btn.syntax.placeholder || "")}
+            aria-label={btn.label}
+            title={btn.label}
+            // size-10 (40px) is a genuinely tappable target; no focus:outline
+            // or ring override here, so the global *:focus-visible ring shows.
+            className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent text-foreground transition-colors hover:border-border hover:bg-surface active:bg-state-active"
+          >
+            <Icon className="size-5" />
+          </button>
+        );
+      })}
     </div>
   );
 }

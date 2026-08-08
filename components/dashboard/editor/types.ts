@@ -16,12 +16,14 @@ export interface MetadataFormProps {
 export interface ToolbarButton {
   id: string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   syntax: { prefix: string; suffix: string; placeholder?: string };
 }
 
 export interface MarkdownToolbarProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 export interface MarkdownEditorProps {

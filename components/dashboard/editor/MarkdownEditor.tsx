@@ -1,8 +1,55 @@
 "use client";
 
+import { useCallback, useLayoutEffect, useRef, type KeyboardEvent } from "react";
+import { applyHeading } from "./markdownOps";
 import type { MarkdownEditorProps } from "./types";
 
+// Keyed by `code`, not `key`: holding Alt changes the character a digit row
+// key produces on several layouts, so `key` would be "1" for some Creators
+// and something else entirely for others. `code` is the physical key.
+const HEADING_LEVELS = { Digit1: 1, Digit2: 2, Digit3: 3 } as const;
+
+// Surfaced to assistive tech via aria-describedby below, since the buttons
+// that used to carry H1/H2/H3 are gone — the shortcut has to be discoverable
+// from the surface itself now.
+// Alt is not decoration. Ctrl/Cmd+1..3 is the browser's own accelerator for
+// switching to tab N, intercepted above the page — a Creator pressing it would
+// lose the editor rather than gain a heading, and preventDefault never runs.
+// Ctrl/Cmd+Alt+1..3 is what Google Docs and Notion bind headings to, for the
+// same reason.
+const HEADING_SHORTCUT_HINT =
+  "Ctrl+Alt+1, Ctrl+Alt+2 or Ctrl+Alt+3 (Cmd+Alt on Mac) applies a heading level to the current line. Typing # at the start of a line also works.";
+
 export default function MarkdownEditor({ value, onChange, textareaRef }: MarkdownEditorProps) {
+  // Same pattern as MarkdownToolbar: onChange is a controlled update, so the
+  // caret can only be repositioned once React has committed the new value.
+  const pendingSelection = useRef<{ start: number; end: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const pending = pendingSelection.current;
+    if (!pending) return;
+    pendingSelection.current = null;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.setSelectionRange(pending.start, pending.end);
+  }, [value, textareaRef]);
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      const isMod = (e.metaKey || e.ctrlKey) && e.altKey && !e.shiftKey;
+      if (!isMod || !(e.code in HEADING_LEVELS)) return;
+
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const level = HEADING_LEVELS[e.code as keyof typeof HEADING_LEVELS];
+      const { text, selectionStart, selectionEnd } = applyHeading(value, textarea.selectionStart, level);
+
+      pendingSelection.current = { start: selectionStart, end: selectionEnd };
+      onChange(text);
+    },
+    [value, onChange]
+  );
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1">
@@ -10,10 +57,16 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
           ref={textareaRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Write your post content in Markdown..."
+          aria-describedby="markdown-heading-shortcuts"
+          aria-keyshortcuts="Control+Alt+1 Control+Alt+2 Control+Alt+3 Meta+Alt+1 Meta+Alt+2 Meta+Alt+3"
           className="w-full h-full min-h-[400px] p-4 rounded-2xl border-2 border-border-strong bg-surface resize-none focus:outline-none focus:border-border-strong font-mono text-sm leading-relaxed text-foreground placeholder:text-text-faint"
           spellCheck={false}
         />
+        <p id="markdown-heading-shortcuts" className="sr-only">
+          {HEADING_SHORTCUT_HINT}
+        </p>
       </div>
     </div>
   );

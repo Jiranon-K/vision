@@ -53,7 +53,7 @@ export default function SplitEditor({ value, onChange, mode }: SplitEditorProps)
 
   return (
     <div className="flex h-full flex-col">
-      <MarkdownToolbar textareaRef={textareaRef} />
+      <MarkdownToolbar textareaRef={textareaRef} value={value} onChange={onChange} />
 
       <div className="flex flex-1 gap-4 min-h-0">
         {mode !== "preview" && (
