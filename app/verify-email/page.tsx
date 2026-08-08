@@ -1,22 +1,40 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { verifyEmailRequest } from "@/lib/api";
+import { toast } from "sonner";
+import { verifyEmailRequest, resendVerificationRequest } from "@/lib/api";
+import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { AuthResult } from "@/components/auth/AuthResult";
+import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
+import { Spinner } from "@/components/ui/spinner";
 
-type State = "loading" | "success" | "error";
+type Phase = "verifying" | "verified" | "failed";
 
-function VerifyInner() {
-  const params = useSearchParams();
-  const token = params.get("token") || "";
-  const [state, setState] = useState<State>(token ? "loading" : "error");
-  const [errorMsg, setErrorMsg] = useState(token ? "" : "Missing verification token");
+const CROSS_LINK = {
+  note: "Wrong address?",
+  label: "Use another email",
+  href: "/register",
+};
+
+function VerifyEmailInner() {
+  const token = useSearchParams().get("token") ?? "";
+
+  const [phase, setPhase] = useState<Phase>(token ? "verifying" : "failed");
+  const [banner, setBanner] = useState<AuthBanner | null>(
+    token
+      ? null
+      : {
+          tone: "error",
+          text: "This link is missing its verification token.",
+        }
+  );
+  const [resending, setResending] = useState(false);
   const didRun = useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    if (didRun.current) return;
+    if (!token || didRun.current) return;
     didRun.current = true;
 
     (async () => {
@@ -24,75 +42,110 @@ function VerifyInner() {
         const res = await verifyEmailRequest(token);
         const data = await res.json();
         if (res.ok) {
-          setState("success");
-        } else {
-          setState("error");
-          setErrorMsg(data.error || "Verification failed");
+          setPhase("verified");
+          return;
         }
+        setPhase("failed");
+        setBanner({
+          tone: "error",
+          text: data.error || "We could not verify this address.",
+        });
       } catch {
-        setState("error");
-        setErrorMsg("Unable to reach server");
+        setPhase("failed");
+        setBanner({ tone: "neutral", text: SERVICE_UNAVAILABLE });
       }
     })();
   }, [token]);
 
-  if (state === "loading") {
+  const handleResend = async () => {
+    if (resending) return;
+    setResending(true);
+    try {
+      const res = await resendVerificationRequest();
+      if (!res.ok) {
+        toast.error("Sign in first, then we can resend the verification email.");
+        return;
+      }
+      toast.success("Verification email sent.");
+    } catch {
+      toast.error(SERVICE_UNAVAILABLE);
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const resendLabel = resending ? "Sending…" : "Resend verification email";
+
+  if (phase === "verified") {
     return (
-      <div className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0px_0px_#000] rotate-1 text-center">
-        <p className="text-brand-dark font-black uppercase">Verifying...</p>
-      </div>
+      <AuthShell
+        heading="Email verified"
+        sub="Your address is confirmed. Everything is unlocked."
+      >
+        <AuthResult ctaLabel="Continue" ctaHref="/dashboard" />
+      </AuthShell>
     );
   }
 
-  if (state === "success") {
+  if (phase === "verifying") {
     return (
-      <div className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0px_0px_#000] rotate-1 text-center">
-        <h2 className="text-2xl font-black text-brand-dark mb-4">EMAIL VERIFIED ✓</h2>
-        <p className="text-brand-dark/80 font-bold text-sm mb-6">
-          Your email is confirmed. You can now access all features.
-        </p>
-        <Link
-          href="/dashboard"
-          className="block w-full text-center py-3 bg-yellow-400 border-[3px] border-black font-black text-brand-dark shadow-[6px_6px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 uppercase"
-        >
-          Continue to dashboard
-        </Link>
-      </div>
+      <AuthShell
+        heading="Verify your email"
+        sub="Confirming your address — this only takes a moment."
+        crossLink={CROSS_LINK}
+      >
+        <div className="mt-7 flex flex-col gap-4">
+          <div className="flex items-center gap-3 text-text-muted">
+            <Spinner size="sm" label={null} />
+            <span className="font-mono text-[11px] uppercase tracking-[0.16em]">
+              Verifying
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleResend}
+            className="w-fit text-[13.5px] text-text-muted hover:text-foreground"
+          >
+            {resendLabel}
+          </button>
+        </div>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0px_0px_#000] rotate-1 text-center">
-      <h2 className="text-2xl font-black text-brand-dark mb-4">VERIFICATION FAILED</h2>
-      <p className="text-brand-dark/80 font-bold text-sm mb-6">{errorMsg}</p>
-      <Link
-        href="/dashboard"
-        className="block w-full text-center py-3 bg-yellow-400 border-[3px] border-black font-black text-brand-dark shadow-[6px_6px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 uppercase"
-      >
-        Go to dashboard
-      </Link>
-    </div>
+    <AuthShell
+      heading="Verify your email"
+      sub="We could not confirm this address from the link you followed."
+      crossLink={CROSS_LINK}
+    >
+      <AuthFormAlert banner={banner} />
+
+      <AuthResult
+        ctaLabel="Back to sign in"
+        ctaHref="/login"
+        altLabel={resendLabel}
+        onAltClick={handleResend}
+      />
+    </AuthShell>
   );
 }
 
 export default function VerifyEmailPage() {
   return (
-    <div
-      className="min-h-screen bg-[#D4FF3F] flex items-center justify-center p-4"
-      style={{ backgroundImage: "radial-gradient(#000 10%, transparent 10%)", backgroundSize: "30px 30px" }}
+    <Suspense
+      fallback={
+        <AuthShell
+          pending
+          heading="Verify your email"
+          sub="Confirming your address — this only takes a moment."
+          crossLink={CROSS_LINK}
+        >
+          {null}
+        </AuthShell>
+      }
     >
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-5xl font-black text-brand-dark bg-white px-6 py-2 border-[4px] border-black shadow-[8px_8px_0px_0px_#000] -rotate-2">
-              VISION
-            </h1>
-          </Link>
-        </div>
-        <Suspense fallback={<div className="text-brand-dark font-black">Loading...</div>}>
-          <VerifyInner />
-        </Suspense>
-      </div>
-    </div>
+      <VerifyEmailInner />
+    </Suspense>
   );
 }

@@ -111,7 +111,7 @@ previously ran at 300ms while fields ran at 200ms.
 | `Checkbox` | —                                                                                                           | checked, unchecked, `indeterminate`, `disabled`, `error` |
 | `Card`     | `default` `elevated` `outline` `interactive`                                                                | hover + press on `interactive`                           |
 | `Badge`    | tones × `subtle` `solid` `outline`; sizes `sm` `md`                                                         | —                                                        |
-| `Alert`    | tones `info` `success` `warning` `error`                                                                    | dismissible via `onDismiss`                              |
+| `Alert`    | tones `neutral` `info` `success` `warning` `error`                                                          | dismissible via `onDismiss`                              |
 | `Spinner`  | sizes `sm` `md` `lg`                                                                                        | —                                                        |
 | `Label`    | `required`                                                                                                  | —                                                        |
 

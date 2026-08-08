@@ -1,130 +1,159 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { resetPasswordRequest } from "@/lib/api";
-import { usePasswordToggle } from "@/hooks/usePasswordToggle";
+import { passwordMeetsPolicy } from "@/lib/password";
+import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
+import { useFieldErrors } from "@/hooks/useFieldErrors";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { AuthResult } from "@/components/auth/AuthResult";
+import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
+
+const RESET_CROSS_LINK = {
+  note: "Remembered it?",
+  label: "Back to sign in",
+  href: "/login",
+};
 
 function ResetPasswordInner() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const token = params.get("token") || "";
+  const token = useSearchParams().get("token") ?? "";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const passwordToggle = usePasswordToggle();
-  const confirmToggle = usePasswordToggle();
+  const [updated, setUpdated] = useState(false);
+  const [banner, setBanner] = useState<AuthBanner | null>(null);
+  const fields = useFieldErrors<"password" | "confirm">();
 
   if (!token) {
     return (
-      <div className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0px_0px_#000] rotate-1">
-        <h2 className="text-2xl font-black text-brand-dark mb-4">MISSING TOKEN</h2>
-        <p className="text-brand-dark/80 font-bold text-sm mb-6">
-          This reset link is invalid. Request a new one to continue.
-        </p>
-        <Link
-          href="/forgot-password"
-          className="block w-full text-center py-3 bg-yellow-400 border-[3px] border-black font-black text-brand-dark shadow-[6px_6px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 uppercase"
-        >
-          Request new link
-        </Link>
-      </div>
+      <AuthShell
+        heading="This reset link is not valid"
+        sub="The link is missing its token, or it has already been used. Request a new one to continue."
+        crossLink={RESET_CROSS_LINK}
+      >
+        <AuthResult ctaLabel="Request new link" ctaHref="/forgot-password" />
+      </AuthShell>
     );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirm) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    setBanner(null);
+
+    const valid = fields.raise({
+      password: passwordMeetsPolicy(password)
+        ? undefined
+        : "Password must meet all requirements",
+      confirm: password === confirm ? undefined : "Passwords do not match",
+    });
+    if (!valid) return;
+
     setLoading(true);
     try {
       const res = await resetPasswordRequest(token, password);
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error || (data.details?.[0]?.message ?? "Reset failed"));
+        const msg = data.error || data.details?.[0]?.message || "Reset failed";
+        setBanner({ tone: "error", text: msg });
+        toast.error(msg);
         return;
       }
       toast.success("Password reset successfully");
-      router.replace("/login");
+      setUpdated(true);
     } catch {
-      toast.error("Unable to reach server");
+      setBanner({ tone: "neutral", text: SERVICE_UNAVAILABLE });
+      toast.error(SERVICE_UNAVAILABLE);
     } finally {
       setLoading(false);
     }
   };
 
+  if (updated) {
+    return (
+      <AuthShell
+        heading="Password updated"
+        sub="You can sign in with your new password now."
+      >
+        <AuthResult ctaLabel="Continue to sign in" ctaHref="/login" />
+      </AuthShell>
+    );
+  }
+
   return (
-    <div className="bg-white border-[4px] border-black p-8 shadow-[12px_12px_0px_0px_#000] rotate-1">
-      <h2 className="text-2xl font-black text-brand-dark mb-6 underline decoration-cyan-400 decoration-4 underline-offset-4">
-        SET NEW PASSWORD
-      </h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">New password</label>
-          <div className="relative">
-            <input
-              type={passwordToggle.type}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              data-testid="reset-password"
-              className="block w-full px-4 py-4 pr-14 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-cyan-50 focus:shadow-[4px_4px_0px_0px_#22d3ee] font-bold"
-              placeholder="••••••••"
-            />
-            {passwordToggle.toggle}
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-black text-brand-dark mb-2 uppercase italic">Confirm password</label>
-          <div className="relative">
-            <input
-              type={confirmToggle.type}
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              data-testid="reset-confirm"
-              className="block w-full px-4 py-4 pr-14 border-[3px] border-black bg-white text-brand-dark focus:outline-none focus:bg-fuchsia-50 focus:shadow-[4px_4px_0px_0px_#d946ef] font-bold"
-              placeholder="••••••••"
-            />
-            {confirmToggle.toggle}
-          </div>
-        </div>
-        <button
-          type="submit"
-          disabled={loading}
-          data-testid="reset-submit"
-          className="w-full py-4 bg-yellow-400 border-[3px] border-black font-black text-brand-dark text-xl shadow-[8px_8px_0px_0px_#000] hover:shadow-none hover:translate-x-1 hover:translate-y-1 uppercase"
+    <AuthShell
+      heading="Choose a new password"
+      sub="Pick something you have not used before."
+      crossLink={{
+        note: "Changed your mind?",
+        label: "Back to sign in",
+        href: "/login",
+      }}
+    >
+      <AuthFormAlert hasFieldErrors={fields.hasErrors} banner={banner} />
+
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="mt-7 flex flex-col gap-4"
+      >
+        <PasswordField
+          id="new-password"
+          label="New password"
+          value={password}
+          onChange={(value) => {
+            setPassword(value);
+            if (passwordMeetsPolicy(value)) fields.clear("password");
+            // The mismatch belongs to the pair, so either side can resolve it.
+            if (value === confirm) fields.clear("confirm");
+          }}
+          autoComplete="new-password"
+          error={fields.errors.password}
+          data-testid="reset-password"
         >
-          {loading ? "SAVING..." : "RESET PASSWORD →"}
-        </button>
+          <PasswordStrength password={password} />
+        </PasswordField>
+
+        <PasswordField
+          id="confirm-password"
+          label="Confirm new password"
+          value={confirm}
+          onChange={(value) => {
+            setConfirm(value);
+            if (value === password) fields.clear("confirm");
+          }}
+          autoComplete="new-password"
+          error={fields.errors.confirm}
+          data-testid="reset-confirm"
+        />
+
+        <AuthSubmitButton loading={loading} data-testid="reset-submit">
+          Update password
+        </AuthSubmitButton>
       </form>
-    </div>
+    </AuthShell>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div
-      className="min-h-screen bg-[#D4FF3F] flex items-center justify-center p-4"
-      style={{ backgroundImage: "radial-gradient(#000 10%, transparent 10%)", backgroundSize: "30px 30px" }}
+    <Suspense
+      fallback={
+        <AuthShell
+          pending
+          heading="Choose a new password"
+          sub="Pick something you have not used before."
+        >
+          {null}
+        </AuthShell>
+      }
     >
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <h1 className="text-5xl font-black text-brand-dark bg-white px-6 py-2 border-[4px] border-black shadow-[8px_8px_0px_0px_#000] -rotate-2">
-              VISION
-            </h1>
-          </Link>
-        </div>
-        <Suspense fallback={<div className="text-brand-dark font-black">Loading...</div>}>
-          <ResetPasswordInner />
-        </Suspense>
-      </div>
-    </div>
+      <ResetPasswordInner />
+    </Suspense>
   );
 }

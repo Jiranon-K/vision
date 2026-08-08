@@ -433,6 +433,10 @@ export default function DesignSystemPage() {
             description="Error alerts announce immediately; the rest are polite."
           >
             <div className="grid gap-4">
+              <Alert tone="neutral" title="Server unreachable">
+                Nothing is wrong with what the Creator did — the condition just
+                carries no status.
+              </Alert>
               <Alert tone="info" title="Draft saved">
                 Your Post is saved but not yet visible to Readers.
               </Alert>
