@@ -7,6 +7,10 @@ const alertVariants = cva(
   {
     variants: {
       tone: {
+        /* The one tone that carries no status meaning — for conditions that
+           are neither the Creator's fault nor a result, like an unreachable
+           server. Colouring those red reads as rejection. */
+        neutral: "border-border bg-surface-muted text-text-secondary",
         info: "border-info bg-info-subtle text-info-strong",
         success: "border-success bg-success-subtle text-success-strong",
         warning: "border-warning bg-warning-subtle text-warning-strong",
@@ -19,9 +23,10 @@ const alertVariants = cva(
   }
 );
 
-type AlertTone = "info" | "success" | "warning" | "error";
+type AlertTone = "neutral" | "info" | "success" | "warning" | "error";
 
 const toneIconPath: Record<AlertTone, string> = {
+  neutral: "M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   info: "M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
   success: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
   warning:
