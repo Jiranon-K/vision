@@ -14,6 +14,12 @@ import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 
+const RESET_CROSS_LINK = {
+  note: "Remembered it?",
+  label: "Back to sign in",
+  href: "/login",
+};
+
 function ResetPasswordInner() {
   const token = useSearchParams().get("token") ?? "";
 
@@ -29,9 +35,7 @@ function ResetPasswordInner() {
       <AuthShell
         heading="This reset link is not valid"
         sub="The link is missing its token, or it has already been used. Request a new one to continue."
-        footNote="Remembered it?"
-        footLinkLabel="Back to sign in"
-        footLinkHref="/login"
+        crossLink={RESET_CROSS_LINK}
       >
         <AuthResult ctaLabel="Request new link" ctaHref="/forgot-password" />
       </AuthShell>
@@ -85,9 +89,11 @@ function ResetPasswordInner() {
     <AuthShell
       heading="Choose a new password"
       sub="Pick something you have not used before."
-      footNote="Changed your mind?"
-      footLinkLabel="Back to sign in"
-      footLinkHref="/login"
+      crossLink={{
+        note: "Changed your mind?",
+        label: "Back to sign in",
+        href: "/login",
+      }}
     >
       <AuthFormAlert hasFieldErrors={fields.hasErrors} banner={banner} />
 
@@ -139,7 +145,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <AuthShell
-          checkingSession
+          pending
           heading="Choose a new password"
           sub="Pick something you have not used before."
         >

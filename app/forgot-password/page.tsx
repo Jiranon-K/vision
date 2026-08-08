@@ -51,9 +51,6 @@ export default function ForgotPasswordPage() {
       <AuthShell
         heading="Check your email"
         sub={`If an account exists for ${email}, a reset link is on its way.`}
-        footNote="Nothing arrived?"
-        footLinkLabel="Try another address"
-        footLinkHref="/forgot-password"
       >
         <AuthResult ctaLabel="Back to sign in" ctaHref="/login" />
       </AuthShell>
@@ -64,9 +61,11 @@ export default function ForgotPasswordPage() {
     <AuthShell
       heading="Reset your password"
       sub="Enter your email and we'll send a link that expires in one hour."
-      footNote="Remembered it?"
-      footLinkLabel="Back to sign in"
-      footLinkHref="/login"
+      crossLink={{
+        note: "Remembered it?",
+        label: "Back to sign in",
+        href: "/login",
+      }}
     >
       <AuthFormAlert hasFieldErrors={fields.hasErrors} banner={banner} />
 

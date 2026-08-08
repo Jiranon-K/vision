@@ -8,13 +8,28 @@ test.use({ video: 'on' });
 
 const SHOTS = 'test-results/auth-visual';
 
-// AnimationProvider wipes a full-screen lime overlay across the viewport for
-// 1.1s after every route change. Stills taken before it clears show the wipe,
-// not the page.
-const WIPE_MS = 1300;
+// AnimationProvider wipes a full-screen lime overlay across the viewport after
+// every route change. Stills taken before it clears show the wipe, not the
+// page — so wait for the overlay to be scaled away rather than for a duration.
+async function settle(page: Page) {
+  await page
+    .locator('div.fixed.inset-0.bg-brand-lime')
+    .first()
+    .evaluate(
+      (el) =>
+        new Promise<void>((resolve) => {
+          const done = () =>
+            el.getBoundingClientRect().width < 1 ? resolve() : requestAnimationFrame(done);
+          done();
+        }),
+      undefined,
+      { timeout: 5_000 }
+    );
+}
 
 async function shoot(page: Page, name: string) {
-  await page.waitForTimeout(WIPE_MS);
+  await settle(page);
+  await page.waitForTimeout(150);
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true });
 }
 
@@ -89,9 +104,11 @@ test('every auth screen and state, desktop', async ({ page }) => {
 
   // Reset password — the form, its mismatch state, and the dead-link state
   await page.goto('/reset-password?token=visual-evidence-token');
-  await page.getByLabel('New password', { exact: true }).fill('E2ePass1!');
+  // Both reset fields carry "password" in their label, so address them by
+  // test id rather than by a label that also has to survive copy changes.
+  await page.getByTestId('reset-password').fill('E2ePass1!');
   await shoot(page, '13-reset-default');
-  await page.getByLabel('Confirm new password').fill('Different1!');
+  await page.getByTestId('reset-confirm').fill('Different1!');
   await page.getByRole('button', { name: 'Update password' }).click();
   await expect(page.getByText('Passwords do not match')).toBeVisible();
   await shoot(page, '14-reset-mismatch');

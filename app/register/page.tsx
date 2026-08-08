@@ -88,12 +88,14 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      checkingSession={checking}
+      pending={checking}
       heading="Create your account"
       sub="One account for the editor, the blog and your analytics."
-      footNote="Already have an account?"
-      footLinkLabel="Sign in"
-      footLinkHref="/login"
+      crossLink={{
+        note: "Already have an account?",
+        label: "Sign in",
+        href: "/login",
+      }}
     >
       <AuthFormAlert hasFieldErrors={fields.hasErrors} banner={banner} />
 

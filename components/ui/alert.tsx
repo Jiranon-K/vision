@@ -25,9 +25,11 @@ const alertVariants = cva(
 
 type AlertTone = "neutral" | "info" | "success" | "warning" | "error";
 
+const INFO_ICON = "M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z";
+
 const toneIconPath: Record<AlertTone, string> = {
-  neutral: "M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-  info: "M12 16v-4m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+  neutral: INFO_ICON,
+  info: INFO_ICON,
   success: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
   warning:
     "M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z",

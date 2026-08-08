@@ -40,8 +40,8 @@ function BrandPanel() {
   );
 }
 
-/** Full-card dark panel shown while the session check is in flight. */
-function CheckingSession() {
+/** Full-card dark panel for a screen that cannot render its form yet. */
+function PendingPanel() {
   return (
     <div
       className="flex flex-1 flex-col items-center justify-center gap-4 bg-ink-950"
@@ -55,19 +55,26 @@ function CheckingSession() {
   );
 }
 
+export interface AuthCrossLink {
+  /** Lead-in text before the link, e.g. "New to Vision?". */
+  note: string;
+  label: string;
+  href: string;
+}
+
 export interface AuthShellProps {
   heading: string;
   sub: string;
   /**
-   * The cross-link under the form — lead-in text plus the link, e.g.
-   * "New to Vision? / Create an account". Omit it once a screen has resolved:
-   * a Creator who just signed in only bounces off the other auth screens.
+   * The cross-link under the form. Omit it once a screen has resolved: a
+   * Creator who just signed in only bounces off the other auth screens.
    */
-  footNote?: string;
-  footLinkLabel?: string;
-  footLinkHref?: string;
-  /** Swaps the whole card for the session-check panel. */
-  checkingSession?: boolean;
+  crossLink?: AuthCrossLink;
+  /**
+   * Swaps the whole card for the pending panel — the session check on login
+   * and register, the Suspense fallback on the screens that read a token.
+   */
+  pending?: boolean;
   children: React.ReactNode;
 }
 
@@ -79,17 +86,15 @@ export interface AuthShellProps {
 export function AuthShell({
   heading,
   sub,
-  footNote,
-  footLinkLabel,
-  footLinkHref,
-  checkingSession = false,
+  crossLink,
+  pending = false,
   children,
 }: AuthShellProps) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-surface-muted p-4 sm:p-8">
       <div className="flex w-full max-w-[1040px] overflow-hidden rounded-[18px] border border-border bg-surface shadow-panel lg:min-h-[660px]">
-        {checkingSession ? (
-          <CheckingSession />
+        {pending ? (
+          <PendingPanel />
         ) : (
           <>
             <BrandPanel />
@@ -116,14 +121,14 @@ export function AuthShell({
                 {children}
 
                 <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-5">
-                  {footNote && footLinkLabel && footLinkHref ? (
+                  {crossLink ? (
                     <p className="text-[13.5px] text-text-muted">
-                      {footNote}{" "}
+                      {crossLink.note}{" "}
                       <Link
-                        href={footLinkHref}
+                        href={crossLink.href}
                         className="border-b-[1.5px] border-accent pb-px font-medium text-foreground"
                       >
-                        {footLinkLabel}
+                        {crossLink.label}
                       </Link>
                     </p>
                   ) : (

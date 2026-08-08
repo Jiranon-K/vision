@@ -62,12 +62,20 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        const msg =
+        // A lockout is temporary and nothing is wrong with what was typed, so
+        // it gets the amber banner rather than the red rejection.
+        const banner: AuthBanner =
           res.status === 423
-            ? "Account temporarily locked. Please try again later."
-            : data.error || "That email and password do not match.";
-        setBanner({ tone: "error", text: msg });
-        toast.error(msg);
+            ? {
+                tone: "warning",
+                text: "Account temporarily locked. Please try again later.",
+              }
+            : {
+                tone: "error",
+                text: data.error || "That email and password do not match.",
+              };
+        setBanner(banner);
+        toast.error(banner.text);
         return;
       }
 
@@ -96,12 +104,14 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      checkingSession={checking}
+      pending={checking}
       heading="Sign in"
       sub="Welcome back. Pick up where you left off."
-      footNote="New to Vision?"
-      footLinkLabel="Create an account"
-      footLinkHref="/register"
+      crossLink={{
+        note: "New to Vision?",
+        label: "Create an account",
+        href: "/register",
+      }}
     >
       <AuthFormAlert hasFieldErrors={fields.hasErrors} banner={banner} />
 

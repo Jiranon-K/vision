@@ -7,23 +7,28 @@ import { verifyEmailRequest, resendVerificationRequest } from "@/lib/api";
 import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthResult } from "@/components/auth/AuthResult";
-import { Alert } from "@/components/ui/alert";
+import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
 import { Spinner } from "@/components/ui/spinner";
 
 type Phase = "verifying" | "verified" | "failed";
 
 const CROSS_LINK = {
-  footNote: "Wrong address?",
-  footLinkLabel: "Use another email",
-  footLinkHref: "/register",
-} as const;
+  note: "Wrong address?",
+  label: "Use another email",
+  href: "/register",
+};
 
 function VerifyEmailInner() {
   const token = useSearchParams().get("token") ?? "";
 
   const [phase, setPhase] = useState<Phase>(token ? "verifying" : "failed");
-  const [error, setError] = useState(
-    token ? "" : "This link is missing its verification token."
+  const [banner, setBanner] = useState<AuthBanner | null>(
+    token
+      ? null
+      : {
+          tone: "error",
+          text: "This link is missing its verification token.",
+        }
   );
   const [resending, setResending] = useState(false);
   const didRun = useRef(false);
@@ -41,10 +46,13 @@ function VerifyEmailInner() {
           return;
         }
         setPhase("failed");
-        setError(data.error || "We could not verify this address.");
+        setBanner({
+          tone: "error",
+          text: data.error || "We could not verify this address.",
+        });
       } catch {
         setPhase("failed");
-        setError(SERVICE_UNAVAILABLE);
+        setBanner({ tone: "neutral", text: SERVICE_UNAVAILABLE });
       }
     })();
   }, [token]);
@@ -84,7 +92,7 @@ function VerifyEmailInner() {
       <AuthShell
         heading="Verify your email"
         sub="Confirming your address — this only takes a moment."
-        {...CROSS_LINK}
+        crossLink={CROSS_LINK}
       >
         <div className="mt-7 flex flex-col gap-4">
           <div className="flex items-center gap-3 text-text-muted">
@@ -109,11 +117,9 @@ function VerifyEmailInner() {
     <AuthShell
       heading="Verify your email"
       sub="We could not confirm this address from the link you followed."
-      {...CROSS_LINK}
+      crossLink={CROSS_LINK}
     >
-      <Alert tone="error" className="mt-5">
-        {error}
-      </Alert>
+      <AuthFormAlert banner={banner} />
 
       <AuthResult
         ctaLabel="Back to sign in"
@@ -130,10 +136,10 @@ export default function VerifyEmailPage() {
     <Suspense
       fallback={
         <AuthShell
-          checkingSession
+          pending
           heading="Verify your email"
           sub="Confirming your address — this only takes a moment."
-          {...CROSS_LINK}
+          crossLink={CROSS_LINK}
         >
           {null}
         </AuthShell>

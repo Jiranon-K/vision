@@ -36,7 +36,12 @@ export function PasswordField({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-baseline justify-between">
-        <Label htmlFor={id}>{label}</Label>
+        {/* The label is hand-rolled rather than handed to Input because the
+            visibility toggle shares its row — so `required` has to be carried
+            across by hand too, or the marker Input would have drawn is lost. */}
+        <Label htmlFor={id} required>
+          {label}
+        </Label>
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
