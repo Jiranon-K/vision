@@ -73,12 +73,14 @@ async function runQueue(once: boolean): Promise<void> {
       } else if (outcome.kind === 'needs-info') {
         await gh.comment(task.issue, outcome.question);
         await gh.relabel(task.issue, LABELS.needsInfo);
-      } else {
+      } else if (outcome.kind === 'failed') {
         const body = outcome.prUrl
           ? `Stopped: ${outcome.reason}. Work preserved in ${outcome.prUrl}.`
           : `Stopped: ${outcome.reason}.`;
         await gh.comment(task.issue, body);
         await gh.relabel(task.issue, LABELS.readyForHuman);
+      } else {
+        throw new Error('Queue tasks must produce a GitHub-published outcome.');
       }
     }
 
@@ -101,7 +103,7 @@ async function main(): Promise<void> {
       body: args.task,
       type: args.type,
     });
-    if (outcome.kind !== 'success') process.exitCode = 1;
+    if (outcome.kind !== 'local-success') process.exitCode = 1;
     return;
   }
 

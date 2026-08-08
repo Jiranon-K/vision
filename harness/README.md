@@ -13,9 +13,10 @@ It opens pull requests. It never merges.
 bun run agent --task "add a category filter to the posts table"
 ```
 
-Ad-hoc mode runs one task and never touches GitHub. This is how the harness
-itself is developed: iterating on the loop should not fill the tracker with
-disposable issues and pull requests.
+Ad-hoc mode runs one task without mutating GitHub: it creates no issues, comments,
+or pull requests, and it never pushes. The resulting commit remains in the local
+agent worktree. This is how the harness itself is developed: iterating on the loop
+should not fill the tracker with disposable issues and pull requests.
 
 ```bash
 bun run agent
@@ -224,6 +225,11 @@ preserves the work.
 
 ## Known gaps
 
+- **The server test suite can reach Resend.** `bun run test:server` attempted real
+  verification-email sends during the baseline run. Before queue mode is enabled,
+  inject a fake email transport for tests and add a regression test proving no
+  network client is called; an unattended verification gate must not depend on
+  production email credentials.
 - **The loop has not been exercised end to end against a real issue.** Its pure
   logic — the denylist, red-test classification, slow-tier path gating — is unit
   tested, and every command it runs is verified, but the worktree resets to

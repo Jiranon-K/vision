@@ -26,6 +26,7 @@ export interface GateResult {
 
 export type Outcome =
   | { kind: 'success'; prUrl: string }
+  | { kind: 'local-success'; branch: string }
   | { kind: 'needs-info'; question: string }
   | { kind: 'failed'; reason: string; prUrl?: string };
 
