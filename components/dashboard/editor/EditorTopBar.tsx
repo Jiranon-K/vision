@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import PublishAction from "./PublishAction";
-import AutosaveStatusSlot from "./AutosaveStatusSlot";
+import AutosaveStatusSlot, { type AutosaveStatus } from "./AutosaveStatusSlot";
 import EditorMeterSlot from "./EditorMeterSlot";
 import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
+import SaveNowAction from "./SaveNowAction";
 import type { EditorMode } from "./types";
 
 export interface EditorTopBarProps {
@@ -22,6 +23,14 @@ export interface EditorTopBarProps {
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
   splitAvailable: boolean;
+  /** Autosave chip state — see AutosaveStatusSlot. */
+  autosaveStatus: AutosaveStatus;
+  autosaveLastSavedAt: number | null;
+  /** Word count / reading time meter reads straight off the buffer. */
+  content: string;
+  /** Save now — appears only while the local autosave buffer is dirty. */
+  autosaveDirty: boolean;
+  onSaveNow: () => void;
 }
 
 // The chrome follows the writing surface in "about 120ms later" (ticket 01).
@@ -65,6 +74,11 @@ export default function EditorTopBar({
   mode,
   onModeChange,
   splitAvailable,
+  autosaveStatus,
+  autosaveLastSavedAt,
+  content,
+  autosaveDirty,
+  onSaveNow,
 }: EditorTopBarProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(false);
@@ -166,8 +180,8 @@ export default function EditorTopBar({
       </button>
 
       <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
-        <AutosaveStatusSlot />
-        <EditorMeterSlot />
+        <AutosaveStatusSlot status={autosaveStatus} lastSavedAt={autosaveLastSavedAt} />
+        <EditorMeterSlot content={content} />
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
@@ -176,6 +190,7 @@ export default function EditorTopBar({
           onModeChange={onModeChange}
           splitAvailable={splitAvailable}
         />
+        <SaveNowAction visible={autosaveDirty && !saving} onClick={onSaveNow} />
         <PublishAction
           label={saveLabel}
           pending={saving}

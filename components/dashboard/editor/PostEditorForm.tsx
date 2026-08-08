@@ -16,6 +16,7 @@ import type { CurrentUser } from "@/lib/auth";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { EditorMode } from "@/components/dashboard/editor/types";
+import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
 import {
   draftKey,
   useAutosaveDraft,
@@ -115,16 +116,35 @@ export default function PostEditorForm({
     currentUser?.role === "admin" ||
     (!!ownerId && ownerId === currentUser?.id);
 
-  const { existingDraft, clearDraft } = useAutosaveDraft(
-    draftKey(postId),
-    formState,
-    { enabled: ready && canEdit },
-  );
+  const {
+    existingDraft,
+    clearDraft,
+    lastSavedAt: autosaveSavedAt,
+    dirty: autosaveDirty,
+    saving: autosaveSaving,
+    saveNow,
+  } = useAutosaveDraft(draftKey(postId), formState, { enabled: ready && canEdit });
 
   const isDirty = useMemo(
     () => ready && canEdit && !sameDraft(formState, baseline),
     [ready, canEdit, formState, baseline],
   );
+
+  // The chip's "last commit" is the more recent of the local autosave and
+  // (in edit mode) the Post's own last server save — a freshly opened,
+  // unedited Post already has something honest to report ("Autosaved
+  // <time since updatedAt>"), not "New Post". A brand-new create-mode Post
+  // has neither, until its first local commit lands.
+  const autosaveLastSavedAt =
+    mode === "edit" ? Math.max(autosaveSavedAt ?? 0, updatedAtMs || 0) || null : autosaveSavedAt;
+
+  const autosaveStatus: AutosaveStatus = autosaveSaving
+    ? "saving"
+    : autosaveLastSavedAt === null
+      ? "new"
+      : autosaveDirty
+        ? "writing"
+        : "saved";
 
   // --- Edit mode: load the existing post -------------------------------------
   const fetchPost = useCallback(async () => {
@@ -401,6 +421,11 @@ export default function PostEditorForm({
         mode={editorMode}
         onModeChange={setEditorMode}
         splitAvailable={splitAvailable}
+        autosaveStatus={autosaveStatus}
+        autosaveLastSavedAt={autosaveLastSavedAt}
+        content={content}
+        autosaveDirty={autosaveDirty}
+        onSaveNow={saveNow}
       />
 
       {/* Reserves the bar's height in the flow — the bar itself is `fixed`
