@@ -69,15 +69,24 @@ numbers above would read near zero however many Creators used the button, and
 the 25% threshold would say "stop" about an artefact of the code rather than
 about anyone's behaviour.
 
-So creating a Post claims that Creator's unattributed suggestions from the
-previous 24 hours. Two consequences to read the numbers with:
+So creating a Post claims one suggestion: that Creator's most recent
+unattributed one, if it was issued in the last 6 hours. Claiming is kept this
+narrow on purpose — every widening buys attribution for a suggestion that was
+probably abandoned, at the price of pinning it to a Post it was never about,
+which shows up as a guaranteed non-match in kept-unedited.
 
-- A Creator who asks for a suggestion on a Post they abandon, then creates a
-  different Post within 24 hours, hands the orphan to the wrong Post. That
-  inflates adoption slightly and adds a guaranteed non-match to
-  kept-unedited. Both errors are small and in known directions.
-- An orphan older than 24 hours is never claimed, and stays excluded from
-  kept-unedited.
+Three consequences to read the numbers with:
+
+- A Creator who asks about a Post they abandon, then creates a different Post
+  within 6 hours, hands that one orphan to the wrong Post — inflating adoption
+  by one and adding one certain non-match. Bounded at one record per Post.
+- Asking several times before saving records several suggestions; only the
+  last is claimed. The earlier ones stay out of kept-unedited, which is the
+  right reading — the last is the one the Creator worked from.
+- An orphan older than 6 hours is never claimed.
+
+`server/tests/integration/suggest-excerpt.test.ts` covers both the claim and
+the case where another Creator's orphan must not be taken.
 
 Both queries return `null` (not `0`) for their rate when there is nothing to
 divide by — read that as "not enough data yet," not as a failing number.

@@ -161,6 +161,35 @@ describe('POST /api/posts/suggest-excerpt — recording usage', () => {
     expect(String(records[0].post)).toBe(String(createRes.body._id));
   });
 
+  // Claiming stays narrow: pinning every orphan to one Post would count
+  // abandoned suggestions as non-matches against the kept-unedited threshold.
+  it('claims only the most recent orphan, leaving earlier ones unattributed', async () => {
+    const cookies = await register('record-latest-orphan@test.local');
+    for (const content of ['First draft attempt at the content.', 'Second draft attempt.']) {
+      const res = await request(app)
+        .post('/api/posts/suggest-excerpt')
+        .set('Cookie', cookies)
+        .send({ content });
+      expect(res.status).toBe(200);
+    }
+
+    const createRes = await request(app)
+      .post('/api/posts')
+      .set('Cookie', cookies)
+      .send({
+        title: 'The Post finally saved',
+        content: 'Second draft attempt.',
+        category: 'SEO',
+        status: 'Published',
+      });
+    expect(createRes.status).toBe(201);
+
+    const records = await ExcerptSuggestion.find({}).sort({ createdAt: 1 });
+    expect(records).toHaveLength(2);
+    expect(records[0].post).toBeUndefined();
+    expect(String(records[1].post)).toBe(String(createRes.body._id));
+  });
+
   it('does not claim another Creator\'s unattributed suggestion', async () => {
     const asker = await register('record-asker@test.local');
     await request(app)
