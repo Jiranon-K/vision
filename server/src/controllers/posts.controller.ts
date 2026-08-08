@@ -230,6 +230,31 @@ export const updatePost = async (
   }
 };
 
+// A provider that hangs must not hang the Creator's editor with it. 8s is
+// generous for a text summary call but bounds the worst case to "annoying"
+// rather than "stuck forever". Overridable so tests can exercise the timeout
+// path without actually waiting 8s.
+const SUGGESTION_TIMEOUT_MS = Number(process.env.AI_SUGGESTION_TIMEOUT_MS) || 8_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('Excerpt suggestion timed out')),
+      ms
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 export const suggestPostExcerpt = async (
   req: AuthRequest,
   res: Response
@@ -253,13 +278,21 @@ export const suggestPostExcerpt = async (
   }
 
   try {
-    const excerpt = await suggestExcerpt(validation.data.content, generateText);
+    const excerpt = await withTimeout(
+      suggestExcerpt(validation.data.content, generateText),
+      SUGGESTION_TIMEOUT_MS
+    );
     // "provider": this suggestion came from the injected provider call, as
-    // opposed to the derived fallback ticket 03 adds under the same field.
+    // opposed to the derived fallback below.
     res.json({ excerpt, source: 'provider' });
   } catch (error) {
-    console.error('Suggest excerpt error:', error);
-    res.status(502).json({ error: 'Failed to generate an excerpt suggestion' });
+    // A failing or slow provider must not fail the request (it would just
+    // train the Creator to distrust the button) — fall back to the same
+    // mechanical derivation the save path uses, and say so via "source" so
+    // the editor never passes a truncated string off as the AI's work.
+    console.error('Suggest excerpt error, falling back to derived excerpt:', error);
+    const excerpt = deriveExcerpt(validation.data.content);
+    res.json({ excerpt, source: 'fallback' });
   }
 };
 

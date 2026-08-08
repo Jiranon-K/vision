@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { categories } from "@/lib/constants";
 import { apiFetch, authFetch } from "@/lib/api";
 import { Spinner } from "@/components/ui/spinner";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import type { MetadataFormProps } from "./types";
 
 // Below this, a "summary" would just echo the content back — the button stays
@@ -30,6 +31,7 @@ export default function MetadataForm({
   // NEXT_PUBLIC_* flag that could drift from what's actually configured.
   const [suggestionAvailable, setSuggestionAvailable] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [confirmingReplace, setConfirmingReplace] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,7 +48,7 @@ export default function MetadataForm({
 
   const contentTooShort = content.trim().length < MIN_SUGGESTION_CONTENT_LENGTH;
 
-  const handleSuggest = async () => {
+  const runSuggest = async () => {
     setSuggesting(true);
     try {
       const res = await authFetch("/api/posts/suggest-excerpt", {
@@ -54,13 +56,40 @@ export default function MetadataForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
-      if (!res.ok) return;
+
+      if (res.status === 429) {
+        toast.error("You've asked too often — try again in a bit.");
+        return;
+      }
+      if (!res.ok) {
+        toast.error("Couldn't suggest an excerpt right now.");
+        return;
+      }
+
       const data = await res.json();
       onExcerptChange(data.excerpt);
-      toast.success("Excerpt suggestion added — edit it as you like.");
+      // "fallback": the provider failed or timed out server-side, so the field
+      // holds a mechanically derived excerpt. Saying so is the point — never
+      // pass a truncation off as the AI's work.
+      if (data.source === "fallback") {
+        toast.warning(
+          "AI suggestions are unavailable right now — added a quick excerpt from your content instead."
+        );
+      } else {
+        toast.success("Excerpt suggestion added — edit it as you like.");
+      }
     } finally {
       setSuggesting(false);
     }
+  };
+
+  const handleSuggest = () => {
+    // An empty field has nothing to lose; replacing text the Creator wrote does.
+    if (excerpt.trim()) {
+      setConfirmingReplace(true);
+      return;
+    }
+    void runSuggest();
   };
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,6 +278,19 @@ export default function MetadataForm({
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmingReplace}
+        title="Replace Excerpt?"
+        message="Asking for a new suggestion will replace the excerpt you have already written."
+        confirmText="Replace"
+        cancelText="Keep mine"
+        onConfirm={() => {
+          setConfirmingReplace(false);
+          void runSuggest();
+        }}
+        onCancel={() => setConfirmingReplace(false)}
+      />
     </div>
   );
 }

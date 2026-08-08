@@ -43,6 +43,7 @@ cp server/.env.example server/.env
 | `GOOGLE_GENERATIVE_AI_API_KEY` | no       | Google AI Studio API key. When set, Excerpt Suggestions are backed by Gemini                                               |
 | `AI_EXCERPT_MODEL`             | no       | Overrides the Gemini model used for Excerpt Suggestions (default `gemini-3.1-flash-lite`)                                  |
 | `AI_PROVIDER`                  | no       | Set to `stub` to force a deterministic fake provider for Excerpt Suggestions — Playwright/local use only, never production |
+| `AI_SUGGESTION_TIMEOUT_MS`     | no       | How long to wait on a provider before falling back to the derived Excerpt (default `8000`)                                 |
 
 ## Scripts
 

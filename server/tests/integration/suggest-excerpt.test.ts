@@ -101,25 +101,7 @@ describe('POST /api/posts/suggest-excerpt', () => {
   });
 });
 
-// ADR 0002: createPost/updatePost must reach no provider, even when one is
-// configured (AI_PROVIDER=stub is set for this whole file).
-describe('save path stays provider-free (ADR 0002)', () => {
-  it('derives the excerpt mechanically on create, never via the provider seam', async () => {
-    const cookies = await register('savepath@test.local');
-    const res = await request(app)
-      .post('/api/posts')
-      .set('Cookie', cookies)
-      .send({
-        title: 'Provider-free save',
-        content: 'Content for a post saved with a provider configured.',
-        category: 'SEO',
-        status: 'Draft',
-        excerpt: '',
-      });
-
-    expect(res.status).toBe(201);
-    // The stub provider always prefixes with this marker — its absence shows
-    // deriveExcerpt (not suggestExcerpt) produced the excerpt.
-    expect(res.body.excerpt).not.toMatch(/^Stub excerpt suggestion:/);
-  });
-});
+// The stronger ADR 0002 regression — spying on the provider seam itself and
+// asserting zero calls from createPost/updatePost — lives in
+// save-path-provider-free.test.ts. It needs the seam mocked before the app
+// module graph loads, which this file's AI_PROVIDER=stub setup does not do.

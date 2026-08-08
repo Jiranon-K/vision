@@ -74,3 +74,19 @@ export const resendVerificationLimiter = rateLimit({
     return `${req.ip}-${user?.id || 'anon'}`;
   },
 });
+
+// One Creator's enthusiasm for the button shouldn't spend everyone's provider
+// budget. ~20/hour is generous for a per-Post action but bounds a runaway UI.
+export const suggestExcerptLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many excerpt suggestion requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(),
+  skip: skipInTest,
+  keyGenerator: (req) => {
+    const user = (req as { user?: { id?: string } }).user;
+    return `${req.ip}-${user?.id || 'anon'}`;
+  },
+});
