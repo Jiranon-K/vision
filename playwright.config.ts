@@ -28,6 +28,7 @@ export default defineConfig({
         /readme-shots\.spec\.ts/,
         /auth-visual\.spec\.ts/,
         /excerpt-suggestion-visual\.spec\.ts/,
+        /editor-frame-visual\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'] },
@@ -38,7 +39,7 @@ export default defineConfig({
     // multi-megabyte binary diff. Run them explicitly: `bun run screenshots`.
     {
       name: 'screenshots',
-      testMatch: /(readme-shots|auth-visual|excerpt-suggestion-visual)\.spec\.ts/,
+      testMatch: /(readme-shots|auth-visual|excerpt-suggestion-visual|editor-frame-visual)\.spec\.ts/,
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'] },
     },

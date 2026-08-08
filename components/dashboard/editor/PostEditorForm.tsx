@@ -2,14 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { animate } from "animejs";
+import { animate, set, cubicBezier } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
 import MetadataForm from "@/components/dashboard/editor/MetadataForm";
+import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Button } from "@/components/ui/button";
 import { apiFetch, authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
   draftKey,
   useAutosaveDraft,
@@ -33,6 +36,12 @@ const EMPTY: PostDraftState = {
   coverImage: "",
 };
 
+// Mirrors --duration-slow / --ease-out from app/globals.css — animejs
+// animates DOM properties directly and can't read CSS custom properties, so
+// the token's *value* is duplicated here rather than its name.
+const ENTRANCE_DURATION = 300;
+const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
+
 function sameDraft(a: PostDraftState, b: PostDraftState): boolean {
   return (
     a.title === b.title &&
@@ -51,7 +60,9 @@ export default function PostEditorForm({
 }: PostEditorFormProps) {
   const router = useRouter();
   const pageRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -70,6 +81,9 @@ export default function PostEditorForm({
 
   const [showRestore, setShowRestore] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  // Gates the top bar's entrance — it waits for the writing surface's own
+  // animation to start, so the arrival order is never a race.
+  const [enterAnimation, setEnterAnimation] = useState(false);
 
   const restoreDecided = useRef(false);
   const skipUnload = useRef(false);
@@ -219,7 +233,7 @@ export default function PostEditorForm({
     router.push("/dashboard/posts");
   };
 
-  // --- Entrance animations (run once the form is on screen) ------------------
+  // --- Entrance: trigger once the form is on screen ---------------------------
   useEffect(() => {
     if (!ready) return;
     const page = pageRef.current;
@@ -230,26 +244,7 @@ export default function PostEditorForm({
         entries.forEach((entry) => {
           if (entry.isIntersecting && !didAnimate.current) {
             didAnimate.current = true;
-            animate(".editor-header", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              duration: 500,
-              easing: "easeOutCubic",
-            });
-            animate(".editor-content", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              delay: 100,
-              duration: 500,
-              easing: "easeOutCubic",
-            });
-            animate(".metadata-form", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              delay: 200,
-              duration: 500,
-              easing: "easeOutCubic",
-            });
+            setEnterAnimation(true);
             observer.disconnect();
           }
         });
@@ -260,6 +255,27 @@ export default function PostEditorForm({
     observer.observe(page);
     return () => observer.disconnect();
   }, [ready]);
+
+  // The Creator came to write, so the title and the writing surface arrive
+  // first, together — opacity plus a small upward translate. The bar (see
+  // EditorTopBar) follows on its own delay, opacity only, no translate.
+  useEffect(() => {
+    if (!enterAnimation) return;
+    const content = contentRef.current;
+    if (!content) return;
+
+    if (prefersReducedMotion) {
+      set(content, { opacity: 1, translateY: 0 });
+      return;
+    }
+
+    animate(content, {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      duration: ENTRANCE_DURATION,
+      ease: ENTRANCE_EASE,
+    });
+  }, [enterAnimation, prefersReducedMotion]);
 
   // --- Save -------------------------------------------------------------------
   const handleSave = async () => {
@@ -313,9 +329,9 @@ export default function PostEditorForm({
   // --- Render -----------------------------------------------------------------
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-brand-dark/50">Loading...</p>
+      <div className="min-h-screen bg-surface-muted p-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-text-muted">Loading...</p>
         </div>
       </div>
     );
@@ -328,26 +344,24 @@ export default function PostEditorForm({
       generic: "โหลด post ไม่สำเร็จ",
     };
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-[20px] border-2 border-brand-dark p-8 shadow-[4px_4px_0px_0px_#191A23] text-center">
-          <h3 className="text-lg font-bold text-brand-dark mb-2">
+      <div className="min-h-screen bg-surface-muted p-8">
+        <div className="rounded-2xl border-2 border-border-strong bg-surface p-8 text-center shadow-hard">
+          <h3 className="mb-2 text-lg font-bold text-foreground">
             {messages[loadError]}
           </h3>
-          <div className="flex items-center justify-center gap-3 mt-4">
+          <div className="mt-4 flex items-center justify-center gap-3">
             {loadError === "generic" && (
-              <button
-                onClick={fetchPost}
-                className="px-5 py-2.5 bg-brand-lime border-2 border-brand-dark rounded-[12px] font-bold text-brand-dark shadow-[4px_4px_0px_0px_#191A23] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-200"
-              >
+              <Button variant="secondary" size="sm" onClick={fetchPost}>
                 Retry
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/dashboard/posts")}
-              className="px-5 py-2.5 bg-brand-gray border-2 border-brand-dark rounded-[12px] font-medium text-brand-dark"
             >
               Back to Posts
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -355,80 +369,59 @@ export default function PostEditorForm({
   }
 
   return (
-    <div ref={pageRef} className="p-8">
-      <div className="editor-header opacity-0 flex items-center justify-between mb-6">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 text-brand-dark/60 hover:text-brand-dark transition-colors"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4L6 10L12 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="font-medium">Back to Posts</span>
-        </button>
+    <div ref={pageRef} className="min-h-screen bg-surface-muted">
+      <EditorTopBar
+        entering={enterAnimation}
+        onBack={handleBack}
+        saveLabel={saving ? "Saving..." : mode === "edit" ? "Update Post" : "Save Post"}
+        saving={saving}
+        canSave={canEdit}
+        onSave={handleSave}
+      />
 
-        <button
-          onClick={handleSave}
-          disabled={saving || !canEdit}
-          className="flex items-center gap-2 bg-brand-lime border-2 border-brand-dark px-6 py-3 rounded-[16px] font-bold text-brand-dark shadow-[4px_4px_0px_0px_#191A23] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4V16H16V7L12 3H4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 3V7H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {saving
-            ? "Saving..."
-            : mode === "edit"
-              ? "Update Post"
-              : "Save Post"}
-        </button>
-      </div>
+      {/* Reserves the bar's height in the flow — the bar itself is `fixed`
+          and never affects this padding, so it can fade in/out freely
+          without moving anything below it. */}
+      <div className="pt-[60px] md:pt-16">
+        <div ref={contentRef} className="mx-auto max-w-5xl p-8 opacity-0">
+          {!canEdit && (
+            <div className="mb-6 rounded-2xl border border-border bg-surface-muted px-5 py-3 text-sm font-medium text-text-secondary">
+              คุณไม่ได้เป็นเจ้าของ post นี้ — ดูได้อย่างเดียว แก้ไขไม่ได้
+            </div>
+          )}
 
-      {!canEdit && (
-        <div className="editor-content opacity-0 mb-6 px-5 py-3 rounded-[16px] border-2 border-brand-dark bg-brand-gray text-sm font-medium text-brand-dark/70">
-          คุณไม่ได้เป็นเจ้าของ post นี้ — ดูได้อย่างเดียว แก้ไขไม่ได้
+          <div className="mb-6">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter post title..."
+              className="w-full rounded-2xl border-2 border-border-strong bg-surface px-6 py-4 text-2xl font-black text-foreground shadow-hard transition-all duration-200 placeholder:text-text-faint focus:translate-x-1 focus:translate-y-1 focus:shadow-none focus:outline-none"
+            />
+          </div>
+
+          <div className="mb-6">
+            <SplitEditor value={content} onChange={setContent} />
+          </div>
+
+          <div>
+            <div className="rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-hard">
+              <h3 className="mb-4 text-lg font-bold text-foreground">Post Settings</h3>
+              <MetadataForm
+                category={category}
+                onCategoryChange={setCategory}
+                status={status}
+                onStatusChange={setStatus}
+                coverImage={coverImage}
+                onCoverImageChange={setCoverImage}
+                excerpt={excerpt}
+                onExcerptChange={setExcerpt}
+                content={content}
+                postId={mode === "edit" ? postId : undefined}
+              />
+            </div>
+          </div>
         </div>
-      )}
-
-      <div className="editor-content opacity-0 mb-6">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter post title..."
-          className="w-full px-6 py-4 text-2xl font-black text-brand-dark placeholder:text-brand-dark/30 bg-white rounded-[20px] border-2 border-brand-dark shadow-[4px_4px_0px_0px_#191A23] focus:outline-none focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all duration-200"
-        />
-      </div>
-
-      <div className="editor-content opacity-0 mb-6">
-        <SplitEditor value={content} onChange={setContent} />
-      </div>
-
-      <div className="editor-content opacity-0">
-        <div className="bg-white rounded-[20px] border-2 border-brand-dark p-6 shadow-[4px_4px_0px_0px_#191A23]">
-          <h3 className="text-lg font-bold text-brand-dark mb-4">Post Settings</h3>
-          <MetadataForm
-            category={category}
-            onCategoryChange={setCategory}
-            status={status}
-            onStatusChange={setStatus}
-            coverImage={coverImage}
-            onCoverImageChange={setCoverImage}
-            excerpt={excerpt}
-            onExcerptChange={setExcerpt}
-            content={content}
-            postId={mode === "edit" ? postId : undefined}
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 lg:hidden">
-        <button
-          onClick={handleBack}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-brand-gray border-2 border-brand-dark rounded-[16px] font-medium text-brand-dark"
-        >
-          Back to Posts
-        </button>
       </div>
 
       <ConfirmDialog
