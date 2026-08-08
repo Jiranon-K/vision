@@ -34,7 +34,12 @@ export interface MarkdownPreviewProps {
   content: string;
 }
 
+// Write is the default; Split is only ever reachable where the measure
+// survives two panes (see EditorModeSwitchSlot for the breakpoint).
+export type EditorMode = "write" | "split" | "preview";
+
 export interface SplitEditorProps {
   value: string;
   onChange: (value: string) => void;
+  mode: EditorMode;
 }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { animate, set, cubicBezier } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
+import PostTitleField from "@/components/dashboard/editor/PostTitleField";
 import MetadataForm from "@/components/dashboard/editor/MetadataForm";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -13,11 +14,19 @@ import { apiFetch, authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import type { EditorMode } from "@/components/dashboard/editor/types";
 import {
   draftKey,
   useAutosaveDraft,
   type PostDraftState,
 } from "@/hooks/useAutosaveDraft";
+
+// Two panes of prose only both keep a readable measure at lg (1024px) and
+// up — the same width Tailwind's own `lg:` breakpoint already treats as
+// "room for a second column". Below it Split is withheld, not just
+// disabled (see EditorModeSwitchSlot).
+const SPLIT_AVAILABLE_QUERY = "(min-width: 1024px)";
 
 interface PostEditorFormProps {
   mode: "create" | "edit";
@@ -70,6 +79,10 @@ export default function PostEditorForm({
   const [status, setStatus] = useState<"Draft" | "Published">("Draft");
   const [excerpt, setExcerpt] = useState("");
   const [coverImage, setCoverImage] = useState("");
+
+  // Write is the default per the ticket, regardless of viewport.
+  const [editorMode, setEditorMode] = useState<EditorMode>("write");
+  const splitAvailable = useMediaQuery(SPLIT_AVAILABLE_QUERY);
 
   const [loading, setLoading] = useState(mode === "edit");
   const [loadError, setLoadError] = useState<LoadError>(null);
@@ -218,6 +231,14 @@ export default function PostEditorForm({
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
+
+  // A Creator who opened Split on a wide window and then narrowed it past
+  // the breakpoint can't be left on a mode the switch no longer offers.
+  useEffect(() => {
+    if (editorMode === "split" && !splitAvailable) {
+      setEditorMode("write");
+    }
+  }, [editorMode, splitAvailable]);
 
   const handleBack = () => {
     if (isDirty) {
@@ -377,31 +398,40 @@ export default function PostEditorForm({
         saving={saving}
         canSave={canEdit}
         onSave={handleSave}
+        mode={editorMode}
+        onModeChange={setEditorMode}
+        splitAvailable={splitAvailable}
       />
 
       {/* Reserves the bar's height in the flow — the bar itself is `fixed`
           and never affects this padding, so it can fade in/out freely
           without moving anything below it. */}
       <div className="pt-[60px] md:pt-16">
-        <div ref={contentRef} className="mx-auto max-w-5xl p-8 opacity-0">
+        <div
+          ref={contentRef}
+          className="mx-auto flex min-h-[calc(100vh-60px)] max-w-5xl flex-col p-8 opacity-0 md:min-h-[calc(100vh-4rem)]"
+        >
           {!canEdit && (
             <div className="mb-6 rounded-2xl border border-border bg-surface-muted px-5 py-3 text-sm font-medium text-text-secondary">
               คุณไม่ได้เป็นเจ้าของ post นี้ — ดูได้อย่างเดียว แก้ไขไม่ได้
             </div>
           )}
 
-          <div className="mb-6">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter post title..."
-              className="w-full rounded-2xl border-2 border-border-strong bg-surface px-6 py-4 text-2xl font-black text-foreground shadow-hard transition-all duration-200 placeholder:text-text-faint focus:translate-x-1 focus:translate-y-1 focus:shadow-none focus:outline-none"
-            />
+          {/* The measure — capped and centred — belongs to the title and
+              the writing surface, not the whole page: Post Settings below
+              is a form, not prose, so it keeps the wider column. Split is
+              the one mode that needs the extra width, since it is two
+              measures side by side rather than one. */}
+          <div className="mx-auto mb-6 w-full max-w-prose">
+            <PostTitleField value={title} onChange={setTitle} />
           </div>
 
-          <div className="mb-6">
-            <SplitEditor value={content} onChange={setContent} />
+          <div
+            className={`mx-auto mb-6 flex w-full flex-1 flex-col ${
+              editorMode === "split" ? "max-w-5xl" : "max-w-prose"
+            }`}
+          >
+            <SplitEditor value={content} onChange={setContent} mode={editorMode} />
           </div>
 
           <div>

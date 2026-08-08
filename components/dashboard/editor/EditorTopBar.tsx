@@ -6,6 +6,7 @@ import PublishAction from "./PublishAction";
 import AutosaveStatusSlot from "./AutosaveStatusSlot";
 import EditorMeterSlot from "./EditorMeterSlot";
 import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
+import type { EditorMode } from "./types";
 
 export interface EditorTopBarProps {
   /** Flips true once the writing surface has started its own entrance —
@@ -18,6 +19,9 @@ export interface EditorTopBarProps {
   saving: boolean;
   canSave: boolean;
   onSave: () => void;
+  mode: EditorMode;
+  onModeChange: (mode: EditorMode) => void;
+  splitAvailable: boolean;
 }
 
 // The chrome follows the writing surface in "about 120ms later" (ticket 01).
@@ -58,6 +62,9 @@ export default function EditorTopBar({
   saving,
   canSave,
   onSave,
+  mode,
+  onModeChange,
+  splitAvailable,
 }: EditorTopBarProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(false);
@@ -164,7 +171,11 @@ export default function EditorTopBar({
       </div>
 
       <div className="flex shrink-0 items-center gap-3">
-        <EditorModeSwitchSlot />
+        <EditorModeSwitchSlot
+          mode={mode}
+          onModeChange={onModeChange}
+          splitAvailable={splitAvailable}
+        />
         <PublishAction
           label={saveLabel}
           pending={saving}
