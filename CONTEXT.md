@@ -26,6 +26,10 @@ _Avoid_: Permalink, Path, Handle
 A short summary of a Post, shown in listings and previews instead of its full content.
 _Avoid_: Summary, Description, Teaser, Snippet
 
+**Excerpt Suggestion**:
+Text the platform proposes as a Post's Excerpt. It is not an Excerpt — it is shown to nobody until the Creator accepts it, where an Excerpt is shown to Readers in listings and previews. Accepting one replaces the Post's Excerpt with the suggested text; until then the Post's Excerpt is unchanged.
+_Avoid_: Suggested excerpt, AI excerpt, Generated excerpt, Draft excerpt
+
 **Category**:
 The single topic a Post belongs to, chosen from a fixed marketing-oriented set (Marketing, SEO, Content, Social Media, Analytics, Branding).
 _Avoid_: Tag, Topic, Section
