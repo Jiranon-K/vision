@@ -263,7 +263,7 @@ export default function MetadataForm({
           rows={3}
           placeholder="Leave blank to generate automatically from the content"
           className={cn(
-            "w-full resize-none rounded-xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-text-faint focus:outline-none",
+            "w-full resize-none rounded-xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-text-faint",
             borderFlash ? "border-brand-border" : "border-border-strong",
             !prefersReducedMotion &&
               "transition-colors duration-[var(--duration-slow)] ease-[var(--ease-out)]"

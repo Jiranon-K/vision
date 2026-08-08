@@ -188,7 +188,7 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
           aria-haspopup={slashQuery ? "listbox" : undefined}
           aria-controls={slashQuery ? SLASH_LISTBOX_ID : undefined}
           aria-activedescendant={activeOption ? optionId(activeOption.id) : undefined}
-          className="w-full h-full min-h-[400px] p-4 rounded-2xl border-2 border-border-strong bg-surface resize-none focus:outline-none focus:border-border-strong font-mono text-sm leading-relaxed text-foreground placeholder:text-text-faint"
+          className="w-full h-full min-h-[400px] p-4 rounded-2xl border-2 border-border-strong bg-surface resize-none font-mono text-sm leading-relaxed text-foreground placeholder:text-text-faint"
           spellCheck={false}
         />
         <p id="markdown-heading-shortcuts" className="sr-only">

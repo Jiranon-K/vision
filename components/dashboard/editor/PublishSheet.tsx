@@ -91,7 +91,7 @@ export default function PublishSheet({
           id={categoryId}
           value={category}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="w-full rounded-xl border-2 border-border-strong bg-surface px-4 py-3 font-medium text-foreground focus:outline-none"
+          className="w-full rounded-xl border-2 border-border-strong bg-surface px-4 py-3 font-medium text-foreground"
         >
           <option value="">Select category</option>
           {categories

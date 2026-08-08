@@ -187,7 +187,11 @@ export default function EditorTopBar({
       // `fixed` takes the bar out of flow entirely, so hiding/showing it
       // never moves the text below — the page reserves the same height with
       // padding instead of relying on this element's own box.
-      className={`fixed inset-x-0 top-0 z-40 flex h-[60px] items-center justify-between gap-3 border-b border-border bg-surface px-4 transition-opacity md:h-16 md:px-8 ${
+      // One height at every width. Direction 1b's central claim is that the
+      // layout does not fork by breakpoint; only the horizontal padding does,
+      // because a phone has no room to spare and the bar's contents do not
+      // change.
+      className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-border bg-surface px-4 transition-opacity md:px-8 ${
         prefersReducedMotion
           ? "duration-[0ms]"
           : "duration-[var(--duration-slow)] ease-[var(--ease-out)]"

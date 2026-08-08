@@ -37,7 +37,10 @@ export default function PostTitleField({ value, onChange }: PostTitleFieldProps)
       }}
       placeholder="Enter post title..."
       rows={1}
-      className="w-full resize-none overflow-hidden rounded-2xl border-2 border-border-strong bg-surface px-6 py-4 text-2xl font-black leading-snug text-foreground shadow-hard transition-all duration-200 placeholder:text-text-faint focus:translate-x-1 focus:translate-y-1 focus:shadow-none focus:outline-none"
+      // No shadow-hard and no press-on-focus translate: the brand's hard
+      // elevation marks a surface as pressable, and the title is the first
+      // line of the Post, not a control. The global focus ring is left alone.
+      className="w-full resize-none overflow-hidden rounded-2xl border-2 border-border-strong bg-surface px-6 py-4 text-2xl font-black leading-snug text-foreground placeholder:text-text-faint"
     />
   );
 }
