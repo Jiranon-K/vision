@@ -10,10 +10,15 @@ import {
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
+// A five-minute ISR window outlives an E2E run: the server is warmed before the
+// database is seeded, so every page would render the empty listing that request
+// cached. `POSTS_REVALIDATE=0` opts that run out of the cache entirely.
+const REVALIDATE = Number(process.env.POSTS_REVALIDATE ?? 300);
+
 // Server-side public fetch — no credentials, ISR-cached.
 export async function getPublishedPosts(): Promise<Post[]> {
   const res = await fetch(`${API_BASE_URL}/api/posts?status=Published`, {
-    next: { revalidate: 300 },
+    next: { revalidate: REVALIDATE },
   });
 
   if (!res.ok) {
@@ -26,7 +31,7 @@ export async function getPublishedPosts(): Promise<Post[]> {
 export async function getPostBySlug(slug: string): Promise<Post | null> {
   const res = await fetch(
     `${API_BASE_URL}/api/posts/slug/${encodeURIComponent(slug)}`,
-    { next: { revalidate: 300 } },
+    { next: { revalidate: REVALIDATE } },
   );
 
   if (res.status === 404) {

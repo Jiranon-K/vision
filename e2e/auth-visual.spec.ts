@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { CREATOR } from './config';
+import { settle } from './visual';
 
 // Evidence run: every auth screen and every state the redesign defines, captured
 // as stills plus a video of the walk-through. Assertions are deliberately thin —
@@ -7,25 +8,6 @@ import { CREATOR } from './config';
 test.use({ video: 'on' });
 
 const SHOTS = 'test-results/auth-visual';
-
-// AnimationProvider wipes a full-screen lime overlay across the viewport after
-// every route change. Stills taken before it clears show the wipe, not the
-// page — so wait for the overlay to be scaled away rather than for a duration.
-async function settle(page: Page) {
-  await page
-    .locator('div.fixed.inset-0.bg-brand-lime')
-    .first()
-    .evaluate(
-      (el) =>
-        new Promise<void>((resolve) => {
-          const done = () =>
-            el.getBoundingClientRect().width < 1 ? resolve() : requestAnimationFrame(done);
-          done();
-        }),
-      undefined,
-      { timeout: 5_000 }
-    );
-}
 
 async function shoot(page: Page, name: string) {
   await settle(page);

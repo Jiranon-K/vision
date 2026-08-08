@@ -23,7 +23,17 @@ export default defineConfig({
     },
     {
       name: 'e2e',
-      testIgnore: /.*\.setup\.ts/,
+      testIgnore: [/.*\.setup\.ts/, /readme-shots\.spec\.ts/, /auth-visual\.spec\.ts/],
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+    // Evidence, not regression coverage: these specs write image and video
+    // artefacts, and readme-shots writes PNGs that are committed. Keeping them
+    // out of the default run stops every unrelated CI run from producing a
+    // multi-megabyte binary diff. Run them explicitly: `bun run screenshots`.
+    {
+      name: 'screenshots',
+      testMatch: /(readme-shots|auth-visual)\.spec\.ts/,
       dependencies: ['setup'],
       use: { ...devices['Desktop Chrome'] },
     },
