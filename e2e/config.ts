@@ -268,6 +268,9 @@ export const serverEnv: Record<string, string> = {
   EMAIL_FROM: 'noreply@e2e.local',
   EMAIL_FROM_NAME: 'Vision E2E',
   ADMIN_EMAILS: '',
+  // Exercises the real Excerpt Suggestion path without an AI account —
+  // deterministic, and must never be selected implicitly in production.
+  AI_PROVIDER: 'stub',
 };
 
 export const webEnv: Record<string, string> = {

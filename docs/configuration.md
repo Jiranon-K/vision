@@ -26,20 +26,23 @@ cp server/.env.example server/.env
 
 ### Backend — `server/.env`
 
-| Variable                     | Required | Description                                                                     |
-| ---------------------------- | -------- | ------------------------------------------------------------------------------- |
-| `MONGODB_URI`                | yes      | MongoDB connection string                                                       |
-| `JWT_SECRET`                 | yes      | Secret used to sign JWTs — 32+ random characters                                |
-| `JWT_ACCESS_EXPIRES_IN`      | no       | Access token TTL (default `15m`)                                                |
-| `JWT_REFRESH_EXPIRES_IN`     | no       | Refresh token TTL (default `7d`)                                                |
-| `JWT_REMEMBER_ME_EXPIRES_IN` | no       | Refresh token TTL when the Creator ticked "remember me" (default `30d`)         |
-| `PORT`                       | no       | API port (default `3001`)                                                       |
-| `NODE_ENV`                   | no       | `development` \| `production` \| `test`. Rate limiters are skipped under `test` |
-| `FRONTEND_URL`               | yes      | The allowed CORS origin, and the base of every link the API puts in an email    |
-| `RESEND_API_KEY`             | yes      | [Resend](https://resend.com) API key — verification and password-reset email    |
-| `EMAIL_FROM`                 | yes      | Sender address for outgoing email                                               |
-| `EMAIL_FROM_NAME`            | no       | Sender display name                                                             |
-| `ADMIN_EMAILS`               | no       | Comma-separated addresses promoted to `admin` on register, self-healed on login |
+| Variable                       | Required | Description                                                                                                                |
+| ------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`                  | yes      | MongoDB connection string                                                                                                  |
+| `JWT_SECRET`                   | yes      | Secret used to sign JWTs — 32+ random characters                                                                           |
+| `JWT_ACCESS_EXPIRES_IN`        | no       | Access token TTL (default `15m`)                                                                                           |
+| `JWT_REFRESH_EXPIRES_IN`       | no       | Refresh token TTL (default `7d`)                                                                                           |
+| `JWT_REMEMBER_ME_EXPIRES_IN`   | no       | Refresh token TTL when the Creator ticked "remember me" (default `30d`)                                                    |
+| `PORT`                         | no       | API port (default `3001`)                                                                                                  |
+| `NODE_ENV`                     | no       | `development` \| `production` \| `test`. Rate limiters are skipped under `test`                                            |
+| `FRONTEND_URL`                 | yes      | The allowed CORS origin, and the base of every link the API puts in an email                                               |
+| `RESEND_API_KEY`               | yes      | [Resend](https://resend.com) API key — verification and password-reset email                                               |
+| `EMAIL_FROM`                   | yes      | Sender address for outgoing email                                                                                          |
+| `EMAIL_FROM_NAME`              | no       | Sender display name                                                                                                        |
+| `ADMIN_EMAILS`                 | no       | Comma-separated addresses promoted to `admin` on register, self-healed on login                                            |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | no       | Google AI Studio API key. When set, Excerpt Suggestions are backed by Gemini                                               |
+| `AI_EXCERPT_MODEL`             | no       | Overrides the Gemini model used for Excerpt Suggestions (default `gemini-3.1-flash-lite`)                                  |
+| `AI_PROVIDER`                  | no       | Set to `stub` to force a deterministic fake provider for Excerpt Suggestions — Playwright/local use only, never production |
 
 ## Scripts
 

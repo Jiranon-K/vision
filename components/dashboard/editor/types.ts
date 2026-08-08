@@ -7,6 +7,7 @@ export interface MetadataFormProps {
   onCoverImageChange: (coverImage: string) => void;
   excerpt: string;
   onExcerptChange: (excerpt: string) => void;
+  content: string;
 }
 
 export interface ToolbarButton {

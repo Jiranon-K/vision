@@ -13,3 +13,13 @@ export const postSchema = z.object({
 });
 
 export const updatePostSchema = postSchema.partial();
+
+// A Creator asks for a suggestion before the Post has ever been saved, so this
+// takes content directly rather than a Post id. The ceiling matches the 5mb
+// JSON body limit in spirit — generous, but not unbounded.
+export const suggestExcerptSchema = z.object({
+  content: z
+    .string()
+    .min(1, 'Content is required')
+    .max(50_000, 'Content is too long'),
+});

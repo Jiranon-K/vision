@@ -13,7 +13,9 @@
     "backfill-owner": "tsx scripts/backfill-owner.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.39",
     "@react-email/components": "^1.0.12",
+    "ai": "^7.0.58",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",

@@ -416,6 +416,7 @@ export default function PostEditorForm({
             onCoverImageChange={setCoverImage}
             excerpt={excerpt}
             onExcerptChange={setExcerpt}
+            content={content}
           />
         </div>
       </div>

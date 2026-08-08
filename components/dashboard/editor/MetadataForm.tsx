@@ -1,9 +1,15 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { categories } from "@/lib/constants";
+import { apiFetch, authFetch } from "@/lib/api";
+import { Spinner } from "@/components/ui/spinner";
 import type { MetadataFormProps } from "./types";
+
+// Below this, a "summary" would just echo the content back — the button stays
+// visible but disabled rather than firing a request that can't say anything.
+const MIN_SUGGESTION_CONTENT_LENGTH = 40;
 
 export default function MetadataForm({
   category,
@@ -14,9 +20,48 @@ export default function MetadataForm({
   onCoverImageChange,
   excerpt,
   onExcerptChange,
+  content,
 }: MetadataFormProps) {
   const statusOptions = ["Draft", "Published"] as const;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Single source of truth for whether this deployment has the capability at
+  // all lives on the server (it holds the credentials) — never a
+  // NEXT_PUBLIC_* flag that could drift from what's actually configured.
+  const [suggestionAvailable, setSuggestionAvailable] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch("/api/capabilities")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled) setSuggestionAvailable(Boolean(data?.excerptSuggestion));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const contentTooShort = content.trim().length < MIN_SUGGESTION_CONTENT_LENGTH;
+
+  const handleSuggest = async () => {
+    setSuggesting(true);
+    try {
+      const res = await authFetch("/api/posts/suggest-excerpt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      onExcerptChange(data.excerpt);
+      toast.success("Excerpt suggestion added — edit it as you like.");
+    } finally {
+      setSuggesting(false);
+    }
+  };
 
   const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,9 +133,25 @@ export default function MetadataForm({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-brand-dark/60 mb-2">
-          Excerpt
-        </label>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-medium text-brand-dark/60">
+            Excerpt
+          </label>
+          {suggestionAvailable && (
+            <button
+              type="button"
+              onClick={handleSuggest}
+              disabled={contentTooShort || suggesting}
+              aria-label={
+                suggesting ? "Suggesting an excerpt…" : "Suggest an excerpt"
+              }
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-brand-dark bg-white text-xs font-bold text-brand-dark hover:bg-brand-gray transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+            >
+              {suggesting && <Spinner size="sm" label={null} />}
+              {suggesting ? "Suggesting…" : "Suggest Excerpt"}
+            </button>
+          )}
+        </div>
         <textarea
           value={excerpt}
           onChange={(e) => onExcerptChange(e.target.value)}

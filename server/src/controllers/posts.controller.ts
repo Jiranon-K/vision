@@ -2,8 +2,10 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
 import { AuthRequest } from '../middleware/auth';
-import { postSchema, updatePostSchema } from '../schemas/posts';
+import { postSchema, updatePostSchema, suggestExcerptSchema } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
+import { suggestExcerpt } from '../ai/excerptSuggestion';
+import { resolveGenerateText } from '../ai/provider';
 
 // $regex compiles its input as a pattern, so a search term must be escaped or the
 // Creator's own text becomes syntax: `c++` is a malformed pattern MongoDB rejects,
@@ -225,6 +227,39 @@ export const updatePost = async (
   } catch (error) {
     console.error('Update post error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+export const suggestPostExcerpt = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const validation = suggestExcerptSchema.safeParse(req.body);
+  if (!validation.success) {
+    res.status(400).json({
+      error: 'Validation failed',
+      details: validation.error.issues.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      })),
+    });
+    return;
+  }
+
+  const generateText = resolveGenerateText();
+  if (!generateText) {
+    res.status(503).json({ error: 'Excerpt suggestions are not available' });
+    return;
+  }
+
+  try {
+    const excerpt = await suggestExcerpt(validation.data.content, generateText);
+    // "provider": this suggestion came from the injected provider call, as
+    // opposed to the derived fallback ticket 03 adds under the same field.
+    res.json({ excerpt, source: 'provider' });
+  } catch (error) {
+    console.error('Suggest excerpt error:', error);
+    res.status(502).json({ error: 'Failed to generate an excerpt suggestion' });
   }
 };
 
