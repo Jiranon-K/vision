@@ -30,13 +30,15 @@ function fields(page: Page) {
   return {
     title: page.getByPlaceholder('Enter post title...'),
     content: page.getByPlaceholder('Write your post content in Markdown...'),
-    excerpt: page.getByPlaceholder('เว้นว่างเพื่อสร้างอัตโนมัติจากเนื้อหา'),
+    excerpt: page.getByPlaceholder('Leave blank to generate automatically from the content'),
     suggest: page.getByRole('button', { name: 'Suggest an excerpt' }),
   };
 }
 
 test('every Excerpt Suggestion state, desktop', async ({ page }) => {
   await page.goto('/dashboard/posts/new');
+  // Cover image and Excerpt live behind the details drawer (ticket 05).
+  await page.getByRole('button', { name: 'Details' }).click();
   const f = fields(page);
   await expect(f.suggest).toBeVisible();
 
@@ -66,6 +68,13 @@ test('every Excerpt Suggestion state, desktop', async ({ page }) => {
   await expect(f.excerpt).not.toHaveValue('', { timeout: 15_000 });
   await expect(page.getByText('Excerpt suggestion added')).toBeVisible();
   await shoot(page, '04-filled');
+
+  // Arrival plays a border flash on the field (ticket 05) that lasts a few
+  // hundred ms — let it finish rather than racing the next click against it,
+  // since the flash is a `transition-colors` on an ancestor of nothing the
+  // Suggest button depends on, but a stray re-render mid-transition is still
+  // enough to make Playwright's click flag the button as momentarily unstable.
+  await page.waitForTimeout(700);
 
   // confirm — the field now holds text, so asking again must ask first
   await f.suggest.click();

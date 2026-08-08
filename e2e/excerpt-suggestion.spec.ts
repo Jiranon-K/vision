@@ -16,7 +16,11 @@ test.describe('excerpt suggestion', () => {
         'This post has more than enough content for the Excerpt Suggestion feature to summarise it into a short excerpt.'
       );
 
-    const excerptField = page.getByPlaceholder('เว้นว่างเพื่อสร้างอัตโนมัติจากเนื้อหา');
+    // Cover image and Excerpt live behind the details drawer (ticket 05), not
+    // inline in the writing path.
+    await page.getByRole('button', { name: 'Details' }).click();
+
+    const excerptField = page.getByPlaceholder('Leave blank to generate automatically from the content');
     await expect(excerptField).toHaveValue('');
 
     const suggestButton = page.getByRole('button', { name: 'Suggest an excerpt' });

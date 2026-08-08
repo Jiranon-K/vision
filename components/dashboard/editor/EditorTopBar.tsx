@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import DetailsAction from "./DetailsAction";
 import PublishAction from "./PublishAction";
 import SaveAction from "./SaveAction";
 import PostStatusSlot from "./PostStatusSlot";
@@ -41,6 +42,9 @@ export interface EditorTopBarProps {
    *  ever reaching the Publish sheet (ticket 04). */
   onSave: () => void;
   onOpenPublish: () => void;
+  /** Opens the details drawer (ticket 05) — cover image and Excerpt, reachable
+   *  in one gesture and never required in order to Publish. */
+  onOpenDetails: () => void;
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
   splitAvailable: boolean;
@@ -94,6 +98,7 @@ export default function EditorTopBar({
   showSave,
   onSave,
   onOpenPublish,
+  onOpenDetails,
   mode,
   onModeChange,
   splitAvailable,
@@ -234,6 +239,7 @@ export default function EditorTopBar({
           onModeChange={onModeChange}
           splitAvailable={splitAvailable}
         />
+        <DetailsAction onClick={onOpenDetails} />
         <SaveNowAction visible={autosaveDirty && !saving} onClick={onSaveNow} />
         {showSave && (
           <>

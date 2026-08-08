@@ -6,9 +6,9 @@ import { animate, set, cubicBezier } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
 import PostTitleField from "@/components/dashboard/editor/PostTitleField";
-import MetadataForm from "@/components/dashboard/editor/MetadataForm";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
 import PublishSheet from "@/components/dashboard/editor/PublishSheet";
+import DetailsDrawer from "@/components/dashboard/editor/DetailsDrawer";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -120,6 +120,7 @@ export default function PostEditorForm({
   const [showRestore, setShowRestore] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
   const [publishSheetOpen, setPublishSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   // True for one brief window right after a Draft -> Published save lands —
   // see handlePublishConfirm and PUBLISH_TRANSITION_HOLD_MS above.
   const [statusAccent, setStatusAccent] = useState(false);
@@ -550,6 +551,7 @@ export default function PostEditorForm({
         showSave={canEdit}
         onSave={handleSave}
         onOpenPublish={() => setPublishSheetOpen(true)}
+        onOpenDetails={() => setDetailsOpen(true)}
         mode={editorMode}
         onModeChange={setEditorMode}
         splitAvailable={splitAvailable}
@@ -576,42 +578,44 @@ export default function PostEditorForm({
 
           {/* A Creator who can't own a save also can't be left with anything
               that pretends otherwise — `inert` (not per-field `disabled`)
-              takes the whole writing surface and Post Settings out of the
-              tab order and off the hit-test in one place, so nothing here
-              has to know it's being viewed read-only. */}
+              takes the whole writing surface out of the tab order and off
+              the hit-test in one place, so nothing here has to know it's
+              being viewed read-only. */}
           <div inert={!canEdit || undefined} className="contents">
             {/* The measure — capped and centred — belongs to the title and
-                the writing surface, not the whole page: Post Settings below
-                is a form, not prose, so it keeps the wider column. Split is
-                the one mode that needs the extra width, since it is two
-                measures side by side rather than one. */}
+                the writing surface. Split is the one mode that needs the
+                extra width, since it is two measures side by side rather
+                than one. */}
             <div className="mx-auto mb-6 w-full max-w-prose">
               <PostTitleField value={title} onChange={setTitle} />
             </div>
 
             <div
-              className={`mx-auto mb-6 flex w-full flex-1 flex-col ${
+              className={`mx-auto flex w-full flex-1 flex-col ${
                 editorMode === "split" ? "max-w-5xl" : "max-w-prose"
               }`}
             >
               <SplitEditor value={content} onChange={setContent} mode={editorMode} />
             </div>
-
-            <div>
-              <div className="rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-hard">
-                <h3 className="mb-4 text-lg font-bold text-foreground">Post Settings</h3>
-                <MetadataForm
-                  coverImage={coverImage}
-                  onCoverImageChange={setCoverImage}
-                  excerpt={excerpt}
-                  onExcerptChange={setExcerpt}
-                  content={content}
-                  postId={mode === "edit" ? postId : undefined}
-                />
-              </div>
-            </div>
           </div>
         </div>
+      </div>
+
+      {/* Cover image and Excerpt (ticket 05) — behind their own drawer, not
+          in the writing path, and never required in order to Publish. Left
+          outside the `inert` block above since it's a fixed overlay of its
+          own; `inert` here mirrors the same read-only rule for its fields. */}
+      <div inert={!canEdit || undefined}>
+        <DetailsDrawer
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
+          coverImage={coverImage}
+          onCoverImageChange={setCoverImage}
+          excerpt={excerpt}
+          onExcerptChange={setExcerpt}
+          content={content}
+          postId={mode === "edit" ? postId : undefined}
+        />
       </div>
 
       <ConfirmDialog

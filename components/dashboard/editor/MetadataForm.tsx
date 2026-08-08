@@ -1,15 +1,32 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { animate, set, cubicBezier } from "animejs";
 import { toast } from "sonner";
 import { apiFetch, authFetch } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button";
+import { Alert } from "@/components/ui/alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import type { MetadataFormProps } from "./types";
 
 // Below this, a "summary" would just echo the content back — the button stays
 // visible but disabled rather than firing a request that can't say anything.
 const MIN_SUGGESTION_CONTENT_LENGTH = 40;
+
+// Mirrors --duration-base / --ease-out from app/globals.css — animejs
+// animates DOM properties directly and can't read CSS custom properties, so
+// the token's *value* is duplicated here rather than its name.
+const SUGGESTION_DURATION = 200;
+const SUGGESTION_EASE = cubicBezier(0.16, 1, 0.3, 1);
+
+// The border flash itself is a CSS `transition-colors` (bound to
+// --duration-slow via the arbitrary-value class below), not something this
+// file drives frame by frame — only the hold before it reverts lives here,
+// and reduced motion reuses the exact same hold to swap instantly instead.
+const BORDER_FLASH_HOLD_MS = 600;
 
 export default function MetadataForm({
   coverImage,
@@ -20,6 +37,9 @@ export default function MetadataForm({
   postId,
 }: MetadataFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const excerptFieldRef = useRef<HTMLTextAreaElement>(null);
+  const fallbackAlertRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   // Single source of truth for whether this deployment has the capability at
   // all lives on the server (it holds the credentials) — never a
@@ -27,6 +47,15 @@ export default function MetadataForm({
   const [suggestionAvailable, setSuggestionAvailable] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
   const [confirmingReplace, setConfirmingReplace] = useState(false);
+  // Drives the field's border flash on arrival — a held state (see
+  // BORDER_FLASH_HOLD_MS), not a running animation.
+  const [borderFlash, setBorderFlash] = useState(false);
+  // A derived fallback (source === "fallback") gets a durable Alert instead
+  // of the toast this used to fire: a toast reporting "the AI part of this
+  // didn't happen" can vanish before the Creator reads it, and the field it's
+  // about is still sitting right there. Kept as the *only* channel for that
+  // message so it isn't said twice.
+  const [showFallbackAlert, setShowFallbackAlert] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +70,56 @@ export default function MetadataForm({
     };
   }, []);
 
+  // Reverts the border flash after its hold — full motion eases the change
+  // back via the field's own `transition-colors`; reduced motion has no
+  // transition class, so the same timeout instead holds the flash as a
+  // static state before it swaps back instantly.
+  useEffect(() => {
+    if (!borderFlash) return;
+    const timer = window.setTimeout(() => setBorderFlash(false), BORDER_FLASH_HOLD_MS);
+    return () => window.clearTimeout(timer);
+  }, [borderFlash]);
+
+  useEffect(() => {
+    if (!showFallbackAlert) return;
+    const el = fallbackAlertRef.current;
+    if (!el) return;
+    if (prefersReducedMotion) {
+      set(el, { opacity: 1, translateY: 0 });
+    } else {
+      set(el, { opacity: 0, translateY: -8 });
+      animate(el, {
+        opacity: [0, 1],
+        translateY: [-8, 0],
+        duration: SUGGESTION_DURATION,
+        ease: SUGGESTION_EASE,
+      });
+    }
+  }, [showFallbackAlert, prefersReducedMotion]);
+
   const contentTooShort = content.trim().length < MIN_SUGGESTION_CONTENT_LENGTH;
+
+  // The Creator did not type this text, so its arrival has to be legible:
+  // the field's content fades up from a small offset while its border
+  // flashes the brand line. Reduced motion swaps the content instantly and
+  // still flashes the border, just without the eased transition.
+  const animateSuggestionArrival = () => {
+    const field = excerptFieldRef.current;
+    if (field) {
+      if (prefersReducedMotion) {
+        set(field, { opacity: 1, translateY: 0 });
+      } else {
+        set(field, { opacity: 0, translateY: 8 });
+        animate(field, {
+          opacity: [0, 1],
+          translateY: [8, 0],
+          duration: SUGGESTION_DURATION,
+          ease: SUGGESTION_EASE,
+        });
+      }
+    }
+    setBorderFlash(true);
+  };
 
   const runSuggest = async () => {
     setSuggesting(true);
@@ -63,14 +141,14 @@ export default function MetadataForm({
 
       const data = await res.json();
       onExcerptChange(data.excerpt);
-      // "fallback": the provider failed or timed out server-side, so the field
-      // holds a mechanically derived excerpt. Saying so is the point — never
-      // pass a truncation off as the AI's work.
+      animateSuggestionArrival();
+      // "fallback": the provider failed or timed out server-side, so the
+      // field holds a mechanically derived excerpt. Saying so is the point —
+      // never pass a truncation off as the AI's work.
       if (data.source === "fallback") {
-        toast.warning(
-          "AI suggestions are unavailable right now — added a quick excerpt from your content instead."
-        );
+        setShowFallbackAlert(true);
       } else {
+        setShowFallbackAlert(false);
         toast.success("Excerpt suggestion added — edit it as you like.");
       }
     } finally {
@@ -106,20 +184,20 @@ export default function MetadataForm({
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-medium text-brand-dark/60 mb-2">
+        <label className="mb-2 block text-sm font-medium text-text-secondary">
           Cover Image
         </label>
         <div className="flex items-center gap-4">
-          <div className="w-32 h-20 rounded-[12px] border-2 border-brand-dark bg-brand-gray overflow-hidden flex items-center justify-center shrink-0">
+          <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border-strong bg-surface-muted">
             {coverImage ? (
               // eslint-disable-next-line @next/next/no-img-element -- previews a cover URL the Creator just typed, which next/image cannot optimize without a configured host
               <img
                 src={coverImage}
                 alt="Cover preview"
-                className="w-full h-full object-cover"
+                className="h-full w-full object-cover"
               />
             ) : (
-              <span className="text-xs text-brand-dark/30">No image</span>
+              <span className="text-xs text-text-faint">No image</span>
             )}
           </div>
           <div className="flex flex-col gap-2">
@@ -130,13 +208,14 @@ export default function MetadataForm({
               accept="image/*"
               className="hidden"
             />
-            <button
+            <Button
               type="button"
+              size="sm"
+              className="w-fit"
               onClick={() => fileInputRef.current?.click()}
-              className="w-fit px-4 py-2 bg-brand-dark text-white rounded-xl font-bold text-sm hover:bg-brand-dark/90 transition-colors"
             >
               {coverImage ? "Change Image" : "Upload Image"}
-            </button>
+            </Button>
             {coverImage && (
               <button
                 type="button"
@@ -144,12 +223,12 @@ export default function MetadataForm({
                   onCoverImageChange("");
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-                className="w-fit text-sm font-medium text-brand-error hover:underline"
+                className="w-fit text-sm font-medium text-error-strong hover:underline"
               >
                 Remove
               </button>
             )}
-            <p className="text-xs text-brand-dark/40">
+            <p className="text-xs text-text-faint">
               JPG, PNG or GIF. Max 2MB.
             </p>
           </div>
@@ -157,8 +236,8 @@ export default function MetadataForm({
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-brand-dark/60">
+        <div className="mb-2 flex items-center justify-between">
+          <label className="block text-sm font-medium text-text-secondary">
             Excerpt
           </label>
           {suggestionAvailable && (
@@ -169,7 +248,7 @@ export default function MetadataForm({
               aria-label={
                 suggesting ? "Suggesting an excerpt…" : "Suggest an excerpt"
               }
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-brand-dark bg-white text-xs font-bold text-brand-dark hover:bg-brand-gray transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+              className="flex items-center gap-1.5 rounded-pill border-2 border-border-strong bg-surface px-3 py-1.5 text-xs font-bold text-foreground transition-colors hover:bg-state-hover disabled:cursor-not-allowed disabled:opacity-[var(--state-disabled-opacity)] disabled:hover:bg-surface"
             >
               {suggesting && <Spinner size="sm" label={null} />}
               {suggesting ? "Suggesting…" : "Suggest Excerpt"}
@@ -177,16 +256,27 @@ export default function MetadataForm({
           )}
         </div>
         <textarea
+          ref={excerptFieldRef}
           value={excerpt}
           onChange={(e) => onExcerptChange(e.target.value)}
           maxLength={500}
           rows={3}
-          placeholder="เว้นว่างเพื่อสร้างอัตโนมัติจากเนื้อหา"
-          className="w-full px-4 py-3 rounded-[12px] border-2 border-brand-dark bg-white resize-none focus:outline-none focus:border-brand-dark text-sm leading-relaxed text-brand-dark placeholder:text-brand-dark/30"
+          placeholder="Leave blank to generate automatically from the content"
+          className={cn(
+            "w-full resize-none rounded-xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-text-faint focus:outline-none",
+            borderFlash ? "border-brand-border" : "border-border-strong",
+            !prefersReducedMotion &&
+              "transition-colors duration-[var(--duration-slow)] ease-[var(--ease-out)]"
+          )}
         />
-        <p className="mt-1 text-right text-xs text-brand-dark/40">
+        <p className="mt-1 text-right text-xs text-text-faint">
           {excerpt.length}/500
         </p>
+        {showFallbackAlert && (
+          <Alert ref={fallbackAlertRef} tone="warning" className="mt-3">
+            AI suggestions are unavailable right now — this excerpt was generated from your content instead.
+          </Alert>
+        )}
       </div>
 
       <ConfirmDialog
