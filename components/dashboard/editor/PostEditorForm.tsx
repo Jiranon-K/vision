@@ -10,6 +10,8 @@ import MetadataForm from "@/components/dashboard/editor/MetadataForm";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
 import { apiFetch, authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
@@ -52,6 +54,20 @@ const EMPTY: PostDraftState = {
 const ENTRANCE_DURATION = 300;
 const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
+// Human-readable age for the restore dialog's "how old is this Draft"
+// requirement — coarser than AutosaveStatusSlot's live "Xs ago" clock since
+// this renders once, on open, rather than ticking.
+function formatDraftAge(savedAt: number): string {
+  const seconds = Math.floor((Date.now() - savedAt) / 1000);
+  if (seconds < 60) return "less than a minute ago";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
 function sameDraft(a: PostDraftState, b: PostDraftState): boolean {
   return (
     a.title === b.title &&
@@ -72,6 +88,7 @@ export default function PostEditorForm({
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
+  const loadErrorPrimaryRef = useRef<HTMLButtonElement>(null);
   const prefersReducedMotion = usePrefersReducedMotion();
 
   const [title, setTitle] = useState("");
@@ -153,19 +170,18 @@ export default function PostEditorForm({
     setLoadError(null);
     try {
       const res = await apiFetch(`/api/posts/${postId}`);
+      // No toast here — the load-error state below takes over the canvas
+      // instead of hiding behind one.
       if (res.status === 404) {
         setLoadError("notfound");
-        toast.error("ไม่พบ post นี้");
         return;
       }
       if (res.status === 403) {
         setLoadError("forbidden");
-        toast.error("ไม่มีสิทธิ์เข้าถึง post นี้");
         return;
       }
       if (!res.ok) {
         setLoadError("generic");
-        toast.error("โหลด post ไม่สำเร็จ");
         return;
       }
 
@@ -189,7 +205,6 @@ export default function PostEditorForm({
       setOwnerId(String(post.owner ?? ""));
     } catch {
       setLoadError("generic");
-      toast.error("โหลด post ไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -198,6 +213,13 @@ export default function PostEditorForm({
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
+
+  // The load-error canvas is a destination, not a passive message — send
+  // focus to its primary action (Retry, or Back to Posts when there is no
+  // Retry) the moment it appears.
+  useEffect(() => {
+    if (loadError) loadErrorPrimaryRef.current?.focus();
+  }, [loadError]);
 
   // --- Offer to restore an autosaved draft -----------------------------------
   useEffect(() => {
@@ -321,7 +343,7 @@ export default function PostEditorForm({
   // --- Save -------------------------------------------------------------------
   const handleSave = async () => {
     if (!canEdit) {
-      toast.error("คุณไม่มีสิทธิ์แก้ไข post นี้");
+      toast.error("You don't have permission to edit this Post.");
       return;
     }
 
@@ -379,24 +401,51 @@ export default function PostEditorForm({
   }
 
   if (loadError) {
-    const messages: Record<Exclude<LoadError, null>, string> = {
-      notfound: "ไม่พบ post ที่ต้องการแก้ไข",
-      forbidden: "คุณไม่มีสิทธิ์เข้าถึง post นี้",
-      generic: "โหลด post ไม่สำเร็จ",
+    // Distinguishes the three failure kinds by tone as well as copy: neither
+    // party is at fault when a Post simply isn't there, access is a boundary
+    // being enforced (warning), and a failed request is the one kind worth
+    // reading as an actual error.
+    const tone: Record<Exclude<LoadError, null>, "neutral" | "warning" | "error"> = {
+      notfound: "neutral",
+      forbidden: "warning",
+      generic: "error",
     };
+    const heading: Record<Exclude<LoadError, null>, string> = {
+      notfound: "Post not found",
+      forbidden: "You don't have access to this Post",
+      generic: "This Post failed to load",
+    };
+    const description: Record<Exclude<LoadError, null>, string> = {
+      notfound: "It may have been deleted, or the link is wrong.",
+      forbidden: "You aren't the owner of this Post, so it can't be opened here.",
+      generic: "Something went wrong while loading. Check your connection and try again.",
+    };
+
     return (
-      <div className="min-h-screen bg-surface-muted p-8">
-        <div className="rounded-2xl border-2 border-border-strong bg-surface p-8 text-center shadow-hard">
-          <h3 className="mb-2 text-lg font-bold text-foreground">
-            {messages[loadError]}
-          </h3>
-          <div className="mt-4 flex items-center justify-center gap-3">
+      <div className="flex min-h-screen items-center justify-center bg-surface-muted p-8">
+        <Card variant="elevated" className="w-full max-w-md p-8">
+          {/* Leads with the one thing that matters: whether the Creator's
+              local work is safe. Only shown when `existingDraft` — read
+              straight from the autosave hook — proves it's actually there. */}
+          {existingDraft && (
+            <Alert tone="success" className="mb-4">
+              Your local Draft is safe. It&apos;s saved on this device and
+              nothing has been lost.
+            </Alert>
+          )}
+
+          <Alert tone={tone[loadError]} title={heading[loadError]}>
+            {description[loadError]}
+          </Alert>
+
+          <div className="mt-6 flex items-center justify-center gap-3">
             {loadError === "generic" && (
-              <Button variant="secondary" size="sm" onClick={fetchPost}>
+              <Button ref={loadErrorPrimaryRef} variant="secondary" size="sm" onClick={fetchPost}>
                 Retry
               </Button>
             )}
             <Button
+              ref={loadError === "generic" ? undefined : loadErrorPrimaryRef}
               variant="outline"
               size="sm"
               onClick={() => router.push("/dashboard/posts")}
@@ -404,7 +453,7 @@ export default function PostEditorForm({
               Back to Posts
             </Button>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -416,7 +465,7 @@ export default function PostEditorForm({
         onBack={handleBack}
         saveLabel={saving ? "Saving..." : mode === "edit" ? "Update Post" : "Save Post"}
         saving={saving}
-        canSave={canEdit}
+        showSave={canEdit}
         onSave={handleSave}
         mode={editorMode}
         onModeChange={setEditorMode}
@@ -437,43 +486,50 @@ export default function PostEditorForm({
           className="mx-auto flex min-h-[calc(100vh-60px)] max-w-5xl flex-col p-8 opacity-0 md:min-h-[calc(100vh-4rem)]"
         >
           {!canEdit && (
-            <div className="mb-6 rounded-2xl border border-border bg-surface-muted px-5 py-3 text-sm font-medium text-text-secondary">
-              คุณไม่ได้เป็นเจ้าของ post นี้ — ดูได้อย่างเดียว แก้ไขไม่ได้
-            </div>
+            <Alert tone="neutral" className="mb-6">
+              You don&apos;t own this Post — you can view it, but not edit it.
+            </Alert>
           )}
 
-          {/* The measure — capped and centred — belongs to the title and
-              the writing surface, not the whole page: Post Settings below
-              is a form, not prose, so it keeps the wider column. Split is
-              the one mode that needs the extra width, since it is two
-              measures side by side rather than one. */}
-          <div className="mx-auto mb-6 w-full max-w-prose">
-            <PostTitleField value={title} onChange={setTitle} />
-          </div>
+          {/* A Creator who can't own a save also can't be left with anything
+              that pretends otherwise — `inert` (not per-field `disabled`)
+              takes the whole writing surface and Post Settings out of the
+              tab order and off the hit-test in one place, so nothing here
+              has to know it's being viewed read-only. */}
+          <div inert={!canEdit || undefined} className="contents">
+            {/* The measure — capped and centred — belongs to the title and
+                the writing surface, not the whole page: Post Settings below
+                is a form, not prose, so it keeps the wider column. Split is
+                the one mode that needs the extra width, since it is two
+                measures side by side rather than one. */}
+            <div className="mx-auto mb-6 w-full max-w-prose">
+              <PostTitleField value={title} onChange={setTitle} />
+            </div>
 
-          <div
-            className={`mx-auto mb-6 flex w-full flex-1 flex-col ${
-              editorMode === "split" ? "max-w-5xl" : "max-w-prose"
-            }`}
-          >
-            <SplitEditor value={content} onChange={setContent} mode={editorMode} />
-          </div>
+            <div
+              className={`mx-auto mb-6 flex w-full flex-1 flex-col ${
+                editorMode === "split" ? "max-w-5xl" : "max-w-prose"
+              }`}
+            >
+              <SplitEditor value={content} onChange={setContent} mode={editorMode} />
+            </div>
 
-          <div>
-            <div className="rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-hard">
-              <h3 className="mb-4 text-lg font-bold text-foreground">Post Settings</h3>
-              <MetadataForm
-                category={category}
-                onCategoryChange={setCategory}
-                status={status}
-                onStatusChange={setStatus}
-                coverImage={coverImage}
-                onCoverImageChange={setCoverImage}
-                excerpt={excerpt}
-                onExcerptChange={setExcerpt}
-                content={content}
-                postId={mode === "edit" ? postId : undefined}
-              />
+            <div>
+              <div className="rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-hard">
+                <h3 className="mb-4 text-lg font-bold text-foreground">Post Settings</h3>
+                <MetadataForm
+                  category={category}
+                  onCategoryChange={setCategory}
+                  status={status}
+                  onStatusChange={setStatus}
+                  coverImage={coverImage}
+                  onCoverImageChange={setCoverImage}
+                  excerpt={excerpt}
+                  onExcerptChange={setExcerpt}
+                  content={content}
+                  postId={mode === "edit" ? postId : undefined}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -481,20 +537,25 @@ export default function PostEditorForm({
 
       <ConfirmDialog
         open={showRestore}
-        title="กู้คืน draft"
-        message="พบ draft ที่ยังไม่บันทึก ต้องการกู้คืนหรือไม่?"
-        confirmText="กู้คืน"
-        cancelText="ละทิ้ง"
+        title="Restore Draft?"
+        message={
+          existingDraft
+            ? `A Draft was found on this device, saved ${formatDraftAge(existingDraft.savedAt)}. Restore it, or discard it and keep what's already here?`
+            : "A Draft was found on this device. Restore it, or discard it and keep what's already here?"
+        }
+        confirmText="Restore"
+        cancelText="Discard"
+        initialFocus="confirm"
         onConfirm={applyRestore}
         onCancel={discardRestore}
       />
 
       <ConfirmDialog
         open={showBackConfirm}
-        title="ออกโดยไม่บันทึก"
-        message="มีการแก้ไขที่ยังไม่บันทึก ต้องการออกหรือไม่?"
-        confirmText="ออก"
-        cancelText="อยู่ต่อ"
+        title="Leave without saving?"
+        message="You have unsaved changes. If you leave now, they will be lost."
+        confirmText="Leave"
+        cancelText="Stay"
         danger
         onConfirm={confirmBack}
         onCancel={() => setShowBackConfirm(false)}

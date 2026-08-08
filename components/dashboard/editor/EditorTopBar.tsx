@@ -18,7 +18,10 @@ export interface EditorTopBarProps {
   backLabel?: string;
   saveLabel: string;
   saving: boolean;
-  canSave: boolean;
+  /** Whether Publish appears at all. A Creator who can't save gets no
+   *  Publish control rather than a disabled one — a control that can never
+   *  be used shouldn't occupy the eye (ticket 08). */
+  showSave: boolean;
   onSave: () => void;
   mode: EditorMode;
   onModeChange: (mode: EditorMode) => void;
@@ -69,7 +72,7 @@ export default function EditorTopBar({
   backLabel = "Back to Posts",
   saveLabel,
   saving,
-  canSave,
+  showSave,
   onSave,
   mode,
   onModeChange,
@@ -191,12 +194,7 @@ export default function EditorTopBar({
           splitAvailable={splitAvailable}
         />
         <SaveNowAction visible={autosaveDirty && !saving} onClick={onSaveNow} />
-        <PublishAction
-          label={saveLabel}
-          pending={saving}
-          disabled={!canSave}
-          onClick={onSave}
-        />
+        {showSave && <PublishAction label={saveLabel} pending={saving} onClick={onSave} />}
       </div>
     </div>
   );

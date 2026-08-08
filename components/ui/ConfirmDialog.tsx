@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate } from "animejs";
+import { animate, set, cubicBezier } from "animejs";
+import { Button } from "@/components/ui/button";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -12,7 +14,18 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   danger?: boolean;
+  /** Which control takes initial focus on open. Defaults to "cancel" — the
+   *  safe option — so a Creator hitting Enter on reflex lands on the choice
+   *  that can't lose anything. */
+  initialFocus?: "confirm" | "cancel";
 }
+
+// Mirrors --duration-base / --ease-out from app/globals.css — animejs
+// animates DOM properties directly and can't read CSS custom properties, so
+// the token's *value* is duplicated here rather than its name (same pattern
+// as PostEditorForm's own entrance constants).
+const ENTRANCE_DURATION = 200;
+const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 export default function ConfirmDialog({
   open,
@@ -23,59 +36,90 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   danger = false,
+  initialFocus = "cancel",
 }: ConfirmDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const didAnimate = useRef(false);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  // Whatever had focus before the dialog opened — restored on close so
+  // dismissing a dialog never strands focus at the top of the document.
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (!open) return;
-    const dialog = dialogRef.current;
-    if (!dialog) return;
 
-    didAnimate.current = false;
-    animate(dialog, {
-      opacity: [0, 1],
-      scale: [0.9, 1],
-      duration: 200,
-      easing: "easeOutCubic",
-    });
-  }, [open]);
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+    const dialog = dialogRef.current;
+    if (dialog) {
+      if (prefersReducedMotion) {
+        // Fades with no scale — a real reduced-motion state, not just a
+        // shorter version of the full animation.
+        set(dialog, { opacity: 0, scale: 1 });
+        animate(dialog, { opacity: [0, 1], duration: ENTRANCE_DURATION, ease: ENTRANCE_EASE });
+      } else {
+        animate(dialog, {
+          opacity: [0, 1],
+          scale: [0.95, 1],
+          duration: ENTRANCE_DURATION,
+          ease: ENTRANCE_EASE,
+        });
+      }
+    }
+
+    (initialFocus === "confirm" ? confirmRef.current : cancelRef.current)?.focus();
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      onCancel();
+    };
+    document.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+      previouslyFocused.current?.focus();
+    };
+  }, [open, initialFocus, onCancel, prefersReducedMotion]);
 
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-surface-inverse/40 backdrop-blur-sm"
         onClick={onCancel}
+        aria-hidden="true"
       />
 
-      
       <div
         ref={dialogRef}
-        className="relative bg-white rounded-[20px] border-2 border-brand-dark p-6 w-full max-w-md shadow-[4px_4px_0px_0px_#191A23] opacity-0"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
+        className="relative w-full max-w-md rounded-2xl border-2 border-border-strong bg-surface p-6 shadow-panel opacity-0"
       >
-        <h3 className="text-xl font-black text-brand-dark mb-2">{title}</h3>
-        <p className="text-brand-dark/70 mb-6">{message}</p>
+        <h3 id="confirm-dialog-title" className="mb-2 text-xl font-black text-foreground">
+          {title}
+        </h3>
+        <p id="confirm-dialog-message" className="mb-6 text-text-secondary">
+          {message}
+        </p>
 
         <div className="flex gap-3">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3 bg-brand-gray border-2 border-brand-dark/20 rounded-[12px] font-bold text-brand-dark/70 hover:border-brand-dark hover:text-brand-dark transition-all duration-200"
-          >
+          <Button ref={cancelRef} variant="outline" fullWidth onClick={onCancel}>
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
+            ref={confirmRef}
+            variant={danger ? "destructive" : "secondary"}
+            fullWidth
             onClick={onConfirm}
-            className={`flex-1 py-3 border-2 border-brand-dark rounded-[12px] font-bold shadow-[4px_4px_0px_0px_#191A23] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-200 ${
-              danger
-                ? "bg-red-500 text-white hover:bg-red-600"
-                : "bg-brand-lime text-brand-dark"
-            }`}
           >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

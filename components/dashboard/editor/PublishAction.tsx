@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 export interface PublishActionProps {
   label: string;
   pending: boolean;
-  disabled: boolean;
   onClick: () => void;
 }
 
@@ -13,11 +12,12 @@ export interface PublishActionProps {
 // into — a control that opens the Publish slide-over. Until that lands, it
 // keeps today's behaviour exactly: it saves the Post, full stop. `secondary`
 // carries --elevation-hard because this is the one control on the bar whose
-// press has a real effect on the Post.
+// press has a real effect on the Post. Ticket 08: a Creator who can't save
+// doesn't get this control at all — EditorTopBar simply doesn't render it —
+// so there is no `disabled` state to represent here.
 export default function PublishAction({
   label,
   pending,
-  disabled,
   onClick,
 }: PublishActionProps) {
   return (
@@ -26,7 +26,6 @@ export default function PublishAction({
       variant="secondary"
       size="sm"
       onClick={onClick}
-      disabled={disabled}
       loading={pending}
       loadingText="Saving..."
     >
