@@ -21,6 +21,11 @@ import type { Outcome, RunState, Task } from './types';
 
 class BudgetExhausted extends Error {}
 
+/** Queue tasks have an issue to update; ad-hoc tasks must stay local. */
+export function shouldPublishToGitHub(task: Task): task is Task & { issue: number } {
+  return typeof task.issue === 'number' && Number.isInteger(task.issue) && task.issue > 0;
+}
+
 export async function runTask(task: Task): Promise<Outcome> {
   const startedAt = new Date();
   const reporter = await Reporter.create(task.issue, startedAt);
@@ -96,7 +101,7 @@ export async function runTask(task: Task): Promise<Outcome> {
     state.costUsd = plan.costUsd;
     checkBudget();
 
-    if (task.issue !== null && plan.text.trim()) {
+    if (shouldPublishToGitHub(task) && plan.text.trim()) {
       await gh.comment(task.issue, `**Agent plan**\n\n${plan.text.trim()}`);
     }
 
@@ -142,6 +147,11 @@ export async function runTask(task: Task): Promise<Outcome> {
     // --- Land ----------------------------------------------------------------
     reporter.phase('LAND');
     await wt.commit(commitMessage(task));
+
+    if (!shouldPublishToGitHub(task)) {
+      state.outcome = { kind: 'local-success', branch };
+      return state.outcome;
+    }
 
     const rebase = await wt.rebaseOnMain();
     reporter.info(`rebase: ${rebase}`);
@@ -416,6 +426,9 @@ async function salvage(
 
   try {
     await wt.commit(`${commitMessage(task)} [wip]`);
+    if (!shouldPublishToGitHub(task)) {
+      return { kind: 'failed', reason };
+    }
     await wt.push(state.branch);
     const url = await gh.openPullRequest({
       branch: state.branch,

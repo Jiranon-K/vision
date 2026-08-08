@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ARTIFACTS_DIR } from './config';
-import type { CommandResult, RunState } from './types';
+import type { CommandResult, Outcome, RunState } from './types';
 
 const COLORS = {
   reset: '\x1b[0m',
@@ -20,6 +20,18 @@ function supportsColor(): boolean {
 function paint(text: string, color: keyof typeof COLORS): string {
   return supportsColor() ? `${COLORS[color]}${text}${COLORS.reset}` : text;
 }
+
+// A total Record rather than a ternary chain: a new Outcome kind then fails
+// typecheck instead of silently falling through to the red FAILED branch.
+export const OUTCOME_LABELS: Record<
+  Outcome['kind'],
+  { text: string; color: keyof typeof COLORS }
+> = {
+  success: { text: 'SUCCESS', color: 'green' },
+  'local-success': { text: 'LOCAL SUCCESS', color: 'green' },
+  'needs-info': { text: 'NEEDS INFO', color: 'yellow' },
+  failed: { text: 'FAILED', color: 'red' },
+};
 
 export class Reporter {
   private gateLogIndex = 0;
@@ -92,13 +104,8 @@ export class Reporter {
 
     const outcome = state.outcome;
     if (!outcome) return;
-    const label =
-      outcome.kind === 'success'
-        ? paint('SUCCESS', 'green')
-        : outcome.kind === 'needs-info'
-          ? paint('NEEDS INFO', 'yellow')
-          : paint('FAILED', 'red');
-    console.log(`\n${label} — artifacts in ${this.dir}`);
+    const { text, color } = OUTCOME_LABELS[outcome.kind];
+    console.log(`\n${paint(text, color)} — artifacts in ${this.dir}`);
   }
 }
 
