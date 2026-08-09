@@ -5,6 +5,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import MarkdownToolbar from "./MarkdownToolbar";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownPreview from "./MarkdownPreview";
+import PostTitleField from "./PostTitleField";
 import type { SplitEditorProps } from "./types";
 
 // A pane fades in from a small horizontal offset the moment it mounts —
@@ -39,7 +40,7 @@ function Pane({ children, className }: { children: ReactNode; className?: string
 
   return (
     <div
-      className={`min-w-0 transition-[opacity,transform] ${
+      className={`flex min-w-0 flex-col transition-[opacity,transform] ${
         entered ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"
       } ${className ?? ""}`}
     >
@@ -48,26 +49,37 @@ function Pane({ children, className }: { children: ReactNode; className?: string
   );
 }
 
-export default function SplitEditor({ value, onChange, mode }: SplitEditorProps) {
+// The paper: title, toolbar and text are one column, not three stacked
+// cards. The title lives here rather than above this component because in
+// Split it belongs to the writing pane — the preview has its own heading,
+// rendered from the Markdown.
+export default function SplitEditor({
+  value,
+  onChange,
+  mode,
+  title,
+  onTitleChange,
+}: SplitEditorProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const split = mode === "split";
 
   return (
-    <div className="flex h-full flex-col">
-      <MarkdownToolbar textareaRef={textareaRef} value={value} onChange={onChange} />
+    <div className="flex w-full flex-1 overflow-hidden">
+      {mode !== "preview" && (
+        <Pane
+          className={`flex-1 bg-surface ${split ? "border-r border-border-subtle" : ""}`}
+        >
+          <PostTitleField value={title} onChange={onTitleChange} narrow={split} />
+          <MarkdownToolbar textareaRef={textareaRef} value={value} onChange={onChange} />
+          <MarkdownEditor value={value} onChange={onChange} textareaRef={textareaRef} />
+        </Pane>
+      )}
 
-      <div className="flex flex-1 gap-4 min-h-0">
-        {mode !== "preview" && (
-          <Pane className="flex-1">
-            <MarkdownEditor value={value} onChange={onChange} textareaRef={textareaRef} />
-          </Pane>
-        )}
-
-        {mode !== "write" && (
-          <Pane className="flex-1">
-            <MarkdownPreview content={value} />
-          </Pane>
-        )}
-      </div>
+      {mode !== "write" && (
+        <Pane className={`flex-1 ${mode === "preview" ? "bg-surface" : "bg-surface-sunken"}`}>
+          <MarkdownPreview content={value} />
+        </Pane>
+      )}
     </div>
   );
 }

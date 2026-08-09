@@ -5,7 +5,6 @@ import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import DetailsAction from "./DetailsAction";
 import PublishAction from "./PublishAction";
-import SaveAction from "./SaveAction";
 import PostStatusSlot from "./PostStatusSlot";
 import AutosaveStatusSlot, { type AutosaveStatus } from "./AutosaveStatusSlot";
 import EditorMeterSlot from "./EditorMeterSlot";
@@ -39,7 +38,8 @@ export interface EditorTopBarProps {
   showSave: boolean;
   /** Persists the Post exactly as it stands, status untouched — distinct
    *  from `onOpenPublish` so a Draft can be saved to the server without
-   *  ever reaching the Publish sheet (ticket 04). */
+   *  ever reaching the Publish sheet (ticket 04). Surfaced as "Save now",
+   *  which appears only while `dirty`. */
   onSave: () => void;
   onOpenPublish: () => void;
   /** Opens the details drawer (ticket 05) — cover image and Excerpt, reachable
@@ -53,9 +53,10 @@ export interface EditorTopBarProps {
   autosaveLastSavedAt: number | null;
   /** Word count / reading time meter reads straight off the buffer. */
   content: string;
-  /** Save now — appears only while the local autosave buffer is dirty. */
-  autosaveDirty: boolean;
-  onSaveNow: () => void;
+  /** Whether the Post on screen differs from the one on the server — the
+   *  only thing "Save now" can act on, so it is also what decides whether
+   *  the control is on the bar at all. */
+  dirty: boolean;
 }
 
 // The chrome follows the writing surface in "about 120ms later" (ticket 01).
@@ -91,7 +92,7 @@ const NON_TYPING_KEYS = new Set([
 export default function EditorTopBar({
   entering,
   onBack,
-  backLabel = "Back to Posts",
+  backLabel = "Posts",
   status,
   statusAccent,
   saving,
@@ -105,8 +106,7 @@ export default function EditorTopBar({
   autosaveStatus,
   autosaveLastSavedAt,
   content,
-  autosaveDirty,
-  onSaveNow,
+  dirty,
 }: EditorTopBarProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(false);
@@ -183,15 +183,12 @@ export default function EditorTopBar({
   }, [entered]);
 
   return (
-    <div
-      // `fixed` takes the bar out of flow entirely, so hiding/showing it
-      // never moves the text below — the page reserves the same height with
-      // padding instead of relying on this element's own box.
-      // One height at every width. Direction 1b's central claim is that the
-      // layout does not fork by breakpoint; only the horizontal padding does,
-      // because a phone has no room to spare and the bar's contents do not
-      // change.
-      className={`fixed inset-x-0 top-0 z-40 flex h-16 items-center justify-between gap-3 border-b border-border bg-surface px-4 transition-opacity md:px-8 ${
+    <header
+      // A flex row in the editor column, not a fixed overlay: the design has
+      // the bar sitting on the canvas and the canvas scrolling beneath it.
+      // It keeps its height while receding — only opacity animates — so a
+      // Creator typing never sees the text below it move.
+      className={`relative z-30 flex h-16 shrink-0 items-center gap-2 border-b border-border-subtle bg-surface px-3 transition-opacity sm:gap-3 sm:px-[18px] ${
         prefersReducedMotion
           ? "duration-[0ms]"
           : "duration-[var(--duration-slow)] ease-[var(--ease-out)]"
@@ -228,30 +225,42 @@ export default function EditorTopBar({
             strokeLinejoin="round"
           />
         </svg>
-        <span className="hidden font-medium sm:inline">{backLabel}</span>
+        <span className="hidden text-sm font-semibold sm:inline">{backLabel}</span>
       </button>
 
-      <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
-        <PostStatusSlot status={status} />
+      {/* State on the left, next to where the Creator came from; actions on
+          the right. The spacer between them is what keeps the two groups
+          apart at every width rather than a justify rule that would drift
+          as items withdraw. Both state items hide at compact widths, where
+          the bottom bar carries them instead. */}
+      <div className="hidden items-center gap-2 md:flex">
         <AutosaveStatusSlot status={autosaveStatus} lastSavedAt={autosaveLastSavedAt} />
-        <EditorMeterSlot content={content} />
+        <PostStatusSlot status={status} />
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="min-w-0 flex-1" />
+
+      <EditorMeterSlot content={content} />
+
+      {/* Visibility lives on wrappers, never as a `hidden` passed into a
+          component that already sets its own `display` — two display
+          utilities at the same specificity are decided by stylesheet order,
+          not by which one the caller wrote last. */}
+      <div className="hidden sm:block">
         <EditorModeSwitchSlot
           mode={mode}
           onModeChange={onModeChange}
           splitAvailable={splitAvailable}
         />
-        <DetailsAction onClick={onOpenDetails} />
-        <SaveNowAction visible={autosaveDirty && !saving} onClick={onSaveNow} />
-        {showSave && (
-          <>
-            <SaveAction saving={saving} onClick={onSave} />
-            <PublishAction onClick={onOpenPublish} />
-          </>
-        )}
       </div>
-    </div>
+
+      {showSave && (
+        <div className="hidden md:block">
+          <SaveNowAction visible={dirty} saving={saving} onClick={onSave} />
+        </div>
+      )}
+      <DetailsAction onClick={onOpenDetails} />
+      {showSave && <PublishAction onClick={onOpenPublish} />}
+    </header>
   );
 }

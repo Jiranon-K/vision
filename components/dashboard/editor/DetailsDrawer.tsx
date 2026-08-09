@@ -15,7 +15,7 @@ export interface DetailsDrawerProps extends MetadataFormProps {
 // view while writing and neither gates Publish.
 export default function DetailsDrawer({ open, onClose, ...metadataProps }: DetailsDrawerProps) {
   return (
-    <SlideOverPanel open={open} onClose={onClose} title="Details">
+    <SlideOverPanel open={open} onClose={onClose} title="Post details" variant="drawer" closeLabel="Close details">
       <MetadataForm {...metadataProps} />
     </SlideOverPanel>
   );

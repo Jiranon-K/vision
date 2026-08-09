@@ -168,9 +168,9 @@ test.describe('signed in as a Creator', () => {
   test('editor', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 715 });
     await page.goto('/dashboard/posts/new');
-    await page.getByPlaceholder('Enter post title...').fill(DEMO_EDITOR_TITLE);
+    await page.getByPlaceholder('Untitled Post').fill(DEMO_EDITOR_TITLE);
     await page
-      .getByPlaceholder('Write your post content in Markdown...')
+      .getByPlaceholder('Start writing. Markdown works; so does thinking out loud.')
       .fill(DEMO_EDITOR_CONTENT);
     // Write is the default mode now, so the preview has to be asked for — the
     // README shot is of the split view, which is the thing worth showing.

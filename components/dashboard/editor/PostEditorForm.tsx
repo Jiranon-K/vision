@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { animate, set, cubicBezier } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
-import PostTitleField from "@/components/dashboard/editor/PostTitleField";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
+import EditorBottomBar from "@/components/dashboard/editor/EditorBottomBar";
+import EditorRail from "@/components/dashboard/editor/EditorRail";
 import PublishSheet from "@/components/dashboard/editor/PublishSheet";
 import DetailsDrawer from "@/components/dashboard/editor/DetailsDrawer";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -151,7 +152,6 @@ export default function PostEditorForm({
     lastSavedAt: autosaveSavedAt,
     dirty: autosaveDirty,
     saving: autosaveSaving,
-    saveNow,
   } = useAutosaveDraft(draftKey(postId), formState, { enabled: ready && canEdit });
 
   const isDirty = useMemo(
@@ -428,12 +428,17 @@ export default function PostEditorForm({
     router.replace("/dashboard/posts");
   };
 
-  // The top bar's plain Save — persists a Draft (or re-saves a Published
-  // Post) without touching status and without ever opening the Publish
-  // sheet. This is what makes "save a Draft to the server" and "Publish"
-  // two different controls rather than the same one pressed twice.
+  // The bar's "Save now" — persists a Draft (or re-saves a Published Post)
+  // without touching status and without ever opening the Publish sheet.
+  // This is what makes "save a Draft to the server" and "Publish" two
+  // different controls rather than the same one pressed twice.
+  //
+  // It stays on the page: the control exists because the Creator is ahead of
+  // the server mid-write, and answering that by navigating them out of the
+  // Post would be a strange reward for saving it. The control withdrawing is
+  // the confirmation; the toast is for anyone not watching the bar.
   const handleSave = async () => {
-    if (await persist()) leaveForPostsList();
+    if (await persist()) toast.success("Saved.");
   };
 
   // The Publish sheet's confirm. Always just persists — Category and
@@ -541,68 +546,75 @@ export default function PostEditorForm({
       : "Save Draft";
 
   return (
-    <div ref={pageRef} className="min-h-screen bg-surface-muted">
-      <EditorTopBar
-        entering={enterAnimation}
-        onBack={handleBack}
-        status={status}
-        statusAccent={statusAccent}
-        saving={saving}
-        showSave={canEdit}
-        onSave={handleSave}
-        onOpenPublish={() => setPublishSheetOpen(true)}
-        onOpenDetails={() => setDetailsOpen(true)}
-        mode={editorMode}
-        onModeChange={setEditorMode}
-        splitAvailable={splitAvailable}
-        autosaveStatus={autosaveStatus}
-        autosaveLastSavedAt={autosaveLastSavedAt}
-        content={content}
-        autosaveDirty={autosaveDirty}
-        onSaveNow={saveNow}
-      />
+    // The editor is a full-height application frame, not a scrolling page:
+    // rail · (top bar, canvas, bottom bar). Only the writing surface
+    // scrolls, so the chrome is always where the Creator left it.
+    <div ref={pageRef} className="flex h-screen overflow-hidden bg-surface-sunken">
+      <EditorRail />
 
-      {/* Reserves the bar's height in the flow — the bar itself is `fixed`
-          and never affects this padding, so it can fade in/out freely
-          without moving anything below it. */}
-      <div className="pt-16">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <EditorTopBar
+          entering={enterAnimation}
+          onBack={handleBack}
+          status={status}
+          statusAccent={statusAccent}
+          saving={saving}
+          showSave={canEdit}
+          onSave={handleSave}
+          onOpenPublish={() => setPublishSheetOpen(true)}
+          onOpenDetails={() => setDetailsOpen(true)}
+          mode={editorMode}
+          onModeChange={setEditorMode}
+          splitAvailable={splitAvailable}
+          autosaveStatus={autosaveStatus}
+          autosaveLastSavedAt={autosaveLastSavedAt}
+          content={content}
+          dirty={isDirty}
+        />
+
+        {!canEdit && (
+          <div className="shrink-0 px-4 py-3">
+            <Alert tone="neutral">
+              You don&apos;t own this Post — you can view it, but not edit it.
+            </Alert>
+          </div>
+        )}
+
         <div
           ref={contentRef}
           // The entrance animates this element's opacity from a ref, so there
           // is no class a screenshot run can wait on. This attribute is that
           // hook — see e2e/readme-shots.spec.ts.
           data-editor-surface
-          className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col p-8 opacity-0"
+          className="flex min-h-0 flex-1 justify-center overflow-hidden opacity-0"
         >
-          {!canEdit && (
-            <Alert tone="neutral" className="mb-6">
-              You don&apos;t own this Post — you can view it, but not edit it.
-            </Alert>
-          )}
-
           {/* A Creator who can't own a save also can't be left with anything
               that pretends otherwise — `inert` (not per-field `disabled`)
               takes the whole writing surface out of the tab order and off
               the hit-test in one place, so nothing here has to know it's
               being viewed read-only. */}
           <div inert={!canEdit || undefined} className="contents">
-            {/* The measure — capped and centred — belongs to the title and
-                the writing surface. Split is the one mode that needs the
-                extra width, since it is two measures side by side rather
-                than one. */}
-            <div className="mx-auto mb-6 w-full max-w-prose">
-              <PostTitleField value={title} onChange={setTitle} />
-            </div>
-
-            <div
-              className={`mx-auto flex w-full flex-1 flex-col ${
-                editorMode === "split" ? "max-w-5xl" : "max-w-prose"
-              }`}
-            >
-              <SplitEditor value={content} onChange={setContent} mode={editorMode} />
-            </div>
+            <SplitEditor
+              value={content}
+              onChange={setContent}
+              mode={editorMode}
+              title={title}
+              onTitleChange={setTitle}
+            />
           </div>
         </div>
+
+        <EditorBottomBar
+          status={status}
+          autosaveStatus={autosaveStatus}
+          autosaveLastSavedAt={autosaveLastSavedAt}
+          dirty={isDirty}
+          saving={saving}
+          showSave={canEdit}
+          onSave={handleSave}
+          mode={editorMode}
+          onModeChange={setEditorMode}
+        />
       </div>
 
       {/* Cover image and Excerpt (ticket 05) — behind their own drawer, not

@@ -4,6 +4,7 @@ import { useId } from "react";
 import { categories } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
 import SlideOverPanel from "./SlideOverPanel";
 
 export interface PublishChecklistItem {
@@ -38,6 +39,11 @@ export interface PublishSheetProps {
 // The scrim, focus trap, Escape-to-close, focus restoration, and slide
 // entrance all live in SlideOverPanel (ticket 05) — this component owns only
 // what's specific to Publishing.
+const STATUS_COPY = {
+  Draft: "Only you can see it.",
+  Published: "Live for every Reader.",
+} as const;
+
 export default function PublishSheet({
   open,
   onClose,
@@ -50,22 +56,22 @@ export default function PublishSheet({
   pending,
   onConfirm,
 }: PublishSheetProps) {
-  const categoryId = useId();
-  const canConfirm = checklist.every((item) => item.done) && !pending;
+  const categoryLabelId = useId();
+  const missing = checklist.filter((item) => !item.done);
+  const canConfirm = missing.length === 0 && !pending;
 
   return (
     <SlideOverPanel
       open={open}
       onClose={onClose}
-      title="Publish"
+      title="Publish this Post"
+      description="Publishing makes it visible to every Reader. You can move it back to Draft at any time."
       footer={
-        <div className="mt-auto flex gap-3 pt-2">
-          <Button type="button" variant="outline" fullWidth onClick={onClose}>
-            Cancel
-          </Button>
+        <div className="mt-auto pt-2">
           <Button
             type="button"
             variant="secondary"
+            size="lg"
             fullWidth
             disabled={!canConfirm}
             loading={pending}
@@ -83,30 +89,45 @@ export default function PublishSheet({
         </div>
       }
     >
-      <div>
-        <Label htmlFor={categoryId} className="mb-2">
+      <div aria-hidden="true" className="h-px bg-border-subtle" />
+
+      {/* Chips, not a select: there are six Categories, they all fit, and a
+          Creator choosing one shouldn't have to open a menu to find out what
+          the choices are. */}
+      <div className="flex flex-col gap-2">
+        <Label id={categoryLabelId} required>
           Category
         </Label>
-        <select
-          id={categoryId}
-          value={category}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          className="w-full rounded-xl border-2 border-border-strong bg-surface px-4 py-3 font-medium text-foreground"
-        >
-          <option value="">Select category</option>
+        <div role="radiogroup" aria-labelledby={categoryLabelId} className="flex flex-wrap gap-2">
           {categories
             .filter((c) => c !== "All")
             .map((cat) => (
-              <option key={cat} value={cat}>
+              <button
+                key={cat}
+                type="button"
+                role="radio"
+                aria-checked={category === cat}
+                onClick={() => onCategoryChange(cat)}
+                className={`rounded-pill border-2 px-3.5 py-2 text-[13.5px] font-bold transition-colors ${
+                  category === cat
+                    ? "border-border-strong bg-accent text-accent-foreground"
+                    : "border-border bg-transparent text-text-secondary hover:bg-state-hover"
+                }`}
+              >
                 {cat}
-              </option>
+              </button>
             ))}
-        </select>
+        </div>
       </div>
 
-      <div>
-        <span className="mb-2 block text-sm font-bold text-foreground">Draft or Published</span>
-        <div role="radiogroup" aria-label="Draft or Published" className="grid grid-cols-2 gap-3">
+      {/* "Draft or Published", not the design's "Visibility": those two are
+          the words the rest of the product uses for a Post's status
+          (CONTEXT.md), and a third name for the same thing is a bug. */}
+      <div className="flex flex-col gap-2">
+        <span id="publish-status-label" className="text-sm font-bold text-foreground">
+          Draft or Published
+        </span>
+        <div role="radiogroup" aria-labelledby="publish-status-label" className="flex gap-3">
           {(["Draft", "Published"] as const).map((option) => (
             <button
               key={option}
@@ -114,47 +135,29 @@ export default function PublishSheet({
               role="radio"
               aria-checked={status === option}
               onClick={() => onStatusChange(option)}
-              className={`rounded-xl border-2 border-border-strong px-4 py-3 text-center font-bold transition-colors ${
+              className={`flex flex-1 flex-col gap-1 rounded-xl border-2 p-3.5 text-left transition-colors ${
                 status === option
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-surface text-foreground hover:bg-state-hover"
+                  ? "border-border-strong bg-state-selected"
+                  : "border-border bg-surface hover:bg-state-hover"
               }`}
             >
-              {option}
+              <strong className="text-[15px] text-foreground">{option}</strong>
+              <span className="text-[13px] leading-snug text-text-secondary">
+                {STATUS_COPY[option]}
+              </span>
             </button>
           ))}
         </div>
-        <p className="mt-2 text-sm text-text-secondary">
-          {status === "Published"
-            ? "Published Posts are visible to Readers on the public blog."
-            : "Draft Posts are not visible to Readers."}
-        </p>
       </div>
 
-      <div>
-        <span className="mb-2 block text-sm font-bold text-foreground">Before you publish</span>
-        <ul className="space-y-2">
-          {checklist.map((item) => (
-            <li key={item.id} className="flex items-center gap-2 text-sm">
-              <span
-                aria-hidden="true"
-                className={`flex size-5 shrink-0 items-center justify-center rounded-pill border-2 ${
-                  item.done
-                    ? "border-success-strong bg-success-subtle text-success-strong"
-                    : "border-border text-text-faint"
-                }`}
-              >
-                {item.done ? (
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 8L6.5 11.5L13 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                ) : null}
-              </span>
-              <span className={item.done ? "text-text-secondary" : "text-foreground"}>{item.label}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {/* One line, not a checklist of ticks: what stands between this Post
+          and Publishing, said plainly — and it says so whether or not the
+          confirm below happens to be reachable. */}
+      <Alert tone={missing.length === 0 ? "success" : "warning"}>
+        {missing.length === 0
+          ? "Everything this Post needs is here."
+          : `Still needed: ${missing.map((item) => item.label.toLowerCase()).join(", ")}.`}
+      </Alert>
     </SlideOverPanel>
   );
 }

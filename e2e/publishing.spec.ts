@@ -28,19 +28,22 @@ test.describe('publishing', () => {
     expect(draftResponse?.status()).toBe(404);
 
     await page.goto('/dashboard/posts/new');
-    await page.getByPlaceholder('Enter post title...').fill(title);
-    await page.getByPlaceholder('Write your post content in Markdown...').fill(body);
+    await page.getByPlaceholder('Untitled Post').fill(title);
+    await page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.').fill(body);
 
     // Category now lives behind Publish (ticket 04) — opening that sheet to
     // set it, then closing without confirming, must not publish anything.
     await page.getByRole('button', { name: 'Publish' }).click();
-    await page.getByLabel('Category').selectOption('SEO');
+    await page.getByRole('radio', { name: 'SEO', exact: true }).click();
     await page.keyboard.press('Escape');
 
     // Saving a Draft to the server is a distinct control from Publish now —
     // this is the control ticket 04 added so a Draft is never persisted by
-    // the same button that publishes it.
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    // the same button that publishes it. It stays on the Post and withdraws
+    // once there is nothing left to save, so leaving is a separate gesture.
+    await page.getByRole('button', { name: 'Save now' }).click();
+    await expect(page.getByText('Saved.')).toBeVisible();
+    await page.getByRole('button', { name: 'Posts', exact: true }).click();
     await page.waitForURL(/\/dashboard\/posts(\?|$)/, { timeout: 30_000 });
 
     await page.getByRole('button', { name: `Edit ${title}` }).click();

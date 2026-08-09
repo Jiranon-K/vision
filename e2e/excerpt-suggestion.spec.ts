@@ -9,16 +9,16 @@ test.describe('excerpt suggestion', () => {
   test('a Creator asks for a suggestion and it lands in the Excerpt field', async ({ page }) => {
     await page.goto('/dashboard/posts/new');
 
-    await page.getByPlaceholder('Enter post title...').fill('Excerpt Suggestion E2E');
+    await page.getByPlaceholder('Untitled Post').fill('Excerpt Suggestion E2E');
     await page
-      .getByPlaceholder('Write your post content in Markdown...')
+      .getByPlaceholder('Start writing. Markdown works; so does thinking out loud.')
       .fill(
         'This post has more than enough content for the Excerpt Suggestion feature to summarise it into a short excerpt.'
       );
 
     // Cover image and Excerpt live behind the details drawer (ticket 05), not
     // inline in the writing path.
-    await page.getByRole('button', { name: 'Details' }).click();
+    await page.getByRole('button', { name: 'Post details' }).click();
 
     const excerptField = page.getByPlaceholder('Leave blank to generate automatically from the content');
     await expect(excerptField).toHaveValue('');

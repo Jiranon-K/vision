@@ -5,11 +5,14 @@ import { useLayoutEffect, useRef } from "react";
 export interface PostTitleFieldProps {
   value: string;
   onChange: (value: string) => void;
+  /** True in Split, where the column is half as wide and 34px display type
+   *  stops fitting on one line. */
+  narrow?: boolean;
 }
 
 // The title is the first line of the Post, not a setting about it — sized
 // and weighted as display type, and never allowed to clip or scroll.
-export default function PostTitleField({ value, onChange }: PostTitleFieldProps) {
+export default function PostTitleField({ value, onChange, narrow = false }: PostTitleFieldProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   // Grows (and shrinks) with content. Reset to "auto" before reading
@@ -35,12 +38,18 @@ export default function PostTitleField({ value, onChange }: PostTitleFieldProps)
         // insert a hard break the rest of the product doesn't expect.
         if (e.key === "Enter") e.preventDefault();
       }}
-      placeholder="Enter post title..."
+      placeholder="Untitled Post"
+      aria-label="Post title"
       rows={1}
-      // No shadow-hard and no press-on-focus translate: the brand's hard
-      // elevation marks a surface as pressable, and the title is the first
-      // line of the Post, not a control. The global focus ring is left alone.
-      className="w-full resize-none overflow-hidden rounded-2xl border-2 border-border-strong bg-surface px-6 py-4 text-2xl font-black leading-snug text-foreground placeholder:text-text-faint"
+      // No box at all: no border, no fill, no shadow. The title is the first
+      // line of the Post, not a field about it — the design gives it display
+      // type on the writing surface itself, and a border would put it back in
+      // a form. The global focus ring is left alone.
+      className={`block w-full resize-none overflow-hidden border-none bg-transparent font-black leading-[1.15] tracking-[-0.03em] text-foreground placeholder:text-text-faint ${
+        narrow
+          ? "px-8 pb-3 pt-[30px] text-[28px]"
+          : "px-5 pb-2.5 pt-[22px] text-[26px] md:px-12 md:pb-3.5 md:pt-10 md:text-[34px]"
+      }`}
     />
   );
 }

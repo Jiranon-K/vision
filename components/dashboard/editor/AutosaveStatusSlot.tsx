@@ -20,7 +20,6 @@ const PULSE_MS = 500;
 
 function formatElapsed(ms: number): string {
   const seconds = Math.floor(ms / 1000);
-  if (seconds < 5) return "just now";
   if (seconds < 60) return `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ago`;
@@ -28,11 +27,14 @@ function formatElapsed(ms: number): string {
   return `${hours}h ago`;
 }
 
+// The design writes the whole chip as one phrase — "Saved 8s ago" — rather
+// than a label and a separate clock, so the elapsed time is appended to
+// "Saved" and to nothing else.
 const LABEL: Record<AutosaveStatus, string> = {
   new: "New Post",
-  writing: "Writing",
+  writing: "Saved",
   saving: "Saving…",
-  saved: "Autosaved",
+  saved: "Saved",
 };
 
 // Fills the slot ticket 01 left empty. Reports the four states the Creator's
@@ -93,22 +95,36 @@ export default function AutosaveStatusSlot({
   const elapsed =
     lastSavedAt !== null && status !== "new" ? formatElapsed(now - lastSavedAt) : null;
 
+  // A Post with nothing committed yet gets a faint, still dot — the breathing
+  // green one is the claim "your work is safe", and it is not true yet.
   const dotColor =
-    status === "saving" ? "bg-warning" : status === "saved" ? "bg-success" : "bg-text-muted";
+    status === "saving" ? "bg-warning" : status === "new" ? "bg-text-faint" : "bg-success";
 
-  const dotMotion = prefersReducedMotion ? "" : pulsing ? "animate-dot-pulse" : "animate-dot-breathe";
+  const dotMotion =
+    prefersReducedMotion || status === "new" || status === "saving"
+      ? ""
+      : pulsing
+        ? "animate-dot-pulse"
+        : "animate-dot-breathe";
 
   return (
+    // A pill on --surface-muted, not a bare row: the dot and its phrase are
+    // one object in the design, and the chip is what gives way first when the
+    // bar runs out of width.
     <div
-      className={`flex min-w-[11rem] shrink-0 items-center gap-2 text-sm text-text-secondary ${className}`}
+      className={`flex shrink-0 items-center gap-2 rounded-pill bg-surface-muted px-3 py-1.5 ${className}`}
     >
       <span
         aria-hidden="true"
-        className={`h-2 w-2 shrink-0 rounded-pill ${dotColor} ${dotMotion}`}
+        className={`size-2 shrink-0 rounded-pill ${dotColor} ${dotMotion}`}
       />
-      <span className="truncate tabular-nums">
+      <span className="truncate font-mono text-xs tabular-nums text-text-secondary">
         {LABEL[status]}
-        {elapsed && status !== "saving" ? ` · ${elapsed}` : ""}
+        {/* On a 390px bar the exact age is not worth its width — the dot
+            already carries "your work is safe". */}
+        {elapsed && status !== "saving" ? (
+          <span className="hidden sm:inline">{` ${elapsed}`}</span>
+        ) : null}
       </span>
     </div>
   );

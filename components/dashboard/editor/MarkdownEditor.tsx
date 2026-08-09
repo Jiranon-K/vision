@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { applyHeading, applyBlockInsert, detectSlashQuery, type SlashQuery } from "./markdownOps";
+import { applyHeading, applyBlockInsert, applyWrap, detectSlashQuery, type SlashQuery } from "./markdownOps";
 import { getCaretCoordinates } from "./caretCoordinates";
 import SlashMenu, { filterSlashOptions, type SlashMenuAnchor } from "./SlashMenu";
 import type { MarkdownEditorProps, SlashMenuOption } from "./types";
@@ -10,6 +10,15 @@ import type { MarkdownEditorProps, SlashMenuOption } from "./types";
 // key produces on several layouts, so `key` would be "1" for some Creators
 // and something else entirely for others. `code` is the physical key.
 const HEADING_LEVELS = { Digit1: 1, Digit2: 2, Digit3: 3 } as const;
+
+// The three the toolbar hint promises. Plain Ctrl/Cmd (no Alt) is safe here
+// where the digit row is not: browsers bind B/I/K inside a text field to
+// nothing they will not let the page have.
+const WRAP_SHORTCUTS = {
+  KeyB: { prefix: "**", suffix: "**", placeholder: "bold text" },
+  KeyI: { prefix: "*", suffix: "*", placeholder: "italic text" },
+  KeyK: { prefix: "[", suffix: "](url)", placeholder: "link text" },
+} as const;
 
 // Surfaced to assistive tech via aria-describedby below, since the buttons
 // that used to carry H1/H2/H3 are gone — the shortcut has to be discoverable
@@ -157,7 +166,26 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
         }
       }
 
-      const isMod = (e.metaKey || e.ctrlKey) && e.altKey && !e.shiftKey;
+      const mod = e.metaKey || e.ctrlKey;
+
+      if (mod && !e.altKey && !e.shiftKey && e.code in WRAP_SHORTCUTS) {
+        e.preventDefault();
+        const textarea = e.currentTarget;
+        const { prefix, suffix, placeholder } = WRAP_SHORTCUTS[e.code as keyof typeof WRAP_SHORTCUTS];
+        const wrapped = applyWrap(
+          value,
+          textarea.selectionStart,
+          textarea.selectionEnd,
+          prefix,
+          suffix,
+          placeholder
+        );
+        pendingSelection.current = { start: wrapped.selectionStart, end: wrapped.selectionEnd };
+        onChange(wrapped.text);
+        return;
+      }
+
+      const isMod = mod && e.altKey && !e.shiftKey;
       if (!isMod || !(e.code in HEADING_LEVELS)) return;
 
       e.preventDefault();
@@ -174,21 +202,26 @@ export default function MarkdownEditor({ value, onChange, textareaRef }: Markdow
   const activeOption = slashQuery ? filteredOptions[activeIndex] : undefined;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex-1">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col">
         <textarea
           ref={textareaRef}
           value={value}
           onChange={handleChange}
           onSelect={handleSelect}
           onKeyDown={handleKeyDown}
-          placeholder="Write your post content in Markdown..."
+          placeholder="Start writing. Markdown works; so does thinking out loud."
+          aria-label="Post content"
           aria-describedby="markdown-heading-shortcuts"
           aria-keyshortcuts="Control+Alt+1 Control+Alt+2 Control+Alt+3 Meta+Alt+1 Meta+Alt+2 Meta+Alt+3"
           aria-haspopup={slashQuery ? "listbox" : undefined}
           aria-controls={slashQuery ? SLASH_LISTBOX_ID : undefined}
           aria-activedescendant={activeOption ? optionId(activeOption.id) : undefined}
-          className="w-full h-full min-h-[400px] p-4 rounded-2xl border-2 border-border-strong bg-surface resize-none font-mono text-sm leading-relaxed text-foreground placeholder:text-text-faint"
+          // Borderless and centred on its own 780px measure: the page is the
+          // paper, so the writing surface has no edge of its own, and line
+          // length is a decision rather than whatever the window happens to
+          // be. The whole width stays clickable — only the text is capped.
+          className="mx-auto w-full max-w-[780px] flex-1 resize-none border-none bg-transparent px-5 pb-6 pt-3.5 font-mono text-sm leading-[1.85] text-foreground placeholder:text-text-faint md:px-12 md:pb-10 md:pt-[18px] md:text-[14.5px]"
           spellCheck={false}
         />
         <p id="markdown-heading-shortcuts" className="sr-only">

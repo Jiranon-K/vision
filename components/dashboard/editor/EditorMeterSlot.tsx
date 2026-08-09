@@ -12,17 +12,25 @@ export interface EditorMeterSlotProps {
 // shown wherever a Post appears (see server/src/utils/postContent.ts) — the
 // Creator writing it is the one person who can't see it until now.
 export default function EditorMeterSlot({ content, className = "" }: EditorMeterSlotProps) {
-  const { words, readTime } = useMemo(
-    () => ({ words: countWords(content), readTime: computeReadTime(content) }),
-    [content],
-  );
+  const { words, readTime } = useMemo(() => {
+    const words = countWords(content);
+    // An empty Post takes no time to read. computeReadTime floors at one
+    // minute because that is right everywhere it is shown to a Reader —
+    // here, on a Post with nothing in it, it would just be wrong.
+    return { words, readTime: words === 0 ? "0 min read" : computeReadTime(content) };
+  }, [content]);
 
   return (
+    // Mono, faint, and never wrapping — the meter is the quietest thing on
+    // the bar, and it withdraws entirely below the width where the mode
+    // switch needs the room.
     <div
-      className={`hidden min-w-[11rem] shrink-0 items-center gap-1.5 truncate text-sm text-text-muted tabular-nums sm:flex ${className}`}
+      className={`hidden shrink-0 items-center gap-[7px] whitespace-nowrap font-mono text-xs tabular-nums text-text-faint lg:flex ${className}`}
     >
       <span>{words.toLocaleString()} words</span>
-      <span aria-hidden="true">·</span>
+      <span aria-hidden="true" className="opacity-40">
+        /
+      </span>
       <span>{readTime}</span>
     </div>
   );

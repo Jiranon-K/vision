@@ -55,13 +55,16 @@ export default function EditorModeSwitchSlot({
     <div
       role="radiogroup"
       aria-label="Editor view"
-      className={`relative inline-flex shrink-0 items-center rounded-pill border border-border bg-surface-muted p-1 text-sm font-medium ${className}`}
+      className={`relative inline-flex shrink-0 items-center gap-1 rounded-xl bg-surface-muted p-[3px] text-[13px] font-bold ${className}`}
     >
       {thumb && (
+        // The design draws the active option as a raised --surface tile with
+        // the 2px outline and --elevation-hard-sm. Drawing it once, as a
+        // thumb that slides, is what lets the switch move rather than blink.
         <div
           aria-hidden="true"
-          className={`absolute inset-y-1 rounded-pill bg-surface shadow-hard-sm transition-[transform,width] ${
-            prefersReducedMotion ? "duration-[0ms]" : ""
+          className={`absolute inset-y-[3px] rounded-[9px] border-2 border-border-strong bg-surface shadow-hard-sm transition-[transform,width] ${
+            prefersReducedMotion ? "duration-[0ms]" : "duration-[var(--duration-base)] ease-[var(--ease-standard)]"
           }`}
           style={{ width: thumb.width, transform: `translateX(${thumb.left}px)`, left: 0 }}
         />
@@ -76,8 +79,8 @@ export default function EditorModeSwitchSlot({
           role="radio"
           aria-checked={mode === option.id}
           onClick={() => onModeChange(option.id)}
-          className={`relative z-10 rounded-pill px-3 py-1.5 transition-colors ${
-            mode === option.id ? "text-foreground" : "text-text-secondary hover:text-foreground"
+          className={`relative z-10 rounded-[9px] px-3.5 py-1.5 transition-colors ${
+            mode === option.id ? "text-foreground" : "text-text-muted hover:text-foreground"
           }`}
         >
           {option.label}

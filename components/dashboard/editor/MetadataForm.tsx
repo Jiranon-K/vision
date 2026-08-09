@@ -183,61 +183,73 @@ export default function MetadataForm({
 
   return (
     <div className="space-y-5">
-      <div>
-        <label className="mb-2 block text-sm font-medium text-text-secondary">
-          Cover Image
-        </label>
-        <div className="flex items-center gap-4">
-          <div className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border-strong bg-surface-muted">
-            {coverImage ? (
-              // eslint-disable-next-line @next/next/no-img-element -- previews a cover URL the Creator just typed, which next/image cannot optimize without a configured host
-              <img
-                src={coverImage}
-                alt="Cover preview"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-xs text-text-faint">No image</span>
-            )}
-          </div>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-bold text-foreground">Cover image</span>
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleCoverChange}
+          accept="image/*"
+          className="hidden"
+        />
+
+        {/* Empty is the common case, so empty gets the whole slot: a dashed
+            well on the sunken surface, sized to be aimed at rather than a
+            button beside a placeholder box. */}
+        {coverImage ? (
           <div className="flex flex-col gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleCoverChange}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button
-              type="button"
-              size="sm"
-              className="w-fit"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              {coverImage ? "Change Image" : "Upload Image"}
-            </Button>
-            {coverImage && (
+            <div className="overflow-hidden rounded-xl border-2 border-border-strong bg-surface-muted">
+              {/* eslint-disable-next-line @next/next/no-img-element -- previews a cover URL the Creator just chose, which next/image cannot optimize without a configured host */}
+              <img src={coverImage} alt="Cover preview" className="h-28 w-full object-cover" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Button type="button" size="sm" onClick={() => fileInputRef.current?.click()}>
+                Change
+              </Button>
               <button
                 type="button"
                 onClick={() => {
                   onCoverImageChange("");
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
-                className="w-fit text-sm font-medium text-error-strong hover:underline"
+                className="text-sm font-medium text-error-strong hover:underline"
               >
                 Remove
               </button>
-            )}
-            <p className="text-xs text-text-faint">
-              JPG, PNG or GIF. Max 2MB.
-            </p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border bg-surface-sunken px-4 py-[22px] text-center text-text-muted transition-colors hover:bg-state-hover"
+          >
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="opacity-50"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+              <path d="M21 15l-5-5L5 21" />
+            </svg>
+            <span className="text-xs leading-normal">
+              Drop an image or browse — JPG, PNG, GIF, max 2&nbsp;MB
+            </span>
+          </button>
+        )}
       </div>
 
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <label className="block text-sm font-medium text-text-secondary">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <label className="block text-sm font-bold text-foreground">
             Excerpt
           </label>
           {suggestionAvailable && (
@@ -269,8 +281,11 @@ export default function MetadataForm({
               "transition-colors duration-[var(--duration-slow)] ease-[var(--ease-out)]"
           )}
         />
-        <p className="mt-1 text-right text-xs text-text-faint">
-          {excerpt.length}/500
+        {/* Says what the field is for, not just how full it is — the Excerpt
+            is the Post's meta description, and nothing else on this screen
+            tells the Creator that. */}
+        <p className="mt-1 text-xs leading-normal text-text-muted">
+          {excerpt.length}/500 · shown in search results and on the blog index
         </p>
         {showFallbackAlert && (
           <Alert ref={fallbackAlertRef} tone="warning" className="mt-3">

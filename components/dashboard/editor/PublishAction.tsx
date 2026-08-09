@@ -13,33 +13,16 @@ export interface PublishActionProps {
 // opening that sheet is the modal half of that pair. Ticket 08: a Creator
 // who can't save doesn't get this control at all — EditorTopBar simply
 // doesn't render it — so there is no `disabled` state to represent here.
+// Text only, and the ellipsis is load-bearing: "Publish…" says a sheet
+// opens, "Publish" would promise the Post goes live on this press.
 export default function PublishAction({ onClick }: PublishActionProps) {
   return (
     <Button type="button" variant="secondary" size="sm" onClick={onClick}>
-      <svg
-        width="18"
-        height="18"
-        viewBox="0 0 20 20"
-        fill="none"
-        aria-hidden="true"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M4 4V16H16V7L12 3H4Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M12 3V7H16"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      Publish
+      {/* Two nodes rather than one plus an appended glyph: the Button lays
+          its children out with a gap, which would leave the ellipsis
+          floating away from the word. */}
+      <span className="hidden sm:inline">Publish…</span>
+      <span className="sm:hidden">Publish</span>
     </Button>
   );
 }

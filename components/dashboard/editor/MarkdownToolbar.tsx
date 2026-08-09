@@ -58,10 +58,11 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }: Markdo
   );
 
   return (
-    // flex-nowrap + overflow-x-auto instead of flex-wrap: at mobile widths
-    // this scrolls sideways rather than dropping to a second row of
-    // half-width targets, which is what the ticket rules out.
-    <div className="mb-2 flex flex-nowrap items-center gap-1 overflow-x-auto rounded-xl border border-border bg-surface-muted p-1.5">
+    // Not a box: a row of bare glyphs on the writing surface, closed by one
+    // hairline. flex-nowrap + overflow-x-auto instead of flex-wrap so mobile
+    // scrolls sideways rather than dropping to a second row of half-width
+    // targets, which is what the ticket rules out.
+    <div className="mb-0.5 flex flex-nowrap items-center gap-0.5 overflow-x-auto border-b border-border-subtle px-3 pb-2 md:px-10">
       {toolbarButtons.map((btn) => {
         const Icon = btn.icon;
         return (
@@ -71,14 +72,22 @@ export default function MarkdownToolbar({ textareaRef, value, onChange }: Markdo
             onClick={() => insertSyntax(btn.syntax.prefix, btn.syntax.suffix, btn.syntax.placeholder || "")}
             aria-label={btn.label}
             title={btn.label}
-            // size-10 (40px) is a genuinely tappable target; no focus:outline
-            // or ring override here, so the global *:focus-visible ring shows.
-            className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-transparent text-foreground transition-colors hover:border-border hover:bg-surface active:bg-state-active"
+            // No focus:outline or ring override here, so the global
+            // *:focus-visible ring shows.
+            className="flex size-[34px] shrink-0 items-center justify-center rounded-lg border-2 border-transparent text-foreground transition-colors hover:border-border hover:bg-surface-muted active:bg-state-active"
           >
-            <Icon className="size-5" />
+            <Icon className="size-[18px]" />
           </button>
         );
       })}
+
+      {/* The shortcuts the toolbar deliberately doesn't carry a button for —
+          stated on the surface rather than left to be discovered. Withdraws
+          before the buttons do, since a hint is worth less than a target. */}
+      <div aria-hidden="true" className="mx-2.5 hidden h-5 w-px shrink-0 bg-border-subtle lg:block" />
+      <span className="hidden whitespace-nowrap font-mono text-[11px] text-text-faint lg:inline">
+        ⌘B ⌘I ⌘K · type / for everything else
+      </span>
     </div>
   );
 }

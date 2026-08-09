@@ -10,6 +10,13 @@ export interface SlideOverPanelProps {
   onClose: () => void;
   title: string;
   closeLabel?: string;
+  /** One line under the title, for a panel whose consequences aren't obvious
+   *  from its name (the Publish sheet's are not). */
+  description?: string;
+  /** `sheet` is the wide, hard-edged panel a decision is made in (Publish);
+   *  `drawer` is the narrow, quiet one settings live in (details). The
+   *  design gives them different widths and different edges on purpose. */
+  variant?: "sheet" | "drawer";
   children: React.ReactNode;
   /** Rendered below `children`, outside the scrolling flow's top group —
    *  callers that need a sticky action row (PublishSheet's Cancel/Confirm)
@@ -37,6 +44,8 @@ export default function SlideOverPanel({
   onClose,
   title,
   closeLabel = "Close",
+  description,
+  variant = "sheet",
   children,
   footer,
 }: SlideOverPanelProps) {
@@ -57,8 +66,16 @@ export default function SlideOverPanel({
         set(panel, { opacity: 0, translateX: 0 });
         animate(panel, { opacity: [0, 1], duration: ENTRANCE_DURATION, ease: ENTRANCE_EASE });
       } else {
-        set(panel, { translateX: "100%" });
-        animate(panel, { translateX: ["100%", "0%"], duration: ENTRANCE_DURATION, ease: ENTRANCE_EASE });
+        // Opacity has to be animated here too, not just translateX: the
+        // panel's class list starts it at opacity-0, so a transform-only
+        // entrance slides an invisible panel into place and leaves it there.
+        set(panel, { translateX: "100%", opacity: 0 });
+        animate(panel, {
+          translateX: ["100%", "0%"],
+          opacity: [0, 1],
+          duration: ENTRANCE_DURATION,
+          ease: ENTRANCE_EASE,
+        });
       }
     }
 
@@ -110,12 +127,24 @@ export default function SlideOverPanel({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative flex h-full w-full max-w-md flex-col gap-6 overflow-y-auto border-l-2 border-border-strong bg-surface p-6 opacity-0 shadow-panel"
+        className={`relative flex h-full w-full flex-col overflow-y-auto bg-surface opacity-0 shadow-panel ${
+          variant === "drawer"
+            ? "max-w-[320px] gap-4 border-l border-border-subtle p-5"
+            : "max-w-[460px] gap-[18px] border-l-2 border-border-strong p-7"
+        }`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <h2 id={titleId} className="text-xl font-black text-foreground">
-            {title}
-          </h2>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2
+              id={titleId}
+              className={`text-foreground ${variant === "drawer" ? "text-[15px] font-extrabold" : "text-[22px] font-black tracking-[-0.02em]"}`}
+            >
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-1 text-sm leading-normal text-text-secondary">{description}</p>
+            )}
+          </div>
           <Button ref={closeRef} type="button" variant="ghost" size="icon" onClick={onClose} aria-label={closeLabel}>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

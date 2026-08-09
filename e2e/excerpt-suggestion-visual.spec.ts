@@ -28,8 +28,8 @@ async function shoot(page: Page, name: string) {
 
 function fields(page: Page) {
   return {
-    title: page.getByPlaceholder('Enter post title...'),
-    content: page.getByPlaceholder('Write your post content in Markdown...'),
+    title: page.getByPlaceholder('Untitled Post'),
+    content: page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.'),
     excerpt: page.getByPlaceholder('Leave blank to generate automatically from the content'),
     suggest: page.getByRole('button', { name: 'Suggest an excerpt' }),
   };
@@ -38,7 +38,7 @@ function fields(page: Page) {
 test('every Excerpt Suggestion state, desktop', async ({ page }) => {
   await page.goto('/dashboard/posts/new');
   // Cover image and Excerpt live behind the details drawer (ticket 05).
-  await page.getByRole('button', { name: 'Details' }).click();
+  await page.getByRole('button', { name: 'Post details' }).click();
   const f = fields(page);
   await expect(f.suggest).toBeVisible();
 
@@ -62,12 +62,15 @@ test('every Excerpt Suggestion state, desktop', async ({ page }) => {
   await f.suggest.click();
   await expect(page.getByRole('button', { name: 'Suggesting an excerpt…' })).toBeVisible();
   await shoot(page, '03-loading');
-  await page.unroute('**/api/posts/suggest-excerpt');
 
   // filled — the suggestion lands in the field, editable in place
   await expect(f.excerpt).not.toHaveValue('', { timeout: 15_000 });
   await expect(page.getByText('Excerpt suggestion added')).toBeVisible();
   await shoot(page, '04-filled');
+  // Unrouting only once the held request has been continued and answered:
+  // tearing the handler down while it is still sleeping leaves its own
+  // route.continue() with nothing to act on ("Route is already handled").
+  await page.unroute('**/api/posts/suggest-excerpt');
 
   // Arrival plays a border flash on the field (ticket 05) that lasts a few
   // hundred ms — let it finish rather than racing the next click against it,

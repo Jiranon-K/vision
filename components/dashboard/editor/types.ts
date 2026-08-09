@@ -51,4 +51,6 @@ export interface SplitEditorProps {
   value: string;
   onChange: (value: string) => void;
   mode: EditorMode;
+  title: string;
+  onTitleChange: (value: string) => void;
 }

@@ -11,13 +11,13 @@ test.describe('slash menu', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/dashboard/posts/new');
-    await page.getByPlaceholder('Enter post title...').fill('Slash Menu E2E');
+    await page.getByPlaceholder('Untitled Post').fill('Slash Menu E2E');
   });
 
   test('typing / at the start of an empty line opens a filterable, keyboard-operable menu', async ({
     page,
   }) => {
-    const content = page.getByPlaceholder('Write your post content in Markdown...');
+    const content = page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.');
     await content.click();
     await content.pressSequentially('/');
 
@@ -49,7 +49,7 @@ test.describe('slash menu', () => {
   });
 
   test('Escape closes the menu and leaves the typed / as ordinary text', async ({ page }) => {
-    const content = page.getByPlaceholder('Write your post content in Markdown...');
+    const content = page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.');
     await content.click();
     await content.pressSequentially('/usr');
 
@@ -69,7 +69,7 @@ test.describe('slash menu', () => {
   });
 
   test('the menu never opens mid-line', async ({ page }) => {
-    const content = page.getByPlaceholder('Write your post content in Markdown...');
+    const content = page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.');
     await content.click();
     await content.pressSequentially('See the docs at https:/');
 
@@ -79,7 +79,7 @@ test.describe('slash menu', () => {
   });
 
   test('the heading keyboard shortcut still works while no menu is open', async ({ page }) => {
-    const content = page.getByPlaceholder('Write your post content in Markdown...');
+    const content = page.getByPlaceholder('Start writing. Markdown works; so does thinking out loud.');
     await content.click();
     await content.pressSequentially('A line of prose');
     await content.press('ControlOrMeta+Alt+Digit1');
