@@ -367,6 +367,41 @@
   --animate-slide-in: slide-in 0.3s ease-out;
   --animate-slide-out: slide-out 0.3s ease-in;
 
+  /* Autosave status dot (ticket 03). Breathe is the idle ambient loop —
+     slow and low-amplitude on purpose, it's "proof of life" not a call to
+     action. Pulse is the one-shot that plays when a commit lands; its
+     duration is duplicated as `PULSE_MS` in AutosaveStatusSlot.tsx so the
+     class can be removed once the animation finishes. */
+  --animate-dot-breathe: dot-breathe 4s ease-in-out infinite;
+  --animate-dot-pulse: dot-pulse 0.5s var(--ease-out);
+
+  @keyframes dot-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.85;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+  }
+
+  @keyframes dot-pulse {
+    0% {
+      transform: scale(1);
+      opacity: 0.85;
+    }
+    40% {
+      transform: scale(1.6);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }

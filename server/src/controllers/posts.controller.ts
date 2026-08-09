@@ -1,9 +1,15 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
+import {
+  recordExcerptSuggestion,
+  claimOrphanSuggestion,
+} from '../reporting/excerptSuggestionRecord';
 import { AuthRequest } from '../middleware/auth';
-import { postSchema, updatePostSchema } from '../schemas/posts';
+import { postSchema, updatePostSchema, suggestExcerptSchema } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
+import { suggestExcerpt } from '../ai/excerptSuggestion';
+import { resolveGenerateText } from '../ai/provider';
 
 // $regex compiles its input as a pattern, so a search term must be escaped or the
 // Creator's own text becomes syntax: `c++` is a malformed pattern MongoDB rejects,
@@ -154,6 +160,7 @@ export const createPost = async (
     });
 
     await post.save();
+    await claimOrphanSuggestion(req.user!.id, post._id as mongoose.Types.ObjectId);
     res.status(201).json(post);
   } catch (error) {
     console.error('Create post error:', error);
@@ -225,6 +232,86 @@ export const updatePost = async (
   } catch (error) {
     console.error('Update post error:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// A provider that hangs must not hang the Creator's editor with it. 8s is
+// generous for a text summary call but bounds the worst case to "annoying"
+// rather than "stuck forever". Overridable so tests can exercise the timeout
+// path without actually waiting 8s.
+const SUGGESTION_TIMEOUT_MS = Number(process.env.AI_SUGGESTION_TIMEOUT_MS) || 8_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error('Excerpt suggestion timed out')),
+      ms
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
+export const suggestPostExcerpt = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const validation = suggestExcerptSchema.safeParse(req.body);
+  if (!validation.success) {
+    res.status(400).json({
+      error: 'Validation failed',
+      details: validation.error.issues.map((e) => ({
+        field: e.path.join('.'),
+        message: e.message,
+      })),
+    });
+    return;
+  }
+
+  const { content, postId } = validation.data;
+
+  const generateText = resolveGenerateText();
+  if (!generateText) {
+    res.status(503).json({ error: 'Excerpt suggestions are not available' });
+    return;
+  }
+
+  try {
+    const excerpt = await withTimeout(
+      suggestExcerpt(content, generateText),
+      SUGGESTION_TIMEOUT_MS
+    );
+    await recordExcerptSuggestion({
+      creatorId: req.user!.id,
+      postId,
+      text: excerpt,
+      source: 'provider',
+    });
+    // "provider": this suggestion came from the injected provider call, as
+    // opposed to the derived fallback below.
+    res.json({ excerpt, source: 'provider' });
+  } catch (error) {
+    // A failing or slow provider must not fail the request (it would just
+    // train the Creator to distrust the button) — fall back to the same
+    // mechanical derivation the save path uses, and say so via "source" so
+    // the editor never passes a truncated string off as the AI's work.
+    console.error('Suggest excerpt error, falling back to derived excerpt:', error);
+    const excerpt = deriveExcerpt(content);
+    await recordExcerptSuggestion({
+      creatorId: req.user!.id,
+      postId,
+      text: excerpt,
+      source: 'fallback',
+    });
+    res.json({ excerpt, source: 'fallback' });
   }
 };
 

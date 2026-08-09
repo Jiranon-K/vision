@@ -1,31 +1,85 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import MarkdownToolbar from "./MarkdownToolbar";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownPreview from "./MarkdownPreview";
+import PostTitleField from "./PostTitleField";
 import type { SplitEditorProps } from "./types";
 
-export default function SplitEditor({ value, onChange }: SplitEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+// A pane fades in from a small horizontal offset the moment it mounts —
+// which, because the editor/preview panes are conditionally rendered by
+// mode below, only happens when a pane is genuinely arriving (write <->
+// preview). A pane that was already visible (e.g. the editor across a
+// write <-> split switch) never remounts, so it never re-plays the fade;
+// it just occupies its new width instantly, with no width/height
+// transition applied to it at all — that's what keeps a mode switch from
+// ever resizing a pane mid-transition.
+function Pane({ children, className }: { children: ReactNode; className?: string }) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const [entered, setEntered] = useState(prefersReducedMotion);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      // Goes through a timer (delay 0) rather than setting state directly
+      // in the effect body, same as EditorTopBar's entrance — it's the CSS
+      // transition duration that actually removes the stagger, not this.
+      const timer = window.setTimeout(() => setEntered(true), 0);
+      return () => window.clearTimeout(timer);
+    }
+    // `entered` already starts false for this branch (see the useState
+    // initializer above) — committing that starting frame before flipping
+    // to settled is what makes the transition play instead of collapsing
+    // into a single paint.
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setEntered(true));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [prefersReducedMotion]);
 
   return (
-    <div className="flex flex-col h-[500px]">
-      
-      <MarkdownToolbar textareaRef={textareaRef} />
+    <div
+      className={`flex min-w-0 flex-col transition-[opacity,transform] ${
+        entered ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"
+      } ${className ?? ""}`}
+    >
+      {children}
+    </div>
+  );
+}
 
-      
-      <div className="flex-1 flex gap-4 min-h-0">
-        
-        <div className="flex-1 min-w-0">
+// The paper: title, toolbar and text are one column, not three stacked
+// cards. The title lives here rather than above this component because in
+// Split it belongs to the writing pane — the preview has its own heading,
+// rendered from the Markdown.
+export default function SplitEditor({
+  value,
+  onChange,
+  mode,
+  title,
+  onTitleChange,
+}: SplitEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const split = mode === "split";
+
+  return (
+    <div className="flex w-full flex-1 overflow-hidden">
+      {mode !== "preview" && (
+        <Pane
+          className={`flex-1 bg-surface ${split ? "border-r border-border-subtle" : ""}`}
+        >
+          <PostTitleField value={title} onChange={onTitleChange} narrow={split} />
+          <MarkdownToolbar textareaRef={textareaRef} value={value} onChange={onChange} />
           <MarkdownEditor value={value} onChange={onChange} textareaRef={textareaRef} />
-        </div>
+        </Pane>
+      )}
 
-        
-        <div className="flex-1 min-w-0">
+      {mode !== "write" && (
+        <Pane className={`flex-1 ${mode === "preview" ? "bg-surface" : "bg-surface-sunken"}`}>
           <MarkdownPreview content={value} />
-        </div>
-      </div>
+        </Pane>
+      )}
     </div>
   );
 }

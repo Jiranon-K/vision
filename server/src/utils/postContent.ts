@@ -4,7 +4,9 @@
 // Intl.Segmenter with word granularity segments Thai and Latin correctly.
 
 const WORDS_PER_MINUTE = 200;
-const EXCERPT_MAX = 500;
+// Exported so server/src/ai/excerptSuggestion.ts can bound a provider's output
+// with the same Thai/emoji-safe truncation instead of a second copy of it.
+export const EXCERPT_MAX = 500;
 const EXCERPT_TARGET = 150;
 
 // Minimal local types — the server's tsconfig lib is ES2020, which predates the
@@ -46,7 +48,10 @@ export function computeReadTime(content: string): string {
 }
 
 // Strip the most common Markdown syntax so the excerpt reads as plain prose.
-function stripMarkdown(content: string): string {
+// Exported for the same reason as safeSlice: an Excerpt Suggestion is prose
+// destined for the same field, and a provider emits Markdown despite being
+// asked not to.
+export function stripMarkdown(content: string): string {
   return content
     .replace(/```[\s\S]*?```/g, ' ') // fenced code blocks
     .replace(/`([^`]+)`/g, '$1') // inline code
@@ -64,7 +69,7 @@ function stripMarkdown(content: string): string {
 
 // Slice without splitting a surrogate pair, so a cut at a Thai/emoji boundary
 // never emits a broken half-character.
-function safeSlice(text: string, max: number): string {
+export function safeSlice(text: string, max: number): string {
   if (text.length <= max) {
     return text;
   }

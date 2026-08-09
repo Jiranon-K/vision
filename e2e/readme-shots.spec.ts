@@ -166,23 +166,20 @@ test.describe('signed in as a Creator', () => {
   });
 
   test('editor', async ({ page }) => {
-    // Framed to end just below the split pane: the Post Settings form beneath it
-    // carries Thai placeholder copy that reads as an accident in an English README.
     await page.setViewportSize({ width: 1440, height: 715 });
     await page.goto('/dashboard/posts/new');
-    await page.getByPlaceholder('Enter post title...').fill(DEMO_EDITOR_TITLE);
+    await page.getByPlaceholder('Untitled Post').fill(DEMO_EDITOR_TITLE);
     await page
-      .getByPlaceholder('Write your post content in Markdown...')
+      .getByPlaceholder('Start writing. Markdown works; so does thinking out loud.')
       .fill(DEMO_EDITOR_CONTENT);
-    await page.getByLabel('Category').selectOption('Social Media');
-    await page.getByLabel('Status').selectOption('Draft');
+    // Write is the default mode now, so the preview has to be asked for — the
+    // README shot is of the split view, which is the thing worth showing.
+    await page.getByRole('radio', { name: 'Split' }).click();
     // The right pane shows a placeholder until content is typed; wait for the
     // rendered heading so the shot is of a live preview, not an empty panel.
     await expect(page.getByRole('heading', { name: 'One Post, every channel' })).toBeVisible();
-    await settleAnimations(page, ['.editor-header', '.editor-content', '.metadata-form']);
-    // Clipped rather than fullPage: below the split pane sits the Post Settings
-    // form, which a fullPage shot cuts through mid-field.
-    // Deliberately never clicks Save Post — saving navigates to /dashboard/posts.
+    await settleAnimations(page, ['[data-editor-surface]']);
+    // Deliberately never saves — saving navigates to /dashboard/posts.
     await shoot(page, 'editor');
   });
 });

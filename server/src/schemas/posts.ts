@@ -13,3 +13,20 @@ export const postSchema = z.object({
 });
 
 export const updatePostSchema = postSchema.partial();
+
+// A Creator asks for a suggestion before the Post has ever been saved, so this
+// takes content directly rather than a Post id. The ceiling matches the 5mb
+// JSON body limit in spirit — generous, but not unbounded.
+export const suggestExcerptSchema = z.object({
+  content: z
+    .string()
+    .min(1, 'Content is required')
+    .max(50_000, 'Content is too long'),
+  // Present once the Post has been saved — lets the recorded suggestion be
+  // joined back to the Post for the adoption query. Absent for a Post that
+  // has never been saved.
+  postId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, 'Invalid post id')
+    .optional(),
+});

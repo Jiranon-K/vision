@@ -9,6 +9,7 @@ import authRoutes from './routes/auth';
 import postsRoutes from './routes/posts';
 import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
+import capabilitiesRoutes from './routes/capabilities';
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/capabilities', capabilitiesRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

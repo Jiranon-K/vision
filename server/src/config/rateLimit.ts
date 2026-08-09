@@ -15,6 +15,14 @@ const createStore = (): Store | undefined => {
 const skipInTest = () => process.env.NODE_ENV === 'test';
 
 
+// Budget an authenticated route per Creator rather than per IP alone, so one
+// Creator behind a shared address cannot spend everyone else's allowance.
+const perCreatorKey = (req: { ip?: string }): string => {
+  const user = (req as { user?: { id?: string } }).user;
+  return `${req.ip}-${user?.id || 'anon'}`;
+};
+
+
 export const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -69,8 +77,18 @@ export const resendVerificationLimiter = rateLimit({
   legacyHeaders: false,
   store: createStore(),
   skip: skipInTest,
-  keyGenerator: (req) => {
-    const user = (req as { user?: { id?: string } }).user;
-    return `${req.ip}-${user?.id || 'anon'}`;
-  },
+  keyGenerator: perCreatorKey,
+});
+
+// One Creator's enthusiasm for the button shouldn't spend everyone's provider
+// budget. ~20/hour is generous for a per-Post action but bounds a runaway UI.
+export const suggestExcerptLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many excerpt suggestion requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(),
+  skip: skipInTest,
+  keyGenerator: perCreatorKey,
 });

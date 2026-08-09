@@ -2,19 +2,37 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { animate } from "animejs";
+import { animate, set } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
-import MetadataForm from "@/components/dashboard/editor/MetadataForm";
+import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
+import EditorBottomBar from "@/components/dashboard/editor/EditorBottomBar";
+import EditorRail from "@/components/dashboard/editor/EditorRail";
+import PublishSheet from "@/components/dashboard/editor/PublishSheet";
+import DetailsDrawer from "@/components/dashboard/editor/DetailsDrawer";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
 import { apiFetch, authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/lib/motion";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import type { EditorMode } from "@/components/dashboard/editor/types";
+import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
 import {
   draftKey,
   useAutosaveDraft,
   type PostDraftState,
 } from "@/hooks/useAutosaveDraft";
+
+// Two panes of prose only both keep a readable measure at lg (1024px) and
+// up — the same width Tailwind's own `lg:` breakpoint already treats as
+// "room for a second column". Below it Split is withheld, not just
+// disabled (see EditorModeSwitchSlot).
+const SPLIT_AVAILABLE_QUERY = "(min-width: 1024px)";
 
 interface PostEditorFormProps {
   mode: "create" | "edit";
@@ -32,6 +50,20 @@ const EMPTY: PostDraftState = {
   excerpt: "",
   coverImage: "",
 };
+
+// Human-readable age for the restore dialog's "how old is this Draft"
+// requirement — coarser than AutosaveStatusSlot's live "Xs ago" clock since
+// this renders once, on open, rather than ticking.
+function formatDraftAge(savedAt: number): string {
+  const seconds = Math.floor((Date.now() - savedAt) / 1000);
+  if (seconds < 60) return "less than a minute ago";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 function sameDraft(a: PostDraftState, b: PostDraftState): boolean {
   return (
@@ -51,7 +83,10 @@ export default function PostEditorForm({
 }: PostEditorFormProps) {
   const router = useRouter();
   const pageRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
+  const loadErrorPrimaryRef = useRef<HTMLButtonElement>(null);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -59,6 +94,10 @@ export default function PostEditorForm({
   const [status, setStatus] = useState<"Draft" | "Published">("Draft");
   const [excerpt, setExcerpt] = useState("");
   const [coverImage, setCoverImage] = useState("");
+
+  // Write is the default per the ticket, regardless of viewport.
+  const [editorMode, setEditorMode] = useState<EditorMode>("write");
+  const splitAvailable = useMediaQuery(SPLIT_AVAILABLE_QUERY);
 
   const [loading, setLoading] = useState(mode === "edit");
   const [loadError, setLoadError] = useState<LoadError>(null);
@@ -70,6 +109,14 @@ export default function PostEditorForm({
 
   const [showRestore, setShowRestore] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
+  const [publishSheetOpen, setPublishSheetOpen] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  // True for one brief window right after a Draft -> Published save lands —
+  // see handlePublishConfirm and PUBLISH_TRANSITION_MS above.
+  const [statusAccent, setStatusAccent] = useState(false);
+  // Gates the top bar's entrance — it waits for the writing surface's own
+  // animation to start, so the arrival order is never a race.
+  const [enterAnimation, setEnterAnimation] = useState(false);
 
   const restoreDecided = useRef(false);
   const skipUnload = useRef(false);
@@ -88,16 +135,47 @@ export default function PostEditorForm({
     currentUser?.role === "admin" ||
     (!!ownerId && ownerId === currentUser?.id);
 
-  const { existingDraft, clearDraft } = useAutosaveDraft(
-    draftKey(postId),
-    formState,
-    { enabled: ready && canEdit },
-  );
+  const {
+    existingDraft,
+    clearDraft,
+    lastSavedAt: autosaveSavedAt,
+    dirty: autosaveDirty,
+    saving: autosaveSaving,
+  } = useAutosaveDraft(draftKey(postId), formState, { enabled: ready && canEdit });
 
   const isDirty = useMemo(
     () => ready && canEdit && !sameDraft(formState, baseline),
     [ready, canEdit, formState, baseline],
   );
+
+  // What the Publish sheet's checklist reports, in the Creator's own terms
+  // rather than a field name — the server requires all three regardless of
+  // Draft or Published, so this is the same gate stated plainly instead of
+  // left for the confirm button's disabled state to imply (ticket 04).
+  const publishChecklist = useMemo(
+    () => [
+      { id: "title", label: "Give the Post a title", done: title.trim().length > 0 },
+      { id: "content", label: "Write something in the Post", done: content.trim().length > 0 },
+      { id: "category", label: "Choose a Category", done: category.trim().length > 0 },
+    ],
+    [title, content, category],
+  );
+
+  // The chip's "last commit" is the more recent of the local autosave and
+  // (in edit mode) the Post's own last server save — a freshly opened,
+  // unedited Post already has something honest to report ("Autosaved
+  // <time since updatedAt>"), not "New Post". A brand-new create-mode Post
+  // has neither, until its first local commit lands.
+  const autosaveLastSavedAt =
+    mode === "edit" ? Math.max(autosaveSavedAt ?? 0, updatedAtMs || 0) || null : autosaveSavedAt;
+
+  const autosaveStatus: AutosaveStatus = autosaveSaving
+    ? "saving"
+    : autosaveLastSavedAt === null
+      ? "new"
+      : autosaveDirty
+        ? "writing"
+        : "saved";
 
   // --- Edit mode: load the existing post -------------------------------------
   const fetchPost = useCallback(async () => {
@@ -106,19 +184,18 @@ export default function PostEditorForm({
     setLoadError(null);
     try {
       const res = await apiFetch(`/api/posts/${postId}`);
+      // No toast here — the load-error state below takes over the canvas
+      // instead of hiding behind one.
       if (res.status === 404) {
         setLoadError("notfound");
-        toast.error("ไม่พบ post นี้");
         return;
       }
       if (res.status === 403) {
         setLoadError("forbidden");
-        toast.error("ไม่มีสิทธิ์เข้าถึง post นี้");
         return;
       }
       if (!res.ok) {
         setLoadError("generic");
-        toast.error("โหลด post ไม่สำเร็จ");
         return;
       }
 
@@ -142,7 +219,6 @@ export default function PostEditorForm({
       setOwnerId(String(post.owner ?? ""));
     } catch {
       setLoadError("generic");
-      toast.error("โหลด post ไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -151,6 +227,13 @@ export default function PostEditorForm({
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
+
+  // The load-error canvas is a destination, not a passive message — send
+  // focus to its primary action (Retry, or Back to Posts when there is no
+  // Retry) the moment it appears.
+  useEffect(() => {
+    if (loadError) loadErrorPrimaryRef.current?.focus();
+  }, [loadError]);
 
   // --- Offer to restore an autosaved draft -----------------------------------
   useEffect(() => {
@@ -205,6 +288,14 @@ export default function PostEditorForm({
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty]);
 
+  // A Creator who opened Split on a wide window and then narrowed it past
+  // the breakpoint can't be left on a mode the switch no longer offers.
+  useEffect(() => {
+    if (editorMode === "split" && !splitAvailable) {
+      setEditorMode("write");
+    }
+  }, [editorMode, splitAvailable]);
+
   const handleBack = () => {
     if (isDirty) {
       setShowBackConfirm(true);
@@ -219,7 +310,7 @@ export default function PostEditorForm({
     router.push("/dashboard/posts");
   };
 
-  // --- Entrance animations (run once the form is on screen) ------------------
+  // --- Entrance: trigger once the form is on screen ---------------------------
   useEffect(() => {
     if (!ready) return;
     const page = pageRef.current;
@@ -230,26 +321,7 @@ export default function PostEditorForm({
         entries.forEach((entry) => {
           if (entry.isIntersecting && !didAnimate.current) {
             didAnimate.current = true;
-            animate(".editor-header", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              duration: 500,
-              easing: "easeOutCubic",
-            });
-            animate(".editor-content", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              delay: 100,
-              duration: 500,
-              easing: "easeOutCubic",
-            });
-            animate(".metadata-form", {
-              opacity: [0, 1],
-              translateY: [20, 0],
-              delay: 200,
-              duration: 500,
-              easing: "easeOutCubic",
-            });
+            setEnterAnimation(true);
             observer.disconnect();
           }
         });
@@ -261,11 +333,37 @@ export default function PostEditorForm({
     return () => observer.disconnect();
   }, [ready]);
 
-  // --- Save -------------------------------------------------------------------
-  const handleSave = async () => {
-    if (!canEdit) {
-      toast.error("คุณไม่มีสิทธิ์แก้ไข post นี้");
+  // The Creator came to write, so the title and the writing surface arrive
+  // first, together — opacity plus a small upward translate. The bar (see
+  // EditorTopBar) follows on its own delay, opacity only, no translate.
+  useEffect(() => {
+    if (!enterAnimation) return;
+    const content = contentRef.current;
+    if (!content) return;
+
+    if (prefersReducedMotion) {
+      set(content, { opacity: 1, translateY: 0 });
       return;
+    }
+
+    animate(content, {
+      opacity: [0, 1],
+      translateY: [16, 0],
+      duration: DURATION_SLOW,
+      ease: EASE_OUT,
+    });
+  }, [enterAnimation, prefersReducedMotion]);
+
+  // --- Save -------------------------------------------------------------------
+  // Writes the Post exactly as it stands right now. Shared by the top bar's
+  // plain Save and the Publish sheet's confirm — the two never fire the same
+  // request for different reasons, they fire the same request for whatever
+  // `status` currently holds. What differs is only what each caller does
+  // once it resolves (see handleSave / handlePublishConfirm below).
+  const persist = async (): Promise<boolean> => {
+    if (!canEdit) {
+      toast.error("You don't have permission to edit this Post.");
+      return false;
     }
 
     const parsed = postFormSchema.safeParse({
@@ -277,7 +375,7 @@ export default function PostEditorForm({
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง");
-      return;
+      return false;
     }
 
     setSaving(true);
@@ -292,10 +390,12 @@ export default function PostEditorForm({
       });
 
       if (res.ok) {
-        skipUnload.current = true;
         clearDraft();
-        router.replace("/dashboard/posts");
-        return;
+        // Keeps `isDirty` (and the beforeunload guard) honest for the
+        // animated Publish path below, which stays on this page briefly
+        // instead of navigating away the instant the request resolves.
+        setBaseline({ title, content, category, status, excerpt, coverImage });
+        return true;
       }
 
       const data = await res.json().catch(() => ({}));
@@ -303,151 +403,263 @@ export default function PostEditorForm({
         data.error ||
           (mode === "edit" ? "Failed to update post" : "Failed to save post"),
       );
+      return false;
     } catch {
       toast.error("Something went wrong");
+      return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const leaveForPostsList = () => {
+    skipUnload.current = true;
+    router.replace("/dashboard/posts");
+  };
+
+  // The bar's "Save now" — persists a Draft (or re-saves a Published Post)
+  // without touching status and without ever opening the Publish sheet.
+  // This is what makes "save a Draft to the server" and "Publish" two
+  // different controls rather than the same one pressed twice.
+  //
+  // It stays on the page: the control exists because the Creator is ahead of
+  // the server mid-write, and answering that by navigating them out of the
+  // Post would be a strange reward for saving it. The control withdrawing is
+  // the confirmation; the toast is for anyone not watching the bar.
+  const handleSave = async () => {
+    if (await persist()) toast.success("Saved.");
+  };
+
+  // The Publish sheet's confirm. Always just persists — Category and
+  // Draft/Published were already decided by the sheet's own controls,
+  // which write straight into `category` / `status` above. The only thing
+  // this function decides is whether the save that just landed was a real
+  // Draft -> Published transition, which is the one case that earns the
+  // top bar's slow crossfade before leaving.
+  const handlePublishConfirm = async () => {
+    const wasPublished = baseline.status === "Published";
+    if (!(await persist())) return;
+
+    setPublishSheetOpen(false);
+    const justPublished = !wasPublished && status === "Published";
+
+    if (justPublished) {
+      setStatusAccent(true);
+      window.setTimeout(() => {
+        setStatusAccent(false);
+        leaveForPostsList();
+      }, PUBLISH_TRANSITION_MS);
+    } else {
+      leaveForPostsList();
     }
   };
 
   // --- Render -----------------------------------------------------------------
   if (loading) {
     return (
-      <div className="p-8">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-brand-dark/50">Loading...</p>
+      <div className="min-h-screen bg-surface-muted p-8">
+        <div className="flex h-64 items-center justify-center">
+          <p className="text-text-muted">Loading...</p>
         </div>
       </div>
     );
   }
 
   if (loadError) {
-    const messages: Record<Exclude<LoadError, null>, string> = {
-      notfound: "ไม่พบ post ที่ต้องการแก้ไข",
-      forbidden: "คุณไม่มีสิทธิ์เข้าถึง post นี้",
-      generic: "โหลด post ไม่สำเร็จ",
+    // Distinguishes the three failure kinds by tone as well as copy: neither
+    // party is at fault when a Post simply isn't there, access is a boundary
+    // being enforced (warning), and a failed request is the one kind worth
+    // reading as an actual error.
+    const tone: Record<Exclude<LoadError, null>, "neutral" | "warning" | "error"> = {
+      notfound: "neutral",
+      forbidden: "warning",
+      generic: "error",
     };
+    const heading: Record<Exclude<LoadError, null>, string> = {
+      notfound: "Post not found",
+      forbidden: "You don't have access to this Post",
+      generic: "This Post failed to load",
+    };
+    const description: Record<Exclude<LoadError, null>, string> = {
+      notfound: "It may have been deleted, or the link is wrong.",
+      forbidden: "You aren't the owner of this Post, so it can't be opened here.",
+      generic: "Something went wrong while loading. Check your connection and try again.",
+    };
+
     return (
-      <div className="p-8">
-        <div className="bg-white rounded-[20px] border-2 border-brand-dark p-8 shadow-[4px_4px_0px_0px_#191A23] text-center">
-          <h3 className="text-lg font-bold text-brand-dark mb-2">
-            {messages[loadError]}
-          </h3>
-          <div className="flex items-center justify-center gap-3 mt-4">
+      <div className="flex min-h-screen items-center justify-center bg-surface-muted p-8">
+        <Card variant="elevated" className="w-full max-w-md p-8">
+          {/* Leads with the one thing that matters: whether the Creator's
+              local work is safe. Only shown when `existingDraft` — read
+              straight from the autosave hook — proves it's actually there. */}
+          {existingDraft && (
+            <Alert tone="success" className="mb-4">
+              Your local Draft is safe. It&apos;s saved on this device and
+              nothing has been lost.
+            </Alert>
+          )}
+
+          <Alert tone={tone[loadError]} title={heading[loadError]}>
+            {description[loadError]}
+          </Alert>
+
+          <div className="mt-6 flex items-center justify-center gap-3">
             {loadError === "generic" && (
-              <button
-                onClick={fetchPost}
-                className="px-5 py-2.5 bg-brand-lime border-2 border-brand-dark rounded-[12px] font-bold text-brand-dark shadow-[4px_4px_0px_0px_#191A23] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-200"
-              >
+              <Button ref={loadErrorPrimaryRef} variant="secondary" size="sm" onClick={fetchPost}>
                 Retry
-              </button>
+              </Button>
             )}
-            <button
+            <Button
+              ref={loadError === "generic" ? undefined : loadErrorPrimaryRef}
+              variant="outline"
+              size="sm"
               onClick={() => router.push("/dashboard/posts")}
-              className="px-5 py-2.5 bg-brand-gray border-2 border-brand-dark rounded-[12px] font-medium text-brand-dark"
             >
               Back to Posts
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
 
+  // What the sheet's confirm button says: "Publish" only when this save
+  // would actually be the Draft -> Published transition, "Save" when a
+  // Published Post is simply being re-saved, "Save Draft" otherwise — so
+  // choosing Draft in the sheet never reads as an act of publishing.
+  const publishConfirmLabel =
+    status === "Published"
+      ? baseline.status === "Published"
+        ? "Save"
+        : "Publish"
+      : "Save Draft";
+
   return (
-    <div ref={pageRef} className="p-8">
-      <div className="editor-header opacity-0 flex items-center justify-between mb-6">
-        <button
-          onClick={handleBack}
-          className="flex items-center gap-2 text-brand-dark/60 hover:text-brand-dark transition-colors"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4L6 10L12 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          <span className="font-medium">Back to Posts</span>
-        </button>
+    // The editor is a full-height application frame, not a scrolling page:
+    // rail · (top bar, canvas, bottom bar). Only the writing surface
+    // scrolls, so the chrome is always where the Creator left it.
+    <div ref={pageRef} className="flex h-screen overflow-hidden bg-surface-sunken">
+      <EditorRail />
 
-        <button
-          onClick={handleSave}
-          disabled={saving || !canEdit}
-          className="flex items-center gap-2 bg-brand-lime border-2 border-brand-dark px-6 py-3 rounded-[16px] font-bold text-brand-dark shadow-[4px_4px_0px_0px_#191A23] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 4V16H16V7L12 3H4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M12 3V7H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {saving
-            ? "Saving..."
-            : mode === "edit"
-              ? "Update Post"
-              : "Save Post"}
-        </button>
-      </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <EditorTopBar
+          entering={enterAnimation}
+          onBack={handleBack}
+          status={status}
+          statusAccent={statusAccent}
+          saving={saving}
+          showSave={canEdit}
+          onSave={handleSave}
+          onOpenPublish={() => setPublishSheetOpen(true)}
+          onOpenDetails={() => setDetailsOpen(true)}
+          mode={editorMode}
+          onModeChange={setEditorMode}
+          splitAvailable={splitAvailable}
+          autosaveStatus={autosaveStatus}
+          autosaveLastSavedAt={autosaveLastSavedAt}
+          content={content}
+          dirty={isDirty}
+        />
 
-      {!canEdit && (
-        <div className="editor-content opacity-0 mb-6 px-5 py-3 rounded-[16px] border-2 border-brand-dark bg-brand-gray text-sm font-medium text-brand-dark/70">
-          คุณไม่ได้เป็นเจ้าของ post นี้ — ดูได้อย่างเดียว แก้ไขไม่ได้
+        {!canEdit && (
+          <div className="shrink-0 px-4 py-3">
+            <Alert tone="neutral">
+              You don&apos;t own this Post — you can view it, but not edit it.
+            </Alert>
+          </div>
+        )}
+
+        <div
+          ref={contentRef}
+          // The entrance animates this element's opacity from a ref, so there
+          // is no class a screenshot run can wait on. This attribute is that
+          // hook — see e2e/readme-shots.spec.ts.
+          data-editor-surface
+          className="flex min-h-0 flex-1 justify-center overflow-hidden opacity-0"
+        >
+          {/* A Creator who can't own a save also can't be left with anything
+              that pretends otherwise — `inert` (not per-field `disabled`)
+              takes the whole writing surface out of the tab order and off
+              the hit-test in one place, so nothing here has to know it's
+              being viewed read-only. */}
+          <div inert={!canEdit || undefined} className="contents">
+            <SplitEditor
+              value={content}
+              onChange={setContent}
+              mode={editorMode}
+              title={title}
+              onTitleChange={setTitle}
+            />
+          </div>
         </div>
-      )}
 
-      <div className="editor-content opacity-0 mb-6">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter post title..."
-          className="w-full px-6 py-4 text-2xl font-black text-brand-dark placeholder:text-brand-dark/30 bg-white rounded-[20px] border-2 border-brand-dark shadow-[4px_4px_0px_0px_#191A23] focus:outline-none focus:shadow-none focus:translate-x-1 focus:translate-y-1 transition-all duration-200"
+        <EditorBottomBar
+          status={status}
+          autosaveStatus={autosaveStatus}
+          autosaveLastSavedAt={autosaveLastSavedAt}
+          dirty={isDirty}
+          saving={saving}
+          showSave={canEdit}
+          onSave={handleSave}
+          mode={editorMode}
+          onModeChange={setEditorMode}
         />
       </div>
 
-      <div className="editor-content opacity-0 mb-6">
-        <SplitEditor value={content} onChange={setContent} />
-      </div>
-
-      <div className="editor-content opacity-0">
-        <div className="bg-white rounded-[20px] border-2 border-brand-dark p-6 shadow-[4px_4px_0px_0px_#191A23]">
-          <h3 className="text-lg font-bold text-brand-dark mb-4">Post Settings</h3>
-          <MetadataForm
-            category={category}
-            onCategoryChange={setCategory}
-            status={status}
-            onStatusChange={setStatus}
-            coverImage={coverImage}
-            onCoverImageChange={setCoverImage}
-            excerpt={excerpt}
-            onExcerptChange={setExcerpt}
-          />
-        </div>
-      </div>
-
-      <div className="mt-6 lg:hidden">
-        <button
-          onClick={handleBack}
-          className="flex items-center justify-center gap-2 w-full py-3 bg-brand-gray border-2 border-brand-dark rounded-[16px] font-medium text-brand-dark"
-        >
-          Back to Posts
-        </button>
+      {/* Cover image and Excerpt (ticket 05) — behind their own drawer, not
+          in the writing path, and never required in order to Publish. Left
+          outside the `inert` block above since it's a fixed overlay of its
+          own; `inert` here mirrors the same read-only rule for its fields. */}
+      <div inert={!canEdit || undefined}>
+        <DetailsDrawer
+          open={detailsOpen}
+          onClose={() => setDetailsOpen(false)}
+          coverImage={coverImage}
+          onCoverImageChange={setCoverImage}
+          excerpt={excerpt}
+          onExcerptChange={setExcerpt}
+          content={content}
+          postId={mode === "edit" ? postId : undefined}
+        />
       </div>
 
       <ConfirmDialog
         open={showRestore}
-        title="กู้คืน draft"
-        message="พบ draft ที่ยังไม่บันทึก ต้องการกู้คืนหรือไม่?"
-        confirmText="กู้คืน"
-        cancelText="ละทิ้ง"
+        title="Restore Draft?"
+        message={
+          existingDraft
+            ? `A Draft was found on this device, saved ${formatDraftAge(existingDraft.savedAt)}. Restore it, or discard it and keep what's already here?`
+            : "A Draft was found on this device. Restore it, or discard it and keep what's already here?"
+        }
+        confirmText="Restore"
+        cancelText="Discard"
+        initialFocus="confirm"
         onConfirm={applyRestore}
         onCancel={discardRestore}
       />
 
       <ConfirmDialog
         open={showBackConfirm}
-        title="ออกโดยไม่บันทึก"
-        message="มีการแก้ไขที่ยังไม่บันทึก ต้องการออกหรือไม่?"
-        confirmText="ออก"
-        cancelText="อยู่ต่อ"
+        title="Leave without saving?"
+        message="You have unsaved changes. If you leave now, they will be lost."
+        confirmText="Leave"
+        cancelText="Stay"
         danger
         onConfirm={confirmBack}
         onCancel={() => setShowBackConfirm(false)}
+      />
+
+      <PublishSheet
+        open={publishSheetOpen}
+        onClose={() => setPublishSheetOpen(false)}
+        category={category}
+        onCategoryChange={setCategory}
+        status={status}
+        onStatusChange={setStatus}
+        checklist={publishChecklist}
+        confirmLabel={publishConfirmLabel}
+        pending={saving}
+        onConfirm={handlePublishConfirm}
       />
     </div>
   );

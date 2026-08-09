@@ -1,0 +1,156 @@
+"use client";
+
+import { useEffect, useId, useRef } from "react";
+import { animate, set } from "animejs";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_SLOW, EASE_OUT } from "@/lib/motion";
+import { Button } from "@/components/ui/button";
+
+export interface SlideOverPanelProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  closeLabel?: string;
+  /** One line under the title, for a panel whose consequences aren't obvious
+   *  from its name (the Publish sheet's are not). */
+  description?: string;
+  /** `sheet` is the wide, hard-edged panel a decision is made in (Publish);
+   *  `drawer` is the narrow, quiet one settings live in (details). The
+   *  design gives them different widths and different edges on purpose. */
+  variant?: "sheet" | "drawer";
+  children: React.ReactNode;
+  /** Rendered below `children`, outside the scrolling flow's top group —
+   *  callers that need a sticky action row (PublishSheet's Cancel/Confirm)
+   *  pass `mt-auto` classes on their own wrapper. */
+  footer?: React.ReactNode;
+}
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// Shared shell behind both slide-overs in the editor (PublishSheet, ticket 04;
+// the details drawer, ticket 05): backdrop scrim, right-edge panel, focus
+// trap, Escape-to-close, focus restoration on close, and the
+// slide-in-over-a-scrim / reduced-motion-fade entrance. The two screens only
+// ever differed in what fills the panel, so that's the only thing left to
+// each caller.
+export default function SlideOverPanel({
+  open,
+  onClose,
+  title,
+  closeLabel = "Close",
+  description,
+  variant = "sheet",
+  children,
+  footer,
+}: SlideOverPanelProps) {
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
+
+    const panel = panelRef.current;
+    if (panel) {
+      if (prefersReducedMotion) {
+        set(panel, { opacity: 0, translateX: 0 });
+        animate(panel, { opacity: [0, 1], duration: DURATION_SLOW, ease: EASE_OUT });
+      } else {
+        // Opacity has to be animated here too, not just translateX: the
+        // panel's class list starts it at opacity-0, so a transform-only
+        // entrance slides an invisible panel into place and leaves it there.
+        set(panel, { translateX: "100%", opacity: 0 });
+        animate(panel, {
+          translateX: ["100%", "0%"],
+          opacity: [0, 1],
+          duration: DURATION_SLOW,
+          ease: EASE_OUT,
+        });
+      }
+    }
+
+    closeRef.current?.focus();
+
+    const handleKeydown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panel) return;
+
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeydown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeydown);
+      // Sends focus back to whatever opened the panel — usually the control
+      // in the top bar — rather than stranding it at the document root.
+      previouslyFocused.current?.focus();
+    };
+  }, [open, onClose, prefersReducedMotion]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end">
+      <div
+        className="absolute inset-0 bg-surface-inverse/40 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className={`relative flex h-full w-full flex-col overflow-y-auto bg-surface opacity-0 shadow-panel ${
+          variant === "drawer"
+            ? "max-w-[320px] gap-4 border-l border-border-subtle p-5"
+            : "max-w-[460px] gap-[18px] border-l-2 border-border-strong p-7"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2
+              id={titleId}
+              className={`text-foreground ${variant === "drawer" ? "text-[15px] font-extrabold" : "text-[22px] font-black tracking-[-0.02em]"}`}
+            >
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-1 text-sm leading-normal text-text-secondary">{description}</p>
+            )}
+          </div>
+          <Button ref={closeRef} type="button" variant="ghost" size="icon" onClick={onClose} aria-label={closeLabel}>
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </Button>
+        </div>
+
+        {children}
+
+        {footer}
+      </div>
+    </div>
+  );
+}
