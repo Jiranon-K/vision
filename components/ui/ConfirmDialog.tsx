@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, set, cubicBezier } from "animejs";
+import { animate, set } from "animejs";
 import { Button } from "@/components/ui/button";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_BASE, EASE_OUT } from "@/lib/motion";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -19,13 +20,6 @@ interface ConfirmDialogProps {
    *  that can't lose anything. */
   initialFocus?: "confirm" | "cancel";
 }
-
-// Mirrors --duration-base / --ease-out from app/globals.css — animejs
-// animates DOM properties directly and can't read CSS custom properties, so
-// the token's *value* is duplicated here rather than its name (same pattern
-// as PostEditorForm's own entrance constants).
-const ENTRANCE_DURATION = 200;
-const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 export default function ConfirmDialog({
   open,
@@ -57,13 +51,13 @@ export default function ConfirmDialog({
         // Fades with no scale — a real reduced-motion state, not just a
         // shorter version of the full animation.
         set(dialog, { opacity: 0, scale: 1 });
-        animate(dialog, { opacity: [0, 1], duration: ENTRANCE_DURATION, ease: ENTRANCE_EASE });
+        animate(dialog, { opacity: [0, 1], duration: DURATION_BASE, ease: EASE_OUT });
       } else {
         animate(dialog, {
           opacity: [0, 1],
           scale: [0.95, 1],
-          duration: ENTRANCE_DURATION,
-          ease: ENTRANCE_EASE,
+          duration: DURATION_BASE,
+          ease: EASE_OUT,
         });
       }
     }

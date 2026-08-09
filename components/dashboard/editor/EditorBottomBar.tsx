@@ -18,10 +18,13 @@ export interface EditorBottomBarProps {
   onModeChange: (mode: EditorMode) => void;
 }
 
-// Below md the top bar is a single non-wrapping row with no space left for
+// Below lg the top bar is a single non-wrapping row with no space left for
 // state, so it carries only back · switch · details · Publish and everything
 // else moves down here — within a thumb's reach, which is where a phone
 // wants the mode switch anyway. Absent entirely at desktop.
+//
+// The boundary is lg (1024px) rather than md because the design's compact
+// tier is "phone or tablet", and its tablet comp is 834px wide.
 export default function EditorBottomBar({
   status,
   autosaveStatus,
@@ -34,7 +37,7 @@ export default function EditorBottomBar({
   onModeChange,
 }: EditorBottomBarProps) {
   return (
-    <div className="flex h-16 shrink-0 items-center gap-2.5 border-t border-border-subtle bg-surface px-3 md:hidden">
+    <div className="flex h-16 shrink-0 items-center gap-2.5 border-t border-border-subtle bg-surface px-3 lg:hidden">
       <AutosaveStatusSlot status={autosaveStatus} lastSavedAt={autosaveLastSavedAt} />
       <div className="hidden sm:block">
         <PostStatusSlot status={status} />

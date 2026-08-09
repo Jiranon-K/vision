@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { animate, set, cubicBezier } from "animejs";
+import { animate, set } from "animejs";
 import { toast } from "sonner";
 import SplitEditor from "@/components/dashboard/editor/SplitEditor";
 import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
@@ -18,6 +18,7 @@ import { apiFetch, authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/lib/motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { EditorMode } from "@/components/dashboard/editor/types";
 import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
@@ -49,18 +50,6 @@ const EMPTY: PostDraftState = {
   excerpt: "",
   coverImage: "",
 };
-
-// Mirrors --duration-slow / --ease-out from app/globals.css — animejs
-// animates DOM properties directly and can't read CSS custom properties, so
-// the token's *value* is duplicated here rather than its name.
-const ENTRANCE_DURATION = 300;
-const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
-
-// How long a Draft -> Published save holds on the editor, playing the top
-// bar's crossfade and accent wash, before leaving for the posts list.
-// Deliberately the slowest thing on this screen (ticket 04) — mirrored in
-// EditorTopBar's PUBLISH_WASH_MS since animejs there can't read this value.
-const PUBLISH_TRANSITION_HOLD_MS = 900;
 
 // Human-readable age for the restore dialog's "how old is this Draft"
 // requirement — coarser than AutosaveStatusSlot's live "Xs ago" clock since
@@ -123,7 +112,7 @@ export default function PostEditorForm({
   const [publishSheetOpen, setPublishSheetOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   // True for one brief window right after a Draft -> Published save lands —
-  // see handlePublishConfirm and PUBLISH_TRANSITION_HOLD_MS above.
+  // see handlePublishConfirm and PUBLISH_TRANSITION_MS above.
   const [statusAccent, setStatusAccent] = useState(false);
   // Gates the top bar's entrance — it waits for the writing surface's own
   // animation to start, so the arrival order is never a race.
@@ -360,8 +349,8 @@ export default function PostEditorForm({
     animate(content, {
       opacity: [0, 1],
       translateY: [16, 0],
-      duration: ENTRANCE_DURATION,
-      ease: ENTRANCE_EASE,
+      duration: DURATION_SLOW,
+      ease: EASE_OUT,
     });
   }, [enterAnimation, prefersReducedMotion]);
 
@@ -459,7 +448,7 @@ export default function PostEditorForm({
       window.setTimeout(() => {
         setStatusAccent(false);
         leaveForPostsList();
-      }, PUBLISH_TRANSITION_HOLD_MS);
+      }, PUBLISH_TRANSITION_MS);
     } else {
       leaveForPostsList();
     }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { PUBLISH_TRANSITION_MS } from "@/lib/motion";
 import DetailsAction from "./DetailsAction";
 import PublishAction from "./PublishAction";
 import PostStatusSlot from "./PostStatusSlot";
@@ -11,13 +12,6 @@ import EditorMeterSlot from "./EditorMeterSlot";
 import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
 import SaveNowAction from "./SaveNowAction";
 import type { EditorMode } from "./types";
-
-// Mirrors the hold PostEditorForm gives a Draft -> Published transition
-// before it navigates away — the value (not the token) has to be duplicated
-// because animejs can't read app/globals.css's custom properties. Kept
-// deliberately the longest-running motion in the bar: ticket 04 calls this
-// out as the one action here with consequences outside the screen.
-const PUBLISH_WASH_MS = 900;
 
 export interface EditorTopBarProps {
   /** Flips true once the writing surface has started its own entrance —
@@ -120,7 +114,7 @@ export default function EditorTopBar({
     const el = washRef.current;
     if (!el) return;
     set(el, { opacity: 0 });
-    animate(el, { opacity: [0, 0.35, 0], duration: PUBLISH_WASH_MS, ease: "linear" });
+    animate(el, { opacity: [0, 0.35, 0], duration: PUBLISH_TRANSITION_MS, ease: "linear" });
   }, [statusAccent, prefersReducedMotion]);
 
   // Entrance: opacity only, no translate, ~120ms after the writing surface
@@ -231,9 +225,12 @@ export default function EditorTopBar({
       {/* State on the left, next to where the Creator came from; actions on
           the right. The spacer between them is what keeps the two groups
           apart at every width rather than a justify rule that would drift
-          as items withdraw. Both state items hide at compact widths, where
-          the bottom bar carries them instead. */}
-      <div className="hidden items-center gap-2 md:flex">
+          as items withdraw.
+          `lg`, not `md`: the design's compact tier covers its 834px tablet
+          as well as the phone, and both state items belong to the bottom
+          bar there. Splitting at md would give an 834px window the desktop
+          bar and no bottom bar at all — the one width with neither. */}
+      <div className="hidden items-center gap-2 lg:flex">
         <AutosaveStatusSlot status={autosaveStatus} lastSavedAt={autosaveLastSavedAt} />
         <PostStatusSlot status={status} />
       </div>
@@ -255,7 +252,7 @@ export default function EditorTopBar({
       </div>
 
       {showSave && (
-        <div className="hidden md:block">
+        <div className="hidden lg:block">
           <SaveNowAction visible={dirty} saving={saving} onClick={onSave} />
         </div>
       )}

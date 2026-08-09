@@ -1,20 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate, set, cubicBezier } from "animejs";
+import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_SLOW, EASE_OUT } from "@/lib/motion";
 import { Badge } from "@/components/ui/badge";
 
 export interface PostStatusSlotProps {
   status: "Draft" | "Published";
   className?: string;
 }
-
-// Mirrors --duration-slow / --ease-out from app/globals.css — animejs can't
-// read CSS custom properties, so the value is duplicated (same pattern as
-// ConfirmDialog's and PostEditorForm's own entrance constants).
-const CROSSFADE_DURATION = 300;
-const CROSSFADE_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 // Draft -> Published is the one status change with consequences outside this
 // screen (ticket 04), so it crossfades instead of just re-rendering. The
@@ -44,12 +39,12 @@ export default function PostStatusSlot({ status, className = "" }: PostStatusSlo
     setOutgoing(from);
     const outgoingEl = outgoingRef.current;
     const incomingEl = incomingRef.current;
-    if (outgoingEl) animate(outgoingEl, { opacity: [1, 0], duration: CROSSFADE_DURATION, ease: CROSSFADE_EASE });
+    if (outgoingEl) animate(outgoingEl, { opacity: [1, 0], duration: DURATION_SLOW, ease: EASE_OUT });
     if (incomingEl) {
       set(incomingEl, { opacity: 0 });
-      animate(incomingEl, { opacity: [0, 1], duration: CROSSFADE_DURATION, ease: CROSSFADE_EASE });
+      animate(incomingEl, { opacity: [0, 1], duration: DURATION_SLOW, ease: EASE_OUT });
     }
-    const timer = window.setTimeout(() => setOutgoing(null), CROSSFADE_DURATION);
+    const timer = window.setTimeout(() => setOutgoing(null), DURATION_SLOW);
     return () => window.clearTimeout(timer);
   }, [status, prefersReducedMotion]);
 

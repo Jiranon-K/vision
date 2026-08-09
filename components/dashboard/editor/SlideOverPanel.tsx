@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
-import { animate, set, cubicBezier } from "animejs";
+import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_SLOW, EASE_OUT } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 
 export interface SlideOverPanelProps {
@@ -23,12 +24,6 @@ export interface SlideOverPanelProps {
    *  pass `mt-auto` classes on their own wrapper. */
   footer?: React.ReactNode;
 }
-
-// Mirrors --duration-slow / --ease-out from app/globals.css — animejs
-// animates DOM properties directly and can't read CSS custom properties, so
-// the token's *value* is duplicated here rather than its name.
-const ENTRANCE_DURATION = 300;
-const ENTRANCE_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -64,7 +59,7 @@ export default function SlideOverPanel({
     if (panel) {
       if (prefersReducedMotion) {
         set(panel, { opacity: 0, translateX: 0 });
-        animate(panel, { opacity: [0, 1], duration: ENTRANCE_DURATION, ease: ENTRANCE_EASE });
+        animate(panel, { opacity: [0, 1], duration: DURATION_SLOW, ease: EASE_OUT });
       } else {
         // Opacity has to be animated here too, not just translateX: the
         // panel's class list starts it at opacity-0, so a transform-only
@@ -73,8 +68,8 @@ export default function SlideOverPanel({
         animate(panel, {
           translateX: ["100%", "0%"],
           opacity: [0, 1],
-          duration: ENTRANCE_DURATION,
-          ease: ENTRANCE_EASE,
+          duration: DURATION_SLOW,
+          ease: EASE_OUT,
         });
       }
     }

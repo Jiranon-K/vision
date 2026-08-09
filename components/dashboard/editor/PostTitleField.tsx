@@ -46,9 +46,12 @@ export default function PostTitleField({ value, onChange, narrow = false }: Post
       // type on the writing surface itself, and a border would put it back in
       // a form. The global focus ring is left alone.
       className={`block w-full resize-none overflow-hidden border-none bg-transparent font-black leading-[1.15] tracking-[-0.03em] text-foreground placeholder:text-text-faint ${
+        // 34px display type only where the measure is full width: the design
+        // steps it down to 28 for its tablet and for Split, and to 26 on a
+        // phone, where a title that size would wrap to four lines.
         narrow
           ? "px-8 pb-3 pt-[30px] text-[28px]"
-          : "px-5 pb-2.5 pt-[22px] text-[26px] md:px-12 md:pb-3.5 md:pt-10 md:text-[34px]"
+          : "px-5 pb-2.5 pt-[22px] text-[26px] md:px-8 md:pb-3 md:pt-[30px] md:text-[28px] lg:px-12 lg:pb-3.5 lg:pt-10 lg:text-[34px]"
       }`}
     />
   );

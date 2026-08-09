@@ -25,7 +25,7 @@ export default function EditorMeterSlot({ content, className = "" }: EditorMeter
     // the bar, and it withdraws entirely below the width where the mode
     // switch needs the room.
     <div
-      className={`hidden shrink-0 items-center gap-[7px] whitespace-nowrap font-mono text-xs tabular-nums text-text-faint lg:flex ${className}`}
+      className={`hidden shrink-0 items-center gap-[7px] whitespace-nowrap font-mono text-xs tabular-nums text-text-faint md:flex ${className}`}
     >
       <span>{words.toLocaleString()} words</span>
       <span aria-hidden="true" className="opacity-40">

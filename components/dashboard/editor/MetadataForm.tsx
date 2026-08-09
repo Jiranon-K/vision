@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate, set, cubicBezier } from "animejs";
+import { animate, set } from "animejs";
 import { toast } from "sonner";
 import { apiFetch, authFetch } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -10,17 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { DURATION_BASE, EASE_OUT } from "@/lib/motion";
 import type { MetadataFormProps } from "./types";
 
 // Below this, a "summary" would just echo the content back — the button stays
 // visible but disabled rather than firing a request that can't say anything.
 const MIN_SUGGESTION_CONTENT_LENGTH = 40;
-
-// Mirrors --duration-base / --ease-out from app/globals.css — animejs
-// animates DOM properties directly and can't read CSS custom properties, so
-// the token's *value* is duplicated here rather than its name.
-const SUGGESTION_DURATION = 200;
-const SUGGESTION_EASE = cubicBezier(0.16, 1, 0.3, 1);
 
 // The border flash itself is a CSS `transition-colors` (bound to
 // --duration-slow via the arbitrary-value class below), not something this
@@ -91,8 +86,8 @@ export default function MetadataForm({
       animate(el, {
         opacity: [0, 1],
         translateY: [-8, 0],
-        duration: SUGGESTION_DURATION,
-        ease: SUGGESTION_EASE,
+        duration: DURATION_BASE,
+        ease: EASE_OUT,
       });
     }
   }, [showFallbackAlert, prefersReducedMotion]);
@@ -113,8 +108,8 @@ export default function MetadataForm({
         animate(field, {
           opacity: [0, 1],
           translateY: [8, 0],
-          duration: SUGGESTION_DURATION,
-          ease: SUGGESTION_EASE,
+          duration: DURATION_BASE,
+          ease: EASE_OUT,
         });
       }
     }
