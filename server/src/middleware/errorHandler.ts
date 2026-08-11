@@ -24,6 +24,7 @@ export const errorHandler = (
   err: unknown,
   req: Request,
   res: Response,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Express recognises an error handler by its arity; dropping the fourth parameter turns this back into ordinary middleware and errors stop reaching it.
   _next: NextFunction
 ): void => {
   const requestId = req.id;
