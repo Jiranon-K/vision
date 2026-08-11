@@ -8,6 +8,7 @@ import {
 } from '../reporting/excerptSuggestionRecord';
 import { AuthRequest } from '../middleware/auth';
 import { badRequest, forbidden, notFound, validationFailed } from '../errors';
+import { logger } from '../logger';
 import {
   postSchema,
   updatePostSchema,
@@ -295,9 +296,9 @@ export const suggestPostExcerpt = async (
     // train the Creator to distrust the button) — fall back to the same
     // mechanical derivation the save path uses, and say so via "source" so
     // the editor never passes a truncated string off as the AI's work.
-    console.error(
-      'Suggest excerpt error, falling back to derived excerpt:',
-      error
+    logger.error(
+      { err: error },
+      'Suggest excerpt error, falling back to derived excerpt'
     );
     const excerpt = deriveExcerpt(content);
     await recordExcerptSuggestion({

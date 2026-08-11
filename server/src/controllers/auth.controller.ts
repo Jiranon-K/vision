@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
+import { logger } from '../logger';
 import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken, hashToken } from '../utils/token';
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../utils/cookies';
 import { validatePasswordStrength } from '../utils/password';
@@ -111,7 +112,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     try {
       await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send verification email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send verification email');
       // Registration still succeeds; user can request resend later
     }
 
@@ -123,7 +124,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       message: 'Registration successful. Please check your email to verify your account.',
     });
   } catch (error) {
-    console.error('Register error:', error);
+    logger.error({ err: error }, 'Register error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -182,7 +183,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ err: error }, 'Login error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -214,7 +215,7 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error({ err: error }, 'Logout error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -273,7 +274,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error('Refresh error:', error);
+    logger.error({ err: error }, 'Refresh error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -323,13 +324,13 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     try {
       await sendResetPasswordEmail(user.email, resetToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send reset email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send reset email');
       // Intentionally do NOT reveal send failure to client (no enumeration)
     }
 
     res.json({ message: 'If an account exists with this email, a password reset link has been sent.' });
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error({ err: error }, 'Forgot password error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -377,7 +378,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 
     res.json({ message: 'Password has been reset successfully. Please login with your new password.' });
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error({ err: error }, 'Reset password error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -413,7 +414,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
-    console.error('Verify email error:', error);
+    logger.error({ err: error }, 'Verify email error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -439,14 +440,14 @@ export const resendVerification = async (req: AuthRequest, res: Response): Promi
     try {
       await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send verification email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send verification email');
       res.status(500).json({ error: 'Could not send verification email. Please try again later.' });
       return;
     }
 
     res.json({ message: 'Verification email sent' });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    logger.error({ err: error }, 'Resend verification error');
     res.status(500).json({ error: 'Server error' });
   }
 };

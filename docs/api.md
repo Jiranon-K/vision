@@ -11,9 +11,10 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 
 ## Health
 
-| Method | Endpoint      | Auth | Description    |
-| ------ | ------------- | ---- | -------------- |
-| GET    | `/api/health` | —    | Liveness check |
+| Method | Endpoint            | Auth | Description                                                       |
+| ------ | ------------------- | ---- | ----------------------------------------------------------------- |
+| GET    | `/api/health`       | —    | Liveness: the process is up. Says nothing about the database      |
+| GET    | `/api/health/ready` | —    | Readiness: 200 when the database is connected, 503 when it is not |
 
 ## Authentication — `/api/auth`
 

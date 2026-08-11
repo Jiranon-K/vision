@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpError } from '../errors';
+import { logger } from '../logger';
+import { getRequestId } from './requestId';
 
 interface BodyParserError extends Error {
   status?: number;
@@ -27,7 +29,7 @@ export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Express recognises an error handler by its arity; dropping the fourth parameter turns this back into ordinary middleware and errors stop reaching it.
   _next: NextFunction
 ): void => {
-  const requestId = req.id;
+  const requestId = getRequestId(req);
 
   if (err instanceof HttpError) {
     res.status(err.status).json({
@@ -48,12 +50,15 @@ export const errorHandler = (
   }
 
   // Internal detail is logged, never returned.
-  console.error('Unhandled error', {
-    requestId,
-    method: req.method,
-    path: req.originalUrl,
-    error: err instanceof Error ? err.stack : String(err),
-  });
+  logger.error(
+    {
+      requestId,
+      method: req.method,
+      path: req.originalUrl,
+      err,
+    },
+    'Unhandled error'
+  );
 
   res.status(500).json({ error: 'Server error', requestId });
 };

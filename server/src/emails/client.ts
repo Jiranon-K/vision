@@ -1,9 +1,10 @@
 import { Resend } from 'resend';
+import { logger } from '../logger';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 if (!RESEND_API_KEY) {
-  console.warn('[emails] RESEND_API_KEY not set — email sending will fail');
+  logger.warn('RESEND_API_KEY not set — email sending will fail');
 }
 
 export const resend = new Resend(RESEND_API_KEY || 'missing-key');

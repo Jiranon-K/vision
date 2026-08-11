@@ -3,9 +3,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import connectDB from './config/db';
+import connectDB, { isDatabaseConnected } from './config/db';
 import { generalLimiter } from './config/rateLimit';
+import { logger } from './logger';
 import { requestId } from './middleware/requestId';
+import { httpLogger } from './middleware/httpLogger';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 import authRoutes from './routes/auth';
@@ -30,6 +32,7 @@ app.use(
 );
 
 app.use(requestId);
+app.use(httpLogger(logger));
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -49,17 +52,34 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/capabilities', capabilitiesRoutes);
 
+// Liveness: the process is up. Deliberately says nothing about the database —
+// blending the two makes an orchestrator restart healthy processes in a loop
+// during a database outage, turning a dependency failure into an outage.
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Readiness: this server can actually serve. The old check answered "healthy"
+// as long as the process was running, which is exactly the situation where it
+// is least informative.
+app.get('/api/health/ready', (_req, res) => {
+  const connected = isDatabaseConnected();
+  res.status(connected ? 200 : 503).json({
+    status: connected ? 'ready' : 'unready',
+    database: connected ? 'connected' : 'disconnected',
+  });
 });
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    connectDB();
+  // Connect first, then listen. Listening before the database is reachable
+  // leaves a window in which the server accepts requests it cannot answer.
+  void connectDB().then(() => {
+    app.listen(PORT, () => {
+      logger.info({ port: PORT }, 'Server listening');
+    });
   });
 }
 
