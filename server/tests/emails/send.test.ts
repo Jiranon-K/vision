@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 
 beforeAll(() => {
   process.env.JWT_SECRET = 'test-secret-for-vitest';
+process.env.JWT_REFRESH_SECRET = 'test-secret-for-vitest-refresh';
   process.env.RESEND_API_KEY = 'test-key';
   process.env.FRONTEND_URL = 'http://test.local';
 });

@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 delete process.env.AI_PROVIDER;
 delete process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 

@@ -3,6 +3,7 @@ import {
   register,
   login,
   logout,
+  logoutEverywhere,
   getMe,
   refresh,
   forgotPassword,
@@ -23,6 +24,9 @@ router.post('/login', loginLimiter, login);
 
 
 router.post('/logout', logout);
+
+
+router.post('/logout-everywhere', auth, logoutEverywhere);
 
 
 router.post('/refresh', refresh);

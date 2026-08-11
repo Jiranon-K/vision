@@ -6,6 +6,7 @@ import ExcerptSuggestion from '../../src/models/ExcerptSuggestion';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 // Keep the timeout path fast to test without actually waiting on a real clock.
 process.env.AI_SUGGESTION_TIMEOUT_MS = '50';
 

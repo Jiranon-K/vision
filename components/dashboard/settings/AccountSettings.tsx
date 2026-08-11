@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { changePasswordRequest } from "@/lib/api";
+import { changePasswordRequest, logoutEverywhereRequest } from "@/lib/api";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { usePasswordToggle } from "@/hooks/usePasswordToggle";
@@ -46,6 +47,8 @@ export default function AccountSettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSigningOutEverywhere, setIsSigningOutEverywhere] = useState(false);
+  const router = useRouter();
 
   const passwordRequirements = useMemo(() => {
     return [
@@ -97,6 +100,23 @@ export default function AccountSettings() {
       toast.error("An unexpected error occurred.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSignOutEverywhere = async () => {
+    setIsSigningOutEverywhere(true);
+    try {
+      const res = await logoutEverywhereRequest();
+      if (res.ok) {
+        toast.success("Signed out on every device.");
+        router.push("/login");
+      } else {
+        toast.error("Could not sign out your other devices. Try again.");
+      }
+    } catch {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setIsSigningOutEverywhere(false);
     }
   };
 
@@ -185,7 +205,29 @@ export default function AccountSettings() {
             <Button onClick={handleChangePassword} variant="default" disabled={!canSubmit || isSaving}>
               {isSaving ? "Updating..." : "Update Password"}
             </Button>
+            <p className="mt-2 text-xs font-bold text-brand-dark/40">
+              Changing your password signs out your other devices.
+            </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="settings-section bg-white rounded-[20px] border-2 border-brand-dark shadow-[4px_4px_0px_0px_#191A23]">
+        <CardHeader>
+          <CardTitle className="text-xl font-black text-brand-dark">Active Sessions</CardTitle>
+          <CardDescription className="text-brand-dark/50">
+            Signed in somewhere you no longer control? End every session,
+            including this one.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={handleSignOutEverywhere}
+            variant="outline"
+            disabled={isSigningOutEverywhere}
+          >
+            {isSigningOutEverywhere ? "Signing out..." : "Sign out everywhere"}
+          </Button>
         </CardContent>
       </Card>
 

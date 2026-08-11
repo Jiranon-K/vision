@@ -59,6 +59,12 @@ export async function logoutRequest(): Promise<Response> {
   });
 }
 
+export async function logoutEverywhereRequest(): Promise<Response> {
+  return authFetch("/api/auth/logout-everywhere", {
+    method: "POST",
+  });
+}
+
 // Settings / Profile
 export async function getProfileRequest(): Promise<Response> {
   return authFetch("/api/settings/profile");

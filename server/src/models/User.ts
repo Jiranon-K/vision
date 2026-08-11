@@ -25,8 +25,13 @@ export interface IUser extends Document {
     frequency: 'daily' | 'weekly' | 'monthly';
   };
 
-  refreshToken?: string;
-  refreshTokenExpiry?: Date;
+  /**
+   * One entry per signed-in device. A hash rather than the token means a
+   * database dump is not a set of working credentials; a list rather than a
+   * single value means signing in on a second device no longer silently signs
+   * the first one out.
+   */
+  sessions: { sid: string; tokenHash: string; expiresAt: Date }[];
   emailVerified: boolean;
   verificationToken?: string;
   verificationTokenExpiry?: Date;
@@ -68,8 +73,18 @@ const UserSchema = new Schema<IUser>(
       },
     },
 
-    refreshToken: { type: String, select: false },
-    refreshTokenExpiry: { type: Date },
+    sessions: {
+      type: [
+        {
+          _id: false,
+          sid: { type: String, required: true },
+          tokenHash: { type: String, required: true },
+          expiresAt: { type: Date, required: true },
+        },
+      ],
+      default: [],
+      select: false,
+    },
     emailVerified: { type: Boolean, default: false },
     verificationToken: { type: String, select: false },
     verificationTokenExpiry: { type: Date },

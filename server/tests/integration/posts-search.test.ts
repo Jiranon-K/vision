@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 process.env.ADMIN_EMAILS = 'admin@test.local';
 
 let mongo: MongoMemoryServer;

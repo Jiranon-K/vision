@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 // No AI_PROVIDER, no GOOGLE_GENERATIVE_AI_API_KEY — this file asserts the
 // no-credentials case, so it must not inherit either from the environment.
 delete process.env.AI_PROVIDER;

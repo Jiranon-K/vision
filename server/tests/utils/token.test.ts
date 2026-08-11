@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 
 // Must be set before importing the token module — it reads JWT_SECRET at import time.
 process.env.JWT_SECRET = 'test-secret-for-vitest';
+process.env.JWT_REFRESH_SECRET = 'test-secret-for-vitest-refresh';
 
 const { hashToken } = await import('../../src/utils/token');
 

@@ -22,7 +22,8 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 | ------ | ---------------------- | ---- | ---------------------------------------------------------------- |
 | POST   | `/register`            | —    | Register a Creator and send the verification email. Rate limited |
 | POST   | `/login`               | —    | Authenticate and set the session cookies. Rate limited           |
-| POST   | `/logout`              | —    | Clear the session cookies                                        |
+| POST   | `/logout`              | —    | Revoke this device's session and clear its cookies               |
+| POST   | `/logout-everywhere`   | yes  | Revoke every session the Creator holds                           |
 | POST   | `/refresh`             | —    | Exchange the refresh cookie for a new access token               |
 | GET    | `/me`                  | yes  | The signed-in Creator                                            |
 | POST   | `/forgot-password`     | —    | Send a password-reset link. Rate limited                         |

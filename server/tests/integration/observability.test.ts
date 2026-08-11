@@ -14,6 +14,7 @@ import { Writable } from 'stream';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 
 let mongo: MongoMemoryServer;
 let app: import('express').Express;
