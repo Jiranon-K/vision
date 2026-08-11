@@ -31,28 +31,51 @@ import { isDuplicateKeyError } from '../utils/duplicateKey';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
 
-// $regex compiles its input as a pattern, so a search term must be escaped or the
-// Creator's own text becomes syntax: `c++` is a malformed pattern MongoDB rejects,
-// and `.*` would match every Post.
-const escapeRegex = (value: string): string =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// The Creator's own text must never be read as syntax: a term is a phrase to
+// match, not an expression to evaluate. `$text` treats a quoted string as a
+// literal phrase, so quoting is both the escaping and the "these words, in this
+// order" behaviour a Creator expects when they type more than one word.
+const asPhrase = (term: string): string => `"${term.replace(/"/g, ' ')}"`;
 
+// A term of one or two characters is an in-progress query, not a search. Left
+// unfiltered it would return the whole collection on every keystroke.
+const MIN_SEARCH_LENGTH = 2;
+
+// The score is sorted by but never returned: it is a ranking mechanism, not
+// part of what a Post is, and MongoDB has allowed a $meta sort without a
+// matching projection since 4.4.
+type SortSpec = Record<string, 1 | -1 | { $meta: 'textScore' }>;
+
+interface ListShape {
+  filter: Record<string, unknown>;
+  sort: SortSpec;
+}
 
 // Category and search narrow a list the same way for both audiences; who may
 // see which Posts is decided by the caller, not here.
 const applyListFilters = (
   filter: Record<string, unknown>,
   query: Request['query']
-): void => {
+): ListShape => {
   const { category, search } = query;
 
   if (category && category !== 'All') {
     filter.category = category;
   }
 
-  if (typeof search === 'string' && search) {
-    filter.title = { $regex: escapeRegex(search), $options: 'i' };
+  const term = typeof search === 'string' ? search.trim() : '';
+  if (term.length < MIN_SEARCH_LENGTH) {
+    return { filter, sort: { createdAt: -1 } };
   }
+
+  // Relevance orders the result; recency breaks ties. Relevance alone makes two
+  // equally good matches arbitrary; recency alone is what the old behaviour got
+  // wrong.
+  filter.$text = { $search: asPhrase(term) };
+  return {
+    filter,
+    sort: { score: { $meta: 'textScore' }, createdAt: -1 },
+  };
 };
 
 // The Smart Creator Hub's list: the Posts this Creator owns, Draft and
@@ -75,11 +98,11 @@ export const getPosts = async (
     filter.status = status;
   }
 
-  applyListFilters(filter, req.query);
+  const shape = applyListFilters(filter, req.query);
 
-  const posts = await Post.find(filter)
+  const posts = await Post.find(shape.filter)
     .select('-coverImage')
-    .sort({ createdAt: -1 });
+    .sort(shape.sort);
   res.json(posts);
 };
 
@@ -91,11 +114,11 @@ export const getPublicPosts = async (
   res: Response
 ): Promise<void> => {
   const filter: Record<string, unknown> = { status: 'Published' };
-  applyListFilters(filter, req.query);
+  const shape = applyListFilters(filter, req.query);
 
-  const posts = await Post.find(filter)
+  const posts = await Post.find(shape.filter)
     .select('-coverImage -owner')
-    .sort({ createdAt: -1 });
+    .sort(shape.sort);
   res.json(posts);
 };
 

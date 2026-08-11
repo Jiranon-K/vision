@@ -58,4 +58,22 @@ PostSchema.index({ featured: 1 });
 PostSchema.index({ owner: 1, createdAt: -1 });
 PostSchema.index({ previousSlugs: 1 });
 
+// Search was an unanchored case-insensitive $regex over titles: no index could
+// answer it, so every search read every Post, matched substrings without regard
+// for words, and could not rank. A text index buys indexed word matching and a
+// relevance score.
+//
+// `default_language: 'none'` disables stemming and stop-word removal. English
+// stemming would silently discard Thai — the language a good deal of this
+// platform's content is written in — and a Creator finding nothing is worse
+// than a Creator finding an unstemmed match.
+PostSchema.index(
+  { title: 'text', excerpt: 'text', content: 'text' },
+  {
+    weights: { title: 10, excerpt: 4, content: 1 },
+    default_language: 'none',
+    name: 'post_search',
+  }
+);
+
 export default mongoose.model<IPost>('Post', PostSchema);
