@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import connectDB, { isDatabaseConnected } from './config/db';
 import { generalLimiter } from './config/rateLimit';
+import { assertStoreIsUsable } from './config/rateLimitStore';
 import { logger } from './logger';
 import { requestId } from './middleware/requestId';
 import { httpLogger } from './middleware/httpLogger';
@@ -74,6 +75,10 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 if (require.main === module) {
+  // Fail at deploy time rather than at the first incident: a production server
+  // with no shared rate limit store enforces nothing above one instance.
+  assertStoreIsUsable();
+
   // Connect first, then listen. Listening before the database is reachable
   // leaves a window in which the server accepts requests it cannot answer.
   void connectDB().then(() => {

@@ -1,13 +1,13 @@
 import rateLimit from 'express-rate-limit';
-import type { Store } from 'express-rate-limit';
+import { createStore } from './rateLimitStore';
+
+// Credential and spend limiters refuse when the shared store cannot answer;
+// the general budget keeps serving. See rateLimitStore.ts for why the two
+// differ.
+const FAIL_CLOSED = 'closed' as const;
+const FAIL_OPEN = 'open' as const;
 
 
-const createStore = (): Store | undefined => {
-  if (process.env.NODE_ENV === 'production') {
-    console.warn('WARNING: Using in-memory rate limit store. Consider Redis for production.');
-  }
-  return undefined;
-};
 
 
 // Disable rate limiting in test environment so integration tests don't share
@@ -29,7 +29,7 @@ export const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_CLOSED),
   skip: skipInTest,
   keyGenerator: (req) => {
     return `${req.ip}-${req.body?.email || 'unknown'}`;
@@ -43,7 +43,7 @@ export const registerLimiter = rateLimit({
   message: { error: 'Too many registration attempts. Please try again in an hour.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_CLOSED),
   skip: skipInTest,
 });
 
@@ -54,7 +54,7 @@ export const generalLimiter = rateLimit({
   message: { error: 'Too many requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_OPEN),
   skip: (req) => req.path.startsWith('/api/health') || skipInTest(),
 });
 
@@ -65,7 +65,7 @@ export const forgotPasswordLimiter = rateLimit({
   message: { error: 'Too many password reset requests. Please try again in an hour.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_CLOSED),
   skip: skipInTest,
 });
 
@@ -75,7 +75,7 @@ export const resendVerificationLimiter = rateLimit({
   message: { error: 'Too many verification email requests. Please try again in an hour.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_CLOSED),
   skip: skipInTest,
   keyGenerator: perCreatorKey,
 });
@@ -89,7 +89,7 @@ export const recordViewLimiter = rateLimit({
   message: { error: 'Too many requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_OPEN),
   skip: skipInTest,
 });
 
@@ -101,7 +101,7 @@ export const suggestExcerptLimiter = rateLimit({
   message: { error: 'Too many excerpt suggestion requests. Please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  store: createStore(),
+  store: createStore(FAIL_CLOSED),
   skip: skipInTest,
   keyGenerator: perCreatorKey,
 });
