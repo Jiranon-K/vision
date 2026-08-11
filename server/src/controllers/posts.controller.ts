@@ -15,6 +15,12 @@ import {
   suggestExcerptSchema,
 } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
+import {
+  normalizeSlug,
+  proposeSlug,
+  saveWithUniqueSlug,
+  slugIsTaken,
+} from '../utils/slug';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
 
@@ -24,32 +30,6 @@ import { resolveGenerateText } from '../ai/provider';
 const escapeRegex = (value: string): string =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const generateUniqueSlug = async (
-  title: string,
-  excludeId?: string
-): Promise<string> => {
-  let base = title
-    .toLowerCase()
-    .normalize('NFKC')
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/(^-|-$)/g, '');
-
-  if (!base) {
-    base = 'post';
-  }
-
-  let slug = base;
-  let counter = 1;
-  while (true) {
-    const existing = await Post.findOne({ slug });
-    if (!existing || (excludeId && String(existing._id) === excludeId)) {
-      break;
-    }
-    slug = `${base}-${counter}`;
-    counter++;
-  }
-  return slug;
-};
 
 // Category and search narrow a list the same way for both audiences; who may
 // see which Posts is decided by the caller, not here.
@@ -138,10 +118,27 @@ export const getPostBySlug = async (
     slug: req.params.slug,
     status: 'Published',
   });
-  if (!post) {
-    throw notFound('Post not found');
+  if (post) {
+    res.json(post);
+    return;
   }
-  res.json(post);
+
+  // A retained address answers with a permanent redirect rather than failing,
+  // so a bookmark or a link already broadcast to a channel keeps working and
+  // search engines learn the new address.
+  const moved = await Post.findOne({
+    previousSlugs: req.params.slug,
+    status: 'Published',
+  }).select('slug');
+  if (moved) {
+    res
+      .status(301)
+      .location(`/api/posts/slug/${encodeURIComponent(moved.slug)}`)
+      .json({ slug: moved.slug });
+    return;
+  }
+
+  throw notFound('Post not found');
 };
 
 export const createPost = async (
@@ -156,7 +153,9 @@ export const createPost = async (
   const { title, excerpt, content, category, status, featured, coverImage } =
     validation.data;
 
-  const slug = await generateUniqueSlug(title);
+  const slug = validation.data.slug
+    ? normalizeSlug(validation.data.slug)
+    : await proposeSlug(title);
 
   const post = new Post({
     title,
@@ -175,7 +174,11 @@ export const createPost = async (
     },
   });
 
-  await post.save();
+  if (validation.data.slug && (await slugIsTaken(slug))) {
+    throw badRequest('That address is already taken by another Post');
+  }
+
+  await saveWithUniqueSlug(post, title);
   await claimOrphanSuggestion(
     req.user!.id,
     post._id as mongoose.Types.ObjectId
@@ -209,10 +212,31 @@ export const updatePost = async (
   }
 
   const data = validation.data;
+  const wasPublished = post.status === 'Published';
 
   if (data.title !== undefined) {
     post.title = data.title;
-    post.slug = await generateUniqueSlug(data.title, String(post._id));
+    // A Draft's address follows its title, because a Draft has no Readers and
+    // no indexed URL. Once Published the two are independent: regenerating the
+    // Slug from a retitled headline threw away every link pointing at it.
+    if (!wasPublished) {
+      post.slug = await proposeSlug(data.title, String(post._id));
+    }
+  }
+
+  // An address a Creator sets deliberately is the one case a Published Slug
+  // moves. The old one is retained so links already shared keep working.
+  if (data.slug !== undefined) {
+    const nextSlug = normalizeSlug(data.slug);
+    if (nextSlug !== post.slug) {
+      if (await slugIsTaken(nextSlug, String(post._id))) {
+        throw badRequest('That address is already taken by another Post');
+      }
+      if (wasPublished) {
+        post.previousSlugs = [...(post.previousSlugs ?? []), post.slug];
+      }
+      post.slug = nextSlug;
+    }
   }
   if (data.content !== undefined) post.content = data.content;
   if (data.category !== undefined) post.category = data.category;

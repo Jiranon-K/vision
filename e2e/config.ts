@@ -245,14 +245,14 @@ bun run dev:all
 \`\`\`
 `;
 
-// Mirrors generateUniqueSlug in server/src/controllers/posts.controller.ts.
+// Mirrors normalizeSlug in server/src/utils/slug.ts.
 // Only valid for titles that are unique across the run — which every title
 // this suite creates is.
 export function slugify(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFKC')
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, '-')
     .replace(/(^-|-$)/g, '');
 }
 

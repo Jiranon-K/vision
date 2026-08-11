@@ -7,6 +7,10 @@ export const postSchema = z.object({
   content: z.string().min(1, 'Content is required'),
   category: z.string().min(1, 'Category is required'),
   status: z.enum(['Published', 'Draft']),
+  // A Creator may set the address deliberately. Absent, it is derived from the
+  // title — and once the Post is Published, deriving stops (see CONTEXT.md:
+  // a Slug is "stable and unique").
+  slug: z.string().min(1).max(200).optional(),
   // readTime is computed server-side (Thai-aware) — not accepted from the client.
   featured: z.boolean().optional(),
   coverImage: z.string().optional(),

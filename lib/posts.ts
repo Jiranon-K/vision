@@ -28,12 +28,30 @@ export async function getPublishedPosts(): Promise<Post[]> {
   return asWireList<WirePost>(await res.json()).map(toPost);
 }
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
+/** A Post read at an address it no longer answers at. */
+export interface MovedPost {
+  movedTo: string;
+}
+
+export function isMovedPost(value: Post | MovedPost | null): value is MovedPost {
+  return value !== null && "movedTo" in value;
+}
+
+export async function getPostBySlug(
+  slug: string,
+): Promise<Post | MovedPost | null> {
   const res = await fetch(
     `${API_BASE_URL}/api/posts/slug/${encodeURIComponent(slug)}`,
-    { next: { revalidate: REVALIDATE } },
+    // manual: a retained Slug answers 301, and following it here would serve
+    // the Post at the old address — the Reader's URL and the search engine's
+    // index both need to learn the new one.
+    { next: { revalidate: REVALIDATE }, redirect: "manual" },
   );
 
+  if (res.status === 301) {
+    const { slug: movedTo } = (await res.json()) as { slug: string };
+    return { movedTo };
+  }
   if (res.status === 404) {
     return null;
   }

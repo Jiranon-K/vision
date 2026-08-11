@@ -16,6 +16,12 @@ export interface IPost extends Document {
   featured: boolean;
   views: number;
   slug: string;
+  /**
+   * Addresses this Post used to be readable at. Retained so a link a Reader
+   * saved keeps working, and included in uniqueness so a released address can
+   * never start pointing at a different Creator's Post.
+   */
+  previousSlugs: string[];
   coverImage?: string;
 }
 
@@ -40,6 +46,7 @@ const PostSchema = new Schema<IPost>(
     featured: { type: Boolean, default: false },
     views: { type: Number, default: 0 },
     slug: { type: String, required: true, unique: true },
+    previousSlugs: { type: [String], default: [] },
     coverImage: { type: String },
   },
   { timestamps: true }
@@ -49,5 +56,6 @@ PostSchema.index({ status: 1, createdAt: -1 });
 PostSchema.index({ category: 1 });
 PostSchema.index({ featured: 1 });
 PostSchema.index({ owner: 1, createdAt: -1 });
+PostSchema.index({ previousSlugs: 1 });
 
 export default mongoose.model<IPost>('Post', PostSchema);
