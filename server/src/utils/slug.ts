@@ -1,4 +1,5 @@
 import Post from '../models/Post';
+import { isDuplicateKeyError } from './duplicateKey';
 
 // \p{M} keeps combining marks. Without it a Thai title loses its vowel and tone
 // marks — "การเขียนบทความ" became "การเข-ยนบทความ" — which is not a word any
@@ -50,14 +51,9 @@ export async function proposeSlug(
   return candidate;
 }
 
-interface DuplicateKeyError {
-  code?: number;
-  keyPattern?: Record<string, unknown>;
-}
-
 export function isDuplicateSlugError(error: unknown): boolean {
-  const candidate = error as DuplicateKeyError;
-  return candidate?.code === 11000 && Boolean(candidate.keyPattern?.slug);
+  const candidate = error as { keyPattern?: Record<string, unknown> };
+  return isDuplicateKeyError(error) && Boolean(candidate.keyPattern?.slug);
 }
 
 /**

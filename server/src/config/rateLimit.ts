@@ -80,6 +80,19 @@ export const resendVerificationLimiter = rateLimit({
   keyGenerator: perCreatorKey,
 });
 
+// Recording a View gets its own budget rather than sharing the general one:
+// a burst against it is then bounded without spending a Reader's allowance for
+// actually reading. Generous, because a Reader legitimately opens many Posts.
+export const recordViewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  message: { error: 'Too many requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(),
+  skip: skipInTest,
+});
+
 // One Creator's enthusiasm for the button shouldn't spend everyone's provider
 // budget. ~20/hour is generous for a per-Post action but bounds a runaway UI.
 export const suggestExcerptLimiter = rateLimit({

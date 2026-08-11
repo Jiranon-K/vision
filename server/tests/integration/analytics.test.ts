@@ -55,9 +55,14 @@ async function createPost(
   return res.body._id as string;
 }
 
-async function view(id: string, times = 1): Promise<void> {
-  for (let i = 0; i < times; i++) {
-    const res = await request(app).post(`/api/posts/${id}/view`);
+// A View is one Reader reading a Post, deduplicated per Reader per Post, so
+// "three Views" means three distinct Readers rather than three requests.
+async function view(id: string, readers = 1): Promise<void> {
+  for (let i = 0; i < readers; i++) {
+    const res = await request(app)
+      .post(`/api/posts/${id}/view`)
+      .set('User-Agent', `Mozilla/5.0 (Test Reader ${i}) Chrome/120 Safari/537.36`)
+      .set('Accept-Language', 'en-GB');
     expect(res.status).toBe(204);
   }
 }
@@ -100,7 +105,7 @@ describe('Growth Analytics is scoped to one Creator', () => {
   it('excludes Draft Views from Total Views but counts the Draft as a Post', async () => {
     const a = await register('stats-draft@test.local');
     const draft = await createPost(a, { status: 'Draft' });
-    await request(app).post(`/api/posts/${draft}/view`);
+    await view(draft);
 
     const res = await request(app).get('/api/analytics').set('Cookie', a);
     expect(statValue(res.body, 'Total Views')).toBe('0');

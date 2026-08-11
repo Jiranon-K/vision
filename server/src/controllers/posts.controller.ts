@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
 import PostView, { startOfUtcDay } from '../models/PostView';
+import ViewRecord from '../models/ViewRecord';
+import {
+  VIEW_DEDUPE_WINDOW_HOURS,
+  deriveReader,
+  looksLikeCrawler,
+} from '../utils/readerIdentity';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
@@ -21,6 +27,7 @@ import {
   saveWithUniqueSlug,
   slugIsTaken,
 } from '../utils/slug';
+import { isDuplicateKeyError } from '../utils/duplicateKey';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
 
@@ -357,11 +364,37 @@ export const incrementViews = async (
     return;
   }
 
+  // Indexing is not readership. Answered as success so a crawler learns
+  // nothing from the difference.
+  if (looksLikeCrawler(req)) {
+    res.status(204).end();
+    return;
+  }
+
+  const now = new Date();
+  const reader = deriveReader(req, now);
+  const expiresAt = new Date(
+    now.getTime() + VIEW_DEDUPE_WINDOW_HOURS * 60 * 60 * 1000
+  );
+
+  try {
+    await ViewRecord.create({ post: post._id, reader, expiresAt });
+  } catch (error) {
+    // The unique index rejecting the row is the deduplication: this Reader has
+    // already been counted for this Post inside the window. Accepted and
+    // ignored rather than refused, so the client needs no logic to interpret it.
+    if (isDuplicateKeyError(error)) {
+      res.status(204).end();
+      return;
+    }
+    throw error;
+  }
+
   await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
   // The Post's counter answers "how many"; the daily rollup answers "when",
   // which is what the Creator's weekly trend is made of.
   await PostView.updateOne(
-    { post: post._id, day: startOfUtcDay(new Date()) },
+    { post: post._id, day: startOfUtcDay(now) },
     { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
     { upsert: true }
   );
@@ -384,5 +417,6 @@ export const deletePost = async (
   await post.deleteOne();
   // Totals describe Posts that exist, so the rollup goes with the Post.
   await PostView.deleteMany({ post: post._id });
+  await ViewRecord.deleteMany({ post: post._id });
   res.json({ message: 'Post deleted successfully' });
 };

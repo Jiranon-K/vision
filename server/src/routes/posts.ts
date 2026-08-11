@@ -11,7 +11,7 @@ import {
   suggestPostExcerpt,
 } from '../controllers/posts.controller';
 import { auth, optionalAuth } from '../middleware/auth';
-import { suggestExcerptLimiter } from '../config/rateLimit';
+import { recordViewLimiter, suggestExcerptLimiter } from '../config/rateLimit';
 
 const router = Router();
 
@@ -24,7 +24,7 @@ router.get('/slug/:slug', getPostBySlug);
 // Above /:id so "suggest-excerpt" is never read as a Post id.
 router.post('/suggest-excerpt', auth, suggestExcerptLimiter, suggestPostExcerpt);
 router.get('/:id', optionalAuth, getPost);
-router.post('/:id/view', incrementViews);
+router.post('/:id/view', recordViewLimiter, incrementViews);
 // Body validation happens in the controllers via safeParse (their {field,message}
 // error shape is what the frontend consumes), so no validateBody middleware here.
 router.post('/', auth, createPost);
