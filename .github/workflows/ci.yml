@@ -1,0 +1,94 @@
+name: CI
+
+# The repository already knows how to verify itself — `verify:fast` and
+# `verify:full` are the documented commands. This workflow calls them rather
+# than growing its own private notion of what "verified" means, so adding a
+# package or a check changes one place and the pipeline follows.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Nothing in the pipeline may reach a real provider: the Excerpt Suggestion
+  # seam selects its deterministic stub, so no AI credential exists here and no
+  # test makes a real network call.
+  AI_PROVIDER: stub
+
+jobs:
+  verify-fast:
+    name: verify:fast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # --frozen-lockfile: a pipeline that silently resolves a newer dependency
+      # is verifying a different project from the one in the repository.
+      - name: Install dependencies
+        run: |
+          bun install --frozen-lockfile
+          cd server && bun install --frozen-lockfile && cd ..
+          cd harness && bun install --frozen-lockfile
+
+      - name: Typecheck, lint and unit tests
+        run: bun run verify:fast
+
+  verify-full:
+    name: verify:full
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install --frozen-lockfile
+          cd server && bun install --frozen-lockfile && cd ..
+          cd harness && bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+
+      # verify:full is verify:fast plus the production build and the Playwright
+      # `e2e` project. The `screenshots` project stays out: it writes the
+      # committed README PNGs, and every run would produce a binary diff.
+      - name: Full verification
+        run: bun run verify:full
+
+      - name: Fail if the committed screenshots changed
+        run: git diff --exit-code -- docs/images
+
+      - name: Upload Playwright artefacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            test-results/
+            playwright-report/
+            e2e-results.json
+          retention-days: 7
