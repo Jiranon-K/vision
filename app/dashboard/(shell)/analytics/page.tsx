@@ -19,12 +19,7 @@ const AnalyticsChart = dynamic(
   }
 );
 
-const statIcons: ("views" | "posts" | "subscribers" | "engagement")[] = [
-  "views",
-  "posts",
-  "subscribers",
-  "engagement",
-];
+const statIcons: ("views" | "posts")[] = ["views", "posts"];
 
 export default function AnalyticsPage() {
   const pageRef = useRef<HTMLDivElement>(null);
@@ -100,9 +95,9 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {showSkeleton ? (
-            Array(4).fill(0).map((_, i) => <StatsCardSkeleton key={i} />)
+            Array(2).fill(0).map((_, i) => <StatsCardSkeleton key={i} />)
           ) : (
             stats.map((stat, index) => (
               <MetricCard

@@ -1,34 +1,50 @@
-import { Request, Response } from 'express';
-import Analytics from '../models/Analytics';
+import { Response } from 'express';
+import mongoose from 'mongoose';
 import Post from '../models/Post';
+import PostView, { startOfUtcDay } from '../models/PostView';
+import { AuthRequest } from '../middleware/auth';
 
-export const getStats = async (_req: Request, res: Response): Promise<void> => {
+const TREND_DAYS = 7;
+
+// Deriving the figures from the Creator's own Posts is what makes them correct
+// by construction. They used to come from a platform-wide document, so every
+// Creator was shown the whole platform's totals under a heading that said the
+// numbers were theirs.
+export const getStats = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
   try {
-    let totalViews = 0;
-    let subscribers = 0;
-    let engagement = 0;
-    let postCount = 0;
+    const owner = new mongoose.Types.ObjectId(req.user!.id);
 
-    try {
-      const latest = await Analytics.findOne().sort({ date: -1 });
-      totalViews = latest?.pageViews || 0;
-      subscribers = latest?.subscribers || 0;
-      engagement = latest?.engagement || 0;
-    } catch (err) {
-      console.error('Analytics query error:', err);
-    }
+    const [viewAgg, postCount] = await Promise.all([
+      Post.aggregate<{ total: number }>([
+        { $match: { owner, status: 'Published' } },
+        { $group: { _id: null, total: { $sum: '$views' } } },
+      ]),
+      Post.countDocuments({ owner }),
+    ]);
 
-    try {
-      postCount = await Post.countDocuments({ status: 'Published' });
-    } catch (err) {
-      console.error('Post count error:', err);
-    }
+    const totalViews = viewAgg[0]?.total ?? 0;
 
+    // Subscribers and Engagement are absent on purpose. Neither has a
+    // per-Creator definition, and a plausible-looking number that describes
+    // someone else is worse than no number at all.
     res.json([
-      { id: '1', label: 'Total Views', value: `${totalViews}`, change: '0%', changeType: 'positive' },
-      { id: '2', label: 'Posts', value: `${postCount}`, change: '0%', changeType: 'positive' },
-      { id: '3', label: 'Subscribers', value: `${subscribers}`, change: '0%', changeType: 'positive' },
-      { id: '4', label: 'Engagement', value: `${engagement}%`, change: '0%', changeType: 'positive' },
+      {
+        id: 'views',
+        label: 'Total Views',
+        value: `${totalViews}`,
+        change: '0%',
+        changeType: 'positive',
+      },
+      {
+        id: 'posts',
+        label: 'Posts',
+        value: `${postCount}`,
+        change: '0%',
+        changeType: 'positive',
+      },
     ]);
   } catch (error) {
     console.error('getStats error:', error);
@@ -37,29 +53,38 @@ export const getStats = async (_req: Request, res: Response): Promise<void> => {
 };
 
 export const getViewsData = async (
-  _req: Request,
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const data = await Analytics.find()
-      .sort({ date: -1 })
-      .limit(7);
+    const owner = new mongoose.Types.ObjectId(req.user!.id);
 
-    const formattedData = data.reverse().map((item) => ({
-      label: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }),
-      value: item.pageViews,
-    }));
+    const today = startOfUtcDay(new Date());
+    const days: Date[] = [];
+    for (let back = TREND_DAYS - 1; back >= 0; back--) {
+      days.push(new Date(today.getTime() - back * 24 * 60 * 60 * 1000));
+    }
 
-    res.json(formattedData.length > 0 ? formattedData : [
-      { label: 'Mon', value: 0 },
-      { label: 'Tue', value: 0 },
-      { label: 'Wed', value: 0 },
-      { label: 'Thu', value: 0 },
-      { label: 'Fri', value: 0 },
-      { label: 'Sat', value: 0 },
-      { label: 'Sun', value: 0 },
+    const rows = await PostView.aggregate<{ _id: Date; total: number }>([
+      { $match: { owner, day: { $gte: days[0] } } },
+      { $group: { _id: '$day', total: { $sum: '$count' } } },
     ]);
-  } catch {
+
+    const byDay = new Map(rows.map((r) => [new Date(r._id).getTime(), r.total]));
+
+    // A day with no Views is a point worth zero, not a missing point: a gap
+    // would make the chart's x-axis move under the Creator week to week.
+    res.json(
+      days.map((day) => ({
+        label: day.toLocaleDateString('en-US', {
+          weekday: 'short',
+          timeZone: 'UTC',
+        }),
+        value: byDay.get(day.getTime()) ?? 0,
+      }))
+    );
+  } catch (error) {
+    console.error('getViewsData error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

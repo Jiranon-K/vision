@@ -85,9 +85,9 @@ export default function DashboardPage() {
         <p className="text-brand-dark/50 mt-1">Welcome back! Here&apos;s your content overview.</p>
       </div>
 
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {showSkeleton ? (
-            Array(4).fill(0).map((_, i) => <StatsCardSkeleton key={i} />)
+            Array(2).fill(0).map((_, i) => <StatsCardSkeleton key={i} />)
           ) : (
             stats.map((stat) => (
               <StatsCard key={stat.id} stat={stat} />

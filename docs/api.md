@@ -44,13 +44,15 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 
 ## Analytics — `/api/analytics`
 
-| Method | Endpoint | Auth | Description                                             |
-| ------ | -------- | ---- | ------------------------------------------------------- |
-| GET    | `/`      | —    | Stat cards: Total Views, Posts, Subscribers, Engagement |
-| GET    | `/views` | —    | The seven most recent daily View counts                 |
+| Method | Endpoint | Auth | Description                                                           |
+| ------ | -------- | ---- | --------------------------------------------------------------------- |
+| GET    | `/`      | yes  | Stat cards for the signed-in Creator: Total Views, Posts              |
+| GET    | `/views` | yes  | The Creator's daily View counts, one point per day for the last seven |
 
-> Both analytics routes are currently unauthenticated: anyone who can reach the
-> API can read these numbers.
+> Both routes report on the Posts the signed-in Creator owns. Total Views sums
+> Views across their Published Posts; a Draft accumulates none. Subscribers and
+> Engagement are not reported — neither has a per-Creator definition, and a
+> platform figure shown as a personal one is worse than no figure.
 
 ## Settings — `/api/settings`
 

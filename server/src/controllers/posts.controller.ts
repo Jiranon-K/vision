@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
+import PostView, { startOfUtcDay } from '../models/PostView';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
@@ -358,7 +359,27 @@ export const incrementViews = async (
   res: Response
 ): Promise<void> => {
   try {
-    await Post.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
+    const post = await Post.findById(req.params.id).select('owner status');
+    if (!post) {
+      res.status(404).json({ error: 'Post not found' });
+      return;
+    }
+    // A Draft has no Readers, so it accumulates no Views. Previously this
+    // incremented whatever id it was handed, without checking that a Reader
+    // could have read it.
+    if (post.status !== 'Published') {
+      res.status(204).end();
+      return;
+    }
+
+    await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
+    // The Post's counter answers "how many"; the daily rollup answers "when",
+    // which is what the Creator's weekly trend is made of.
+    await PostView.updateOne(
+      { post: post._id, day: startOfUtcDay(new Date()) },
+      { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
+      { upsert: true }
+    );
     res.status(204).end();
   } catch {
     res.status(400).json({ error: 'Invalid id' });
@@ -384,6 +405,8 @@ export const deletePost = async (
     }
 
     await post.deleteOne();
+    // Totals describe Posts that exist, so the rollup goes with the Post.
+    await PostView.deleteMany({ post: post._id });
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
