@@ -7,7 +7,12 @@ import {
   claimOrphanSuggestion,
 } from '../reporting/excerptSuggestionRecord';
 import { AuthRequest } from '../middleware/auth';
-import { postSchema, updatePostSchema, suggestExcerptSchema } from '../schemas/posts';
+import { badRequest, forbidden, notFound, validationFailed } from '../errors';
+import {
+  postSchema,
+  updatePostSchema,
+  suggestExcerptSchema,
+} from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
@@ -69,29 +74,25 @@ export const getPosts = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  try {
-    const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = {};
 
-    // Moderation depends on an admin seeing across Creators, so the role widens
-    // the constraint rather than skipping it.
-    if (req.user!.role !== 'admin') {
-      filter.owner = req.user!.id;
-    }
-
-    const { status } = req.query;
-    if (status && status !== 'All') {
-      filter.status = status;
-    }
-
-    applyListFilters(filter, req.query);
-
-    const posts = await Post.find(filter)
-      .select('-coverImage')
-      .sort({ createdAt: -1 });
-    res.json(posts);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  // Moderation depends on an admin seeing across Creators, so the role widens
+  // the constraint rather than skipping it.
+  if (req.user!.role !== 'admin') {
+    filter.owner = req.user!.id;
   }
+
+  const { status } = req.query;
+  if (status && status !== 'All') {
+    filter.status = status;
+  }
+
+  applyListFilters(filter, req.query);
+
+  const posts = await Post.find(filter)
+    .select('-coverImage')
+    .sort({ createdAt: -1 });
+  res.json(posts);
 };
 
 // The Reader's list. It takes no session into account at all: branching on
@@ -101,184 +102,143 @@ export const getPublicPosts = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const filter: Record<string, unknown> = { status: 'Published' };
-    applyListFilters(filter, req.query);
+  const filter: Record<string, unknown> = { status: 'Published' };
+  applyListFilters(filter, req.query);
 
-    const posts = await Post.find(filter)
-      .select('-coverImage -owner')
-      .sort({ createdAt: -1 });
-    res.json(posts);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
+  const posts = await Post.find(filter)
+    .select('-coverImage -owner')
+    .sort({ createdAt: -1 });
+  res.json(posts);
 };
 
 export const getPost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-    // A Post the caller neither owns nor can read publicly answers as missing:
-    // a distinct refusal would confirm the id exists.
-    const canRead =
-      post.status === 'Published' ||
+  const post = await Post.findById(req.params.id);
+  // A Post the caller neither owns nor can read publicly answers as missing:
+  // a distinct refusal would confirm the id exists.
+  const canRead =
+    post &&
+    (post.status === 'Published' ||
       (req.user &&
-        (req.user.role === 'admin' || String(post.owner) === req.user.id));
-    if (!canRead) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+        (req.user.role === 'admin' || String(post.owner) === req.user.id)));
+  if (!canRead) {
+    throw notFound('Post not found');
   }
+  res.json(post);
 };
 
 export const getPostBySlug = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const post = await Post.findOne({
-      slug: req.params.slug,
-      status: 'Published',
-    });
-    if (!post) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-    res.json(post);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  const post = await Post.findOne({
+    slug: req.params.slug,
+    status: 'Published',
+  });
+  if (!post) {
+    throw notFound('Post not found');
   }
+  res.json(post);
 };
 
 export const createPost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  try {
-    const validation = postSchema.safeParse(req.body);
-    if (!validation.success) {
-      res.status(400).json({
-        error: 'Validation failed',
-        details: validation.error.issues.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-        })),
-      });
-      return;
-    }
-
-    const { title, excerpt, content, category, status, featured, coverImage } =
-      validation.data;
-
-    const slug = await generateUniqueSlug(title);
-
-    const post = new Post({
-      title,
-      excerpt: deriveExcerpt(content, excerpt),
-      content,
-      category,
-      status,
-      readTime: computeReadTime(content),
-      featured: featured || false,
-      coverImage,
-      slug,
-      owner: req.user!.id,
-      author: {
-        name: req.user?.name || 'Unknown Author',
-        role: req.user?.role === 'admin' ? 'Admin' : 'Author',
-      },
-    });
-
-    await post.save();
-    await claimOrphanSuggestion(req.user!.id, post._id as mongoose.Types.ObjectId);
-    res.status(201).json(post);
-  } catch (error) {
-    console.error('Create post error:', error);
-    res.status(500).json({ error: 'Server error' });
+  const validation = postSchema.safeParse(req.body);
+  if (!validation.success) {
+    throw validationFailed(validation.error.issues);
   }
+
+  const { title, excerpt, content, category, status, featured, coverImage } =
+    validation.data;
+
+  const slug = await generateUniqueSlug(title);
+
+  const post = new Post({
+    title,
+    excerpt: deriveExcerpt(content, excerpt),
+    content,
+    category,
+    status,
+    readTime: computeReadTime(content),
+    featured: featured || false,
+    coverImage,
+    slug,
+    owner: req.user!.id,
+    author: {
+      name: req.user?.name || 'Unknown Author',
+      role: req.user?.role === 'admin' ? 'Admin' : 'Author',
+    },
+  });
+
+  await post.save();
+  await claimOrphanSuggestion(
+    req.user!.id,
+    post._id as mongoose.Types.ObjectId
+  );
+  res.status(201).json(post);
 };
 
 export const updatePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  try {
-    const validation = updatePostSchema.safeParse(req.body);
-    if (!validation.success) {
-      res.status(400).json({
-        error: 'Validation failed',
-        details: validation.error.issues.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-        })),
-      });
-      return;
-    }
-
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-
-    if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
-      res
-        .status(403)
-        .json({ error: 'You do not have permission to edit this post' });
-      return;
-    }
-
-    // Adopt ownership of a legacy post that predates the owner field (only an
-    // admin reaches here for an orphan; authors are rejected above). Prevents a
-    // required-field validation error on save before the backfill migration runs.
-    if (!post.owner) {
-      post.owner = new mongoose.Types.ObjectId(req.user!.id);
-    }
-
-    const data = validation.data;
-
-    if (data.title !== undefined) {
-      post.title = data.title;
-      post.slug = await generateUniqueSlug(data.title, String(post._id));
-    }
-    if (data.content !== undefined) post.content = data.content;
-    if (data.category !== undefined) post.category = data.category;
-    if (data.status !== undefined) post.status = data.status;
-    if (data.featured !== undefined) post.featured = data.featured;
-    if (data.coverImage !== undefined) post.coverImage = data.coverImage;
-
-    // Recompute derived fields whenever the source content changes; re-derive the
-    // excerpt when content changed or a new excerpt was supplied (blank → auto).
-    if (data.content !== undefined) {
-      post.readTime = computeReadTime(post.content);
-    }
-    if (data.content !== undefined || data.excerpt !== undefined) {
-      post.excerpt = deriveExcerpt(post.content, data.excerpt);
-    }
-
-    await post.save();
-
-    res.json(post);
-  } catch (error) {
-    console.error('Update post error:', error);
-    res.status(500).json({ error: 'Server error' });
+  const validation = updatePostSchema.safeParse(req.body);
+  if (!validation.success) {
+    throw validationFailed(validation.error.issues);
   }
+
+  const post = await Post.findById(req.params.id);
+  if (!post) {
+    throw notFound('Post not found');
+  }
+
+  if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
+    throw forbidden('You do not have permission to edit this post');
+  }
+
+  // Adopt ownership of a legacy post that predates the owner field (only an
+  // admin reaches here for an orphan; authors are rejected above). Prevents a
+  // required-field validation error on save before the backfill migration runs.
+  if (!post.owner) {
+    post.owner = new mongoose.Types.ObjectId(req.user!.id);
+  }
+
+  const data = validation.data;
+
+  if (data.title !== undefined) {
+    post.title = data.title;
+    post.slug = await generateUniqueSlug(data.title, String(post._id));
+  }
+  if (data.content !== undefined) post.content = data.content;
+  if (data.category !== undefined) post.category = data.category;
+  if (data.status !== undefined) post.status = data.status;
+  if (data.featured !== undefined) post.featured = data.featured;
+  if (data.coverImage !== undefined) post.coverImage = data.coverImage;
+
+  // Recompute derived fields whenever the source content changes; re-derive the
+  // excerpt when content changed or a new excerpt was supplied (blank → auto).
+  if (data.content !== undefined) {
+    post.readTime = computeReadTime(post.content);
+  }
+  if (data.content !== undefined || data.excerpt !== undefined) {
+    post.excerpt = deriveExcerpt(post.content, data.excerpt);
+  }
+
+  await post.save();
+
+  res.json(post);
 };
 
 // A provider that hangs must not hang the Creator's editor with it. 8s is
 // generous for a text summary call but bounds the worst case to "annoying"
 // rather than "stuck forever". Overridable so tests can exercise the timeout
 // path without actually waiting 8s.
-const SUGGESTION_TIMEOUT_MS = Number(process.env.AI_SUGGESTION_TIMEOUT_MS) || 8_000;
+const SUGGESTION_TIMEOUT_MS =
+  Number(process.env.AI_SUGGESTION_TIMEOUT_MS) || 8_000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -305,14 +265,7 @@ export const suggestPostExcerpt = async (
 ): Promise<void> => {
   const validation = suggestExcerptSchema.safeParse(req.body);
   if (!validation.success) {
-    res.status(400).json({
-      error: 'Validation failed',
-      details: validation.error.issues.map((e) => ({
-        field: e.path.join('.'),
-        message: e.message,
-      })),
-    });
-    return;
+    throw validationFailed(validation.error.issues);
   }
 
   const { content, postId } = validation.data;
@@ -342,7 +295,10 @@ export const suggestPostExcerpt = async (
     // train the Creator to distrust the button) — fall back to the same
     // mechanical derivation the save path uses, and say so via "source" so
     // the editor never passes a truncated string off as the AI's work.
-    console.error('Suggest excerpt error, falling back to derived excerpt:', error);
+    console.error(
+      'Suggest excerpt error, falling back to derived excerpt:',
+      error
+    );
     const excerpt = deriveExcerpt(content);
     await recordExcerptSuggestion({
       creatorId: req.user!.id,
@@ -358,57 +314,50 @@ export const incrementViews = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  try {
-    const post = await Post.findById(req.params.id).select('owner status');
-    if (!post) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-    // A Draft has no Readers, so it accumulates no Views. Previously this
-    // incremented whatever id it was handed, without checking that a Reader
-    // could have read it.
-    if (post.status !== 'Published') {
-      res.status(204).end();
-      return;
-    }
-
-    await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
-    // The Post's counter answers "how many"; the daily rollup answers "when",
-    // which is what the Creator's weekly trend is made of.
-    await PostView.updateOne(
-      { post: post._id, day: startOfUtcDay(new Date()) },
-      { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
-      { upsert: true }
-    );
-    res.status(204).end();
-  } catch {
-    res.status(400).json({ error: 'Invalid id' });
+  // A malformed id is the caller's mistake; a failure to write is the
+  // server's. Catching everything and calling it "Invalid id" blended the two.
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    throw badRequest('Invalid id');
   }
+
+  const post = await Post.findById(req.params.id).select('owner status');
+  if (!post) {
+    throw notFound('Post not found');
+  }
+  // A Draft has no Readers, so it accumulates no Views. Previously this
+  // incremented whatever id it was handed, without checking that a Reader
+  // could have read it.
+  if (post.status !== 'Published') {
+    res.status(204).end();
+    return;
+  }
+
+  await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
+  // The Post's counter answers "how many"; the daily rollup answers "when",
+  // which is what the Creator's weekly trend is made of.
+  await PostView.updateOne(
+    { post: post._id, day: startOfUtcDay(new Date()) },
+    { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
+    { upsert: true }
+  );
+  res.status(204).end();
 };
 
 export const deletePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      res.status(404).json({ error: 'Post not found' });
-      return;
-    }
-
-    if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
-      res
-        .status(403)
-        .json({ error: 'You do not have permission to delete this post' });
-      return;
-    }
-
-    await post.deleteOne();
-    // Totals describe Posts that exist, so the rollup goes with the Post.
-    await PostView.deleteMany({ post: post._id });
-    res.json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  const post = await Post.findById(req.params.id);
+  if (!post) {
+    throw notFound('Post not found');
   }
+
+  if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
+    throw forbidden('You do not have permission to delete this post');
+  }
+
+  await post.deleteOne();
+  // Totals describe Posts that exist, so the rollup goes with the Post.
+  await PostView.deleteMany({ post: post._id });
+  res.json({ message: 'Post deleted successfully' });
 };

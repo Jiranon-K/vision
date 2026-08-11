@@ -50,22 +50,28 @@ async function createPost(cookies: string[], title: string): Promise<void> {
   expect(res.status).toBe(201);
 }
 
-async function seed(): Promise<void> {
+async function seed(): Promise<string[]> {
   const cookies = await register('search@test.local');
   await createPost(cookies, 'Learning C++ Basics');
   await createPost(cookies, 'Regex .* Cheatsheet');
   await createPost(cookies, 'Marketing Fundamentals');
+  return cookies;
 }
 
-function search(term: string) {
-  return request(app).get('/api/posts').query({ search: term });
+// The Hub list is the Creator's own, so a search narrows inside that constraint
+// rather than across the platform.
+function search(term: string, cookies: string[]) {
+  return request(app)
+    .get('/api/posts')
+    .set('Cookie', cookies)
+    .query({ search: term });
 }
 
 describe('Post search treats the term as literal text', () => {
   it('matches a term containing regex metacharacters instead of erroring', async () => {
-    await seed();
+    const cookies = await seed();
 
-    const res = await search('c++');
+    const res = await search('c++', cookies);
 
     expect(res.status).toBe(200);
     expect(res.body.map((p: { title: string }) => p.title)).toEqual([
@@ -74,9 +80,9 @@ describe('Post search treats the term as literal text', () => {
   });
 
   it('does not let a wildcard term match every post', async () => {
-    await seed();
+    const cookies = await seed();
 
-    const res = await search('.*');
+    const res = await search('.*', cookies);
 
     expect(res.status).toBe(200);
     expect(res.body.map((p: { title: string }) => p.title)).toEqual([
@@ -85,9 +91,9 @@ describe('Post search treats the term as literal text', () => {
   });
 
   it('keeps case-insensitive substring matching', async () => {
-    await seed();
+    const cookies = await seed();
 
-    const res = await search('basics');
+    const res = await search('basics', cookies);
 
     expect(res.status).toBe(200);
     expect(res.body.map((p: { title: string }) => p.title)).toEqual([
