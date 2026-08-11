@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   getPosts,
+  getPublicPosts,
   getPost,
   getPostBySlug,
   createPost,
@@ -14,7 +15,11 @@ import { suggestExcerptLimiter } from '../config/rateLimit';
 
 const router = Router();
 
-router.get('/', optionalAuth, getPosts);
+// Two audiences, two paths. "/" answers "what does this Creator own"; "/public"
+// answers "what may a Reader read". Sharing one path and branching on whether a
+// session was present is what leaked every Creator's Drafts to every Creator.
+router.get('/', auth, getPosts);
+router.get('/public', getPublicPosts);
 router.get('/slug/:slug', getPostBySlug);
 // Above /:id so "suggest-excerpt" is never read as a Post id.
 router.post('/suggest-excerpt', auth, suggestExcerptLimiter, suggestPostExcerpt);

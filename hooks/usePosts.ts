@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { apiFetch, authFetch } from "@/lib/api";
+import { authFetch } from "@/lib/api";
 import { asWireList, toPostRow } from "@/lib/post-contract";
 import type { PostRow } from "@/types/types";
 
@@ -20,7 +20,7 @@ export function usePosts(): UsePostsReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await apiFetch("/api/posts");
+      const res = await authFetch("/api/posts");
       if (!res.ok) throw new Error("Failed to fetch posts");
       
       setPosts(asWireList(await res.json()).map(toPostRow));

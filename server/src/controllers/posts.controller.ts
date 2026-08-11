@@ -44,35 +44,68 @@ const generateUniqueSlug = async (
   return slug;
 };
 
+// Category and search narrow a list the same way for both audiences; who may
+// see which Posts is decided by the caller, not here.
+const applyListFilters = (
+  filter: Record<string, unknown>,
+  query: Request['query']
+): void => {
+  const { category, search } = query;
+
+  if (category && category !== 'All') {
+    filter.category = category;
+  }
+
+  if (typeof search === 'string' && search) {
+    filter.title = { $regex: escapeRegex(search), $options: 'i' };
+  }
+};
+
+// The Smart Creator Hub's list: the Posts this Creator owns, Draft and
+// Published alike. Ownership is a filter rather than a check — a filter applied
+// after the query has already pulled every Creator's Drafts into the process.
 export const getPosts = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const { category, status, search } = req.query;
-
     const filter: Record<string, unknown> = {};
 
-    if (category && category !== 'All') {
-      filter.category = category;
+    // Moderation depends on an admin seeing across Creators, so the role widens
+    // the constraint rather than skipping it.
+    if (req.user!.role !== 'admin') {
+      filter.owner = req.user!.id;
     }
 
+    const { status } = req.query;
     if (status && status !== 'All') {
       filter.status = status;
     }
 
-    // Unauthenticated callers (e.g. the public blog) may only ever see published
-    // posts — never expose Draft content or owner ids to anonymous requests.
-    if (!req.user) {
-      filter.status = 'Published';
-    }
-
-    if (typeof search === 'string' && search) {
-      filter.title = { $regex: escapeRegex(search), $options: 'i' };
-    }
+    applyListFilters(filter, req.query);
 
     const posts = await Post.find(filter)
       .select('-coverImage')
+      .sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// The Reader's list. It takes no session into account at all: branching on
+// whether one happened to be present is what let a signed-in Creator read every
+// other Creator's Drafts. Owner ids never cross this boundary.
+export const getPublicPosts = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const filter: Record<string, unknown> = { status: 'Published' };
+    applyListFilters(filter, req.query);
+
+    const posts = await Post.find(filter)
+      .select('-coverImage -owner')
       .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
@@ -90,8 +123,13 @@ export const getPost = async (
       res.status(404).json({ error: 'Post not found' });
       return;
     }
-    // Hide unpublished drafts from anonymous callers (the dashboard sends creds).
-    if (!req.user && post.status !== 'Published') {
+    // A Post the caller neither owns nor can read publicly answers as missing:
+    // a distinct refusal would confirm the id exists.
+    const canRead =
+      post.status === 'Published' ||
+      (req.user &&
+        (req.user.role === 'admin' || String(post.owner) === req.user.id));
+    if (!canRead) {
       res.status(404).json({ error: 'Post not found' });
       return;
     }

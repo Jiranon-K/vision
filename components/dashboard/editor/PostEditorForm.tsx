@@ -14,7 +14,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { apiFetch, authFetch } from "@/lib/api";
+import { authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
 import type { CurrentUser } from "@/lib/auth";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -183,7 +183,7 @@ export default function PostEditorForm({
     setLoading(true);
     setLoadError(null);
     try {
-      const res = await apiFetch(`/api/posts/${postId}`);
+      const res = await authFetch(`/api/posts/${postId}`);
       // No toast here — the load-error state below takes over the canvas
       // instead of hiding behind one.
       if (res.status === 404) {

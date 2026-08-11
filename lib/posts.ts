@@ -17,7 +17,7 @@ const REVALIDATE = Number(process.env.POSTS_REVALIDATE ?? 300);
 
 // Server-side public fetch — no credentials, ISR-cached.
 export async function getPublishedPosts(): Promise<Post[]> {
-  const res = await fetch(`${API_BASE_URL}/api/posts?status=Published`, {
+  const res = await fetch(`${API_BASE_URL}/api/posts/public`, {
     next: { revalidate: REVALIDATE },
   });
 

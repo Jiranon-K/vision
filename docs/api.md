@@ -31,15 +31,16 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 
 ## Posts — `/api/posts`
 
-| Method | Endpoint      | Auth     | Description                                                  |
-| ------ | ------------- | -------- | ------------------------------------------------------------ |
-| GET    | `/`           | optional | List Posts. Filters: `category`, `status`, `search`          |
-| GET    | `/:id`        | optional | A single Post by id                                          |
-| GET    | `/slug/:slug` | —        | A Published Post by Slug — what the public blog reads        |
-| POST   | `/:id/view`   | —        | Record a View                                                |
-| POST   | `/`           | yes      | Create a Post. `readTime` and `slug` are derived server-side |
-| PUT    | `/:id`        | yes      | Update a Post. Owner or admin only                           |
-| DELETE | `/:id`        | yes      | Delete a Post. Owner or admin only                           |
+| Method | Endpoint      | Auth     | Description                                                                                      |
+| ------ | ------------- | -------- | ------------------------------------------------------------------------------------------------ |
+| GET    | `/`           | yes      | The Hub list: the caller's own Posts. An admin sees all. Filters: `category`, `status`, `search` |
+| GET    | `/public`     | —        | The Reader list: Published Posts, without owner ids. Filters: `category`, `search`               |
+| GET    | `/:id`        | optional | A single Post by id. A Draft is readable by its owner or an admin only                           |
+| GET    | `/slug/:slug` | —        | A Published Post by Slug — what the public blog reads                                            |
+| POST   | `/:id/view`   | —        | Record a View                                                                                    |
+| POST   | `/`           | yes      | Create a Post. `readTime` and `slug` are derived server-side                                     |
+| PUT    | `/:id`        | yes      | Update a Post. Owner or admin only                                                               |
+| DELETE | `/:id`        | yes      | Delete a Post. Owner or admin only                                                               |
 
 ## Analytics — `/api/analytics`
 
