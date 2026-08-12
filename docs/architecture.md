@@ -12,6 +12,13 @@ Sessions are httpOnly cookies. `middleware.ts` gates `/dashboard/*` on cookie
 presence for the redirect, and `hooks/useAuth.ts` confirms with `GET /api/auth/me`
 once the page mounts — the cookie check is a fast path, not the authorization.
 
+The Smart Creator Hub fetches through one seam. `lib/query.ts` decides cache
+keys, freshness windows, retry policy and what a change to a Post invalidates;
+the hooks in `hooks/` are the interface every screen consumes, and no screen
+knows a query library is behind them. Session expiry is answered once, at the
+query layer, so several refused requests produce one redirect. The public
+marketing pages and the blog are untouched by it — they fetch on the server.
+
 The vocabulary the code is written in — Post, Creator, Draft, Published, View,
 Category — is defined in [CONTEXT.md](../CONTEXT.md). Read it before naming
 anything new.
@@ -28,6 +35,7 @@ anything new.
 | Animation | Anime.js 4, via a shared `AnimationProvider`      |
 | Markdown  | react-markdown, remark-gfm, rehype-slug/highlight |
 | Toasts    | sonner                                            |
+| Hub data  | TanStack Query, behind the hooks in `hooks/`      |
 | Fonts     | Space Grotesk, Geist Mono (`next/font/google`)    |
 | E2E       | Playwright                                        |
 

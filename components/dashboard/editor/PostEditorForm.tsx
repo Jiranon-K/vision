@@ -20,6 +20,7 @@ import type { CurrentUser } from "@/lib/auth";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/lib/motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useInvalidatePostData } from "@/hooks/usePosts";
 import type { EditorMode } from "@/components/dashboard/editor/types";
 import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
 import {
@@ -82,6 +83,7 @@ export default function PostEditorForm({
   currentUser,
 }: PostEditorFormProps) {
   const router = useRouter();
+  const invalidatePostData = useInvalidatePostData();
   const pageRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
@@ -390,6 +392,10 @@ export default function PostEditorForm({
       });
 
       if (res.ok) {
+        // The Hub cannot show a Post that was just published as a Draft, or
+        // analytics that predate it. Declaring what a save makes stale here is
+        // what keeps the screens agreeing without any of them coordinating.
+        await invalidatePostData();
         clearDraft();
         // Keeps `isDirty` (and the beforeunload guard) honest for the
         // animated Publish path below, which stays on this page briefly
