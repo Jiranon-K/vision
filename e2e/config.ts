@@ -245,14 +245,14 @@ bun run dev:all
 \`\`\`
 `;
 
-// Mirrors generateUniqueSlug in server/src/controllers/posts.controller.ts.
+// Mirrors normalizeSlug in server/src/utils/slug.ts.
 // Only valid for titles that are unique across the run — which every title
 // this suite creates is.
 export function slugify(title: string): string {
   return title
     .toLowerCase()
     .normalize('NFKC')
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/[^\p{L}\p{N}\p{M}]+/gu, '-')
     .replace(/(^-|-$)/g, '');
 }
 
@@ -261,6 +261,7 @@ export const serverEnv: Record<string, string> = {
   PORT: String(E2E_API_PORT),
   MONGODB_URI: E2E_MONGODB_URI,
   JWT_SECRET: 'e2e-only-secret-not-used-anywhere-else-0123456789',
+  JWT_REFRESH_SECRET: 'e2e-only-refresh-secret-not-used-anywhere-else-0123',
   FRONTEND_URL: WEB_URL,
   // Deliberately fake. server/src/emails/client.ts builds a Resend client
   // straight from this value and has no stub path.

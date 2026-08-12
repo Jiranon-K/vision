@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 process.env.ADMIN_EMAILS = 'admin@test.local';
 
 let mongo: MongoMemoryServer;
@@ -115,17 +116,138 @@ describe('Post ownership authorization', () => {
   });
 });
 
+describe('The Hub list is scoped to its owner', () => {
+  it('returns only the calling Creator’s own Posts', async () => {
+    const a = await register('a-owner@test.local');
+    await createPost(a, { status: 'Draft', title: 'A draft' });
+    await createPost(a, { status: 'Published', title: 'A published' });
+
+    const b = await register('b-owner@test.local');
+    await createPost(b, { status: 'Draft', title: 'B draft' });
+    await createPost(b, { status: 'Published', title: 'B published' });
+
+    const res = await request(app).get('/api/posts').set('Cookie', a);
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
+      'A draft',
+      'A published',
+    ]);
+  });
+
+  it('refuses an unauthenticated caller', async () => {
+    const res = await request(app).get('/api/posts');
+    expect(res.status).toBe(401);
+  });
+
+  it('lets an admin list across Creators', async () => {
+    const a = await register('someone-else@test.local');
+    await createPost(a, { title: 'Theirs' });
+
+    const admin = await register('admin@test.local');
+    await createPost(admin, { title: 'Mine' });
+
+    const res = await request(app).get('/api/posts').set('Cookie', admin);
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
+      'Mine',
+      'Theirs',
+    ]);
+  });
+
+  it('keeps filters and search inside the owner constraint', async () => {
+    const a = await register('filter-a@test.local');
+    await createPost(a, { title: 'Shared Topic', category: 'SEO' });
+
+    const b = await register('filter-b@test.local');
+    await createPost(b, { title: 'Shared Topic', category: 'SEO' });
+
+    const byCategory = await request(app)
+      .get('/api/posts?category=SEO')
+      .set('Cookie', a);
+    expect(byCategory.body.items).toHaveLength(1);
+
+    const bySearch = await request(app)
+      .get('/api/posts?search=Shared')
+      .set('Cookie', a);
+    expect(bySearch.body.items).toHaveLength(1);
+
+    const byStatus = await request(app)
+      .get('/api/posts?status=Draft')
+      .set('Cookie', a);
+    expect(byStatus.body.items).toHaveLength(1);
+  });
+
+  it('returns 404 when a Creator fetches another Creator’s Draft by id', async () => {
+    const a = await register('draft-owner@test.local');
+    const draft = await createPost(a, { status: 'Draft' });
+
+    const b = await register('draft-peeker@test.local');
+    const res = await request(app)
+      .get(`/api/posts/${draft.body._id}`)
+      .set('Cookie', b);
+    expect(res.status).toBe(404);
+  });
+
+  it('lets any Creator fetch another Creator’s Published Post by id', async () => {
+    const a = await register('pub-owner@test.local');
+    const post = await createPost(a, { status: 'Published' });
+
+    const b = await register('pub-reader@test.local');
+    const res = await request(app)
+      .get(`/api/posts/${post.body._id}`)
+      .set('Cookie', b);
+    expect(res.status).toBe(200);
+  });
+
+  it('lets an admin fetch any Draft by id', async () => {
+    const a = await register('admin-draft-owner@test.local');
+    const draft = await createPost(a, { status: 'Draft' });
+
+    const admin = await register('admin@test.local');
+    const res = await request(app)
+      .get(`/api/posts/${draft.body._id}`)
+      .set('Cookie', admin);
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('Draft visibility for anonymous callers', () => {
   it('excludes drafts from the public list', async () => {
     const a = await register('writer@test.local');
     await createPost(a, { status: 'Draft' });
     await createPost(a, { status: 'Published', title: 'Live' });
 
-    const res = await request(app).get('/api/posts');
+    const res = await request(app).get('/api/posts/public');
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].status).toBe('Published');
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].status).toBe('Published');
+  });
+
+  it('lists Published Posts from every Creator, without owner ids', async () => {
+    const a = await register('public-a@test.local');
+    await createPost(a, { status: 'Published', title: 'From A' });
+
+    const b = await register('public-b@test.local');
+    await createPost(b, { status: 'Published', title: 'From B' });
+
+    const res = await request(app).get('/api/posts/public');
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
+      'From A',
+      'From B',
+    ]);
+    for (const post of res.body.items) {
+      expect(post.owner).toBeUndefined();
+    }
+  });
+
+  it('ignores a status filter that would expose Drafts', async () => {
+    const a = await register('public-draft@test.local');
+    await createPost(a, { status: 'Draft', title: 'Hidden' });
+
+    const res = await request(app).get('/api/posts/public?status=Draft');
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(0);
   });
 
   it('returns 404 for a draft fetched by id without auth', async () => {

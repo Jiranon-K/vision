@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 process.env.RESEND_API_KEY = 'test-key';
 process.env.FRONTEND_URL = 'http://test.local';
 process.env.EMAIL_FROM = 'noreply@test.local';

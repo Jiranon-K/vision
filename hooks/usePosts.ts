@@ -1,7 +1,19 @@
-import { useState, useEffect, useCallback } from "react";
-import { apiFetch, authFetch } from "@/lib/api";
-import { asWireList, toPostRow } from "@/lib/post-contract";
+"use client";
+
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
+import { authFetch } from "@/lib/api";
+import { asWirePage, toPostRow } from "@/lib/post-contract";
+import { ApiError, FRESH_FOR, queryFetch, queryKeys } from "@/lib/query";
 import type { PostRow } from "@/types/types";
+
+// A traversal has to terminate on its own even if the server keeps offering a
+// cursor. 200 pages is far past any real archive and short of a hang.
+const MAX_PAGES = 200;
 
 interface UsePostsReturn {
   posts: PostRow[];
@@ -11,46 +23,76 @@ interface UsePostsReturn {
   deletePost: (id: string) => Promise<boolean>;
 }
 
+// The Hub's table filters and sorts in the browser, so it wants the Creator's
+// whole archive — as bounded pages that carry no Post bodies.
+async function fetchAllPostRows(): Promise<PostRow[]> {
+  const rows: PostRow[] = [];
+  let cursor: string | undefined;
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    const { items, nextCursor } = asWirePage(
+      await queryFetch<unknown>(`/api/posts${query}`),
+    );
+    rows.push(...items.map(toPostRow));
+    if (!nextCursor) break;
+    cursor = nextCursor;
+  }
+
+  return rows;
+}
+
+/**
+ * Everything a change to a Post makes stale. Declared once so no screen has to
+ * coordinate with another: publishing a Draft updates the Posts list and the
+ * analytics that summarise it, wherever either happens to be showing.
+ */
+export function invalidatePostData(client: QueryClient): Promise<void> {
+  return Promise.all([
+    client.invalidateQueries({ queryKey: queryKeys.posts }),
+    client.invalidateQueries({ queryKey: queryKeys.analytics }),
+  ]).then(() => undefined);
+}
+
+/** For screens outside the Hub shell — the editor — that change a Post. */
+export function useInvalidatePostData(): () => Promise<void> {
+  const client = useQueryClient();
+  return () => invalidatePostData(client);
+}
+
 export function usePosts(): UsePostsReturn {
-  const [posts, setPosts] = useState<PostRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const client = useQueryClient();
 
-  const fetchPosts = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const res = await apiFetch("/api/posts");
-      if (!res.ok) throw new Error("Failed to fetch posts");
-      
-      setPosts(asWireList(await res.json()).map(toPostRow));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      setPosts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const query = useQuery({
+    queryKey: queryKeys.postsList(),
+    queryFn: fetchAllPostRows,
+    staleTime: FRESH_FOR.posts,
+  });
 
-  const deletePost = useCallback(async (id: string): Promise<boolean> => {
-    try {
-      const res = await authFetch(`/api/posts/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error("Failed to delete post");
-      
-      // Refresh list after deletion
-      await fetchPosts();
-      return true;
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  }, [fetchPosts]);
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await authFetch(`/api/posts/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        throw new ApiError(res.status, "Failed to delete post");
+      }
+    },
+    onSuccess: () => invalidatePostData(client),
+  });
 
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
-  return { posts, isLoading, error, refresh: fetchPosts, deletePost };
+  return {
+    posts: query.data ?? [],
+    isLoading: query.isPending,
+    error: query.error ? "Failed to fetch posts" : null,
+    refresh: async () => {
+      await query.refetch();
+    },
+    deletePost: async (id: string) => {
+      try {
+        await remove.mutateAsync(id);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+  };
 }

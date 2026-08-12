@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
-import { authFetch } from "@/lib/api";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { FRESH_FOR, queryFetch, queryKeys } from "@/lib/query";
 import type { DashboardStat, ViewsDataPoint } from "@/types/types";
 
 interface AnalyticsData {
@@ -7,54 +9,43 @@ interface AnalyticsData {
   viewsData: ViewsDataPoint[];
   isLoading: boolean;
   error: string | null;
+  refresh: () => Promise<void>;
 }
 
-export function useAnalytics(isAuthed: boolean) {
-  const [data, setData] = useState<AnalyticsData>({
-    stats: [],
-    viewsData: [],
-    isLoading: true,
-    error: null,
+// Two queries rather than one fetching both: the dashboard needs the same two,
+// and keying them separately is what lets the second screen serve them from
+// cache instead of asking again.
+export function useStats(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.analyticsStats(),
+    queryFn: () => queryFetch<DashboardStat[]>("/api/analytics"),
+    staleTime: FRESH_FOR.analytics,
+    // Gated on the auth check having passed; without this the queries fire
+    // during it and are refused for no reason.
+    enabled,
   });
+}
 
-  const fetchAnalytics = useCallback(async () => {
-    if (!isAuthed) return;
+export function useViewsTrend(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.analyticsViews(),
+    queryFn: () => queryFetch<ViewsDataPoint[]>("/api/analytics/views"),
+    staleTime: FRESH_FOR.analytics,
+    enabled,
+  });
+}
 
-    setData(prev => ({ ...prev, isLoading: true, error: null }));
+export function useAnalytics(isAuthed: boolean): AnalyticsData {
+  const stats = useStats(isAuthed);
+  const views = useViewsTrend(isAuthed);
 
-    try {
-      const [statsRes, viewsRes] = await Promise.all([
-        authFetch("/api/analytics"),
-        authFetch("/api/analytics/views"),
-      ]);
-
-      if (!statsRes.ok || !viewsRes.ok) {
-        throw new Error("Failed to fetch analytics data");
-      }
-
-      const [stats, viewsData] = await Promise.all([
-        statsRes.json(),
-        viewsRes.json(),
-      ]);
-
-      setData({
-        stats: stats || [],
-        viewsData: viewsData || [],
-        isLoading: false,
-        error: null,
-      });
-    } catch (err) {
-      setData(prev => ({
-        ...prev,
-        isLoading: false,
-        error: err instanceof Error ? err.message : "An error occurred",
-      }));
-    }
-  }, [isAuthed]);
-
-  useEffect(() => {
-    fetchAnalytics();
-  }, [fetchAnalytics]);
-
-  return { ...data, refresh: fetchAnalytics };
+  return {
+    stats: stats.data ?? [],
+    viewsData: views.data ?? [],
+    isLoading: !isAuthed || stats.isPending || views.isPending,
+    error: stats.error || views.error ? "Failed to fetch analytics data" : null,
+    refresh: async () => {
+      await Promise.all([stats.refetch(), views.refetch()]);
+    },
+  };
 }

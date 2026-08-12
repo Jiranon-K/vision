@@ -5,9 +5,9 @@ import { animate, stagger } from "animejs";
 import FeaturedCard from "@/components/blog/FeaturedCard";
 import BlogCard from "@/components/blog/BlogCard";
 import { categories } from "@/lib/constants";
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 
-const BlogList = ({ posts }: { posts: Post[] }) => {
+const BlogList = ({ posts }: { posts: PostSummary[] }) => {
   const [activeCategory, setActiveCategory] = useState("All");
   const heroRef = useRef<HTMLDivElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);

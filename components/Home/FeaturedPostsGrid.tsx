@@ -3,9 +3,9 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import BlogCard from "@/components/blog/BlogCard";
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 
-const FeaturedPostsGrid = ({ posts }: { posts: Post[] }) => {
+const FeaturedPostsGrid = ({ posts }: { posts: PostSummary[] }) => {
   const gridRef = useRef<HTMLDivElement>(null);
   const didAnimate = useRef(false);
 

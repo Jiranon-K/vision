@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PostContent from "@/components/blog/PostContent";
@@ -9,8 +9,8 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import ShareButtons from "@/components/blog/ShareButtons";
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import ViewTracker from "@/components/blog/ViewTracker";
-import { getPostBySlug, getPublishedPosts } from "@/lib/posts";
-import type { Post } from "@/lib/post-contract";
+import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
+import type { PostSummary } from "@/lib/post-contract";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 300;
@@ -49,7 +49,7 @@ export async function generateMetadata({
     post = null;
   }
 
-  if (!post) {
+  if (!post || isMovedPost(post)) {
     return { title: "Post not found" };
   }
 
@@ -94,9 +94,15 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  // The Creator moved this Post's address. Send the Reader — and any search
+  // engine holding the old URL — permanently to the new one.
+  if (isMovedPost(post)) {
+    permanentRedirect(`/blog/${encodeURIComponent(post.movedTo)}`);
+  }
+
   // Related: prefer same category, fall back to latest. coverImage is excluded
   // from the list endpoint, so this payload stays lean.
-  let related: Post[] = [];
+  let related: PostSummary[] = [];
   try {
     const others = (await getPublishedPosts()).filter(
       (p) => p.slug !== post.slug,

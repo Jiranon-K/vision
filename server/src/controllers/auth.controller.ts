@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
-import { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken, hashToken } from '../utils/token';
+import { logger } from '../logger';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken, newSessionId } from '../utils/token';
 import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../utils/cookies';
 import { validatePasswordStrength } from '../utils/password';
 import { trackFailedLogin, resetFailedLogin, isAccountLocked } from '../middleware/loginSecurity';
@@ -38,19 +39,70 @@ async function respondWithTokens(
     name: user.profile.name,
     role: user.role,
   };
+  const sid = newSessionId();
   const accessToken = generateAccessToken(tokenPayload);
-  const refreshToken = generateRefreshToken(tokenPayload, rememberMe);
+  const refreshToken = generateRefreshToken(tokenPayload, rememberMe, sid);
 
-
-  user.refreshToken = refreshToken;
-  user.refreshTokenExpiry = new Date(
+  const expiresAt = new Date(
     Date.now() + (rememberMe ? REMEMBER_ME_COOKIE_MAX_AGE : REFRESH_COOKIE_MAX_AGE)
   );
-  await user.save();
 
+  // Written as two atomic updates rather than by assigning the array: the
+  // session list is select:false, so a document loaded without it would carry
+  // an empty array and saving would sign out every other device. Pruning
+  // expired entries here bounds the list to the devices actually in use.
+  await User.updateOne(
+    { _id: user._id },
+    { $pull: { sessions: { expiresAt: { $lte: new Date() } } } }
+  );
+  await User.updateOne(
+    { _id: user._id },
+    { $push: { sessions: { sid, tokenHash: hashToken(refreshToken), expiresAt } } }
+  );
 
   setAccessTokenCookie(res, accessToken);
   setRefreshTokenCookie(res, refreshToken, rememberMe);
+}
+
+// Sign-in and password change both need the Creator's session list loaded, and
+// it is select:false so it never rides along on an ordinary read.
+async function loadWithSessions(id: string) {
+  return User.findById(id).select('+sessions');
+}
+
+/**
+ * Drop every session and issue a fresh one for the device making the request.
+ * Lives here rather than in the settings controller because issuing a session
+ * is this module's job, and two places that mint refresh tokens is one too many.
+ */
+export async function reissueSessionAfterPasswordChange(
+  req: Request,
+  res: Response,
+  userId: string
+): Promise<void> {
+  const user = await loadWithSessions(userId);
+  if (!user) return;
+
+  // Whether this device asked to be remembered is recorded in the refresh
+  // token it is holding; re-issuing without reading it would silently downgrade
+  // a remembered session to a short one.
+  let rememberMe = false;
+  const current = req.cookies?.refresh_token;
+  if (current) {
+    try {
+      const payload = verifyRefreshToken(current);
+      const existing = user.sessions?.find((s) => s.sid === payload.sid);
+      if (existing) {
+        rememberMe =
+          existing.expiresAt.getTime() - Date.now() > REFRESH_COOKIE_MAX_AGE;
+      }
+    } catch {
+      // Unreadable: fall through with the default session length.
+    }
+  }
+
+  await User.updateOne({ _id: user._id }, { $set: { sessions: [] } });
+  await respondWithTokens(res, user, rememberMe);
 }
 
 function sanitizeUser(user: InstanceType<typeof User>) {
@@ -111,7 +163,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     try {
       await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send verification email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send verification email');
       // Registration still succeeds; user can request resend later
     }
 
@@ -123,7 +175,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       message: 'Registration successful. Please check your email to verify your account.',
     });
   } catch (error) {
-    console.error('Register error:', error);
+    logger.error({ err: error }, 'Register error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -182,41 +234,49 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error({ err: error }, 'Login error');
     res.status(500).json({ error: 'Server error' });
   }
 };
 
+// Signing out revokes the session on this device and leaves the Creator's other
+// devices alone. Clearing the cookies alone would leave a captured token valid
+// for as long as it had left to live.
 export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     const refreshToken = req.cookies?.refresh_token;
-    const accessToken = req.cookies?.access_token;
 
     if (refreshToken) {
-      await User.findOneAndUpdate({ refreshToken }, {
-        refreshToken: undefined,
-        refreshTokenExpiry: undefined,
-      });
-    } else if (accessToken) {
       try {
-        const payload = verifyAccessToken(accessToken);
-        await User.findByIdAndUpdate(payload.id, {
-          refreshToken: undefined,
-          refreshTokenExpiry: undefined,
-        });
+        const payload = verifyRefreshToken(refreshToken);
+        await User.updateOne(
+          { _id: payload.id },
+          { $pull: { sessions: { sid: payload.sid } } }
+        );
       } catch {
-
+        // An unreadable token identifies no session to revoke; clearing the
+        // cookies below is all that is left to do.
       }
     }
-
 
     clearAuthCookies(res);
 
     res.json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Logout error:', error);
+    logger.error({ err: error }, 'Logout error');
     res.status(500).json({ error: 'Server error' });
   }
+};
+
+// The action a Creator needs when they have left themselves signed in somewhere
+// they no longer control.
+export const logoutEverywhere = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  await User.updateOne({ _id: req.user!.id }, { $set: { sessions: [] } });
+  clearAuthCookies(res);
+  res.json({ message: 'Signed out on every device' });
 };
 
 export const refresh = async (req: Request, res: Response): Promise<void> => {
@@ -240,19 +300,18 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
     }
 
 
-    const user = await User.findOne({
-      _id: payload.id,
-      refreshToken: refreshToken,
-    }).select('+refreshToken');
+    const user = await loadWithSessions(payload.id);
+    const session = user?.sessions?.find(
+      (s) => s.sid === payload.sid && s.tokenHash === hashToken(refreshToken)
+    );
 
-    if (!user) {
+    if (!user || !session) {
       clearAuthCookies(res);
       res.status(401).json({ error: 'Invalid refresh token' });
       return;
     }
 
-
-    if (user.refreshTokenExpiry && user.refreshTokenExpiry < new Date()) {
+    if (session.expiresAt < new Date()) {
       clearAuthCookies(res);
       res.status(401).json({ error: 'Refresh token expired. Please login again.' });
       return;
@@ -273,7 +332,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error('Refresh error:', error);
+    logger.error({ err: error }, 'Refresh error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -323,13 +382,13 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     try {
       await sendResetPasswordEmail(user.email, resetToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send reset email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send reset email');
       // Intentionally do NOT reveal send failure to client (no enumeration)
     }
 
     res.json({ message: 'If an account exists with this email, a password reset link has been sent.' });
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error({ err: error }, 'Forgot password error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -371,13 +430,14 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
-    user.refreshToken = undefined;
-    user.refreshTokenExpiry = undefined;
     await user.save();
+    // A reset is the flow a Creator reaches for when they believe someone else
+    // has their account, so every device loses its session.
+    await User.updateOne({ _id: user._id }, { $set: { sessions: [] } });
 
     res.json({ message: 'Password has been reset successfully. Please login with your new password.' });
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error({ err: error }, 'Reset password error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -413,7 +473,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 
     res.json({ message: 'Email verified successfully' });
   } catch (error) {
-    console.error('Verify email error:', error);
+    logger.error({ err: error }, 'Verify email error');
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -439,14 +499,14 @@ export const resendVerification = async (req: AuthRequest, res: Response): Promi
     try {
       await sendVerificationEmail(user.email, verificationToken, user.profile?.name);
     } catch (sendErr) {
-      console.error('Failed to send verification email:', sendErr);
+      logger.error({ err: sendErr }, 'Failed to send verification email');
       res.status(500).json({ error: 'Could not send verification email. Please try again later.' });
       return;
     }
 
     res.json({ message: 'Verification email sent' });
   } catch (error) {
-    console.error('Resend verification error:', error);
+    logger.error({ err: error }, 'Resend verification error');
     res.status(500).json({ error: 'Server error' });
   }
 };

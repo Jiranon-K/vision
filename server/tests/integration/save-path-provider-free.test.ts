@@ -5,6 +5,7 @@ import request from 'supertest';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
+process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 // A provider IS configured here — the point of this file is that createPost
 // and updatePost never reach it regardless, which a stub-marker check on the
 // output can't prove (a provider could echo mechanical-looking text back).

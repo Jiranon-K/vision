@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import ExcerptSuggestion from '../models/ExcerptSuggestion';
+import { logger } from '../logger';
 
 // Writing the measurement the thresholds in docs/excerpt-suggestion-metrics.md
 // are read from. It lives beside the queries that read it rather than in the
@@ -27,7 +28,7 @@ export async function recordExcerptSuggestion(params: {
       source: params.source,
     });
   } catch (error) {
-    console.error('Failed to record excerpt suggestion:', error);
+    logger.error({ err: error }, 'Failed to record excerpt suggestion');
   }
 }
 
@@ -58,6 +59,6 @@ export async function claimOrphanSuggestion(
       await ExcerptSuggestion.updateOne({ _id: orphan._id }, { $set: { post: postId } });
     }
   } catch (error) {
-    console.error('Failed to claim an orphan excerpt suggestion:', error);
+    logger.error({ err: error }, 'Failed to claim an orphan excerpt suggestion');
   }
 }

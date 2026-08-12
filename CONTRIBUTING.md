@@ -73,6 +73,17 @@ refactor(server): extract analytics aggregation into service
 
 **Never** push to `main` directly.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs `verify:fast` on every pull request and
+`verify:full` on every push to `main`. It calls the same commands the README
+tells you to run locally, so a green machine means a green pipeline.
+
+The pre-commit hook is a fast local courtesy and skips itself during a merge,
+rebase or cherry-pick — the moments when code most often breaks. CI is what
+makes that exemption safe, which is why a failing check must block the merge.
+Enable branch protection on `main` requiring the `verify:fast` check.
+
 ## Verification
 
 One set of scripts, run by humans and by the agent harness alike — so "green for

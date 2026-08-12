@@ -3,6 +3,7 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
 import { validatePasswordStrength } from '../utils/password';
 import { changePasswordSchema } from '../schemas/auth';
+import { reissueSessionAfterPasswordChange } from './auth.controller';
 
 // `profile` is a nested path, so Mongoose hands back a subdocument on some
 // query shapes and a plain object on others. Normalize before spreading.
@@ -105,6 +106,11 @@ export const changePassword = async (
 
     user.password = newPassword;
     await user.save();
+
+    // Changing a password is a meaningful response to a suspected compromise
+    // only if it takes the other devices with it. The device making the change
+    // is re-issued so the safe action does not punish the Creator making it.
+    await reissueSessionAfterPasswordChange(req, res, user._id.toString());
 
     res.json({ message: 'Password changed successfully' });
   } catch {

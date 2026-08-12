@@ -1,0 +1,70 @@
+# Development and evaluation, not a production topology. A production deploy is
+# expected to use managed services for the database and the rate limit store —
+# see docs/deployment.md. Nothing here holds a secret worth having, and nothing
+# seeds data, so this file is safe to run and safe to commit.
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/vision
+      RATE_LIMIT_REDIS_URL: redis://redis:6379
+      FRONTEND_URL: http://localhost:6421
+      # Development-only values. Generate real ones for anything else.
+      JWT_SECRET: local-compose-access-secret-not-for-any-real-deploy
+      JWT_REFRESH_SECRET: local-compose-refresh-secret-not-for-any-real-deploy
+      # server/src/emails/client.ts builds a Resend client straight from this
+      # and has no stub path, so it must be present and must not be real.
+      RESEND_API_KEY: re_compose_fake_key
+      EMAIL_FROM: noreply@vision.local
+      EMAIL_FROM_NAME: Vision
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+    restart: unless-stopped
+    ports:
+      - "6421:6421"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_PUBLIC_SITE_URL: http://localhost:6421
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:

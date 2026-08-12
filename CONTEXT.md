@@ -51,7 +51,7 @@ _Avoid_: Visitor, Guest, Audience member
 ### Audience and growth
 
 **View**:
-One recorded read of a Published Post. Counted per Post and reported to its Creator.
+One recorded read of a Published Post. Counted per Post and reported to its Creator. Deduplicated per Reader per Post over a window measured in hours, so a refresh is not a second View and a Reader returning the next day is. A Draft accumulates none, and a known crawler is not a Reader.
 _Avoid_: Hit, Impression, Read, Pageview
 
 **Audience**:

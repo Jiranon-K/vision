@@ -1,10 +1,10 @@
 import Link from "next/link";
 import FeaturedPostsGrid from "./FeaturedPostsGrid";
 import { getPublishedPosts } from "@/lib/posts";
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 
 const FeaturedPosts = async () => {
-  let posts: Post[] = [];
+  let posts: PostSummary[] = [];
   try {
     posts = await getPublishedPosts();
   } catch {
