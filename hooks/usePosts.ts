@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { authFetch } from "@/lib/api";
-import { asWireList, toPostRow } from "@/lib/post-contract";
+import { asWirePage, toPostRow } from "@/lib/post-contract";
 import type { PostRow } from "@/types/types";
+
+// A traversal has to terminate on its own even if the server keeps offering a
+// cursor. 200 pages is far past any real archive and short of a hang.
+const MAX_PAGES = 200;
 
 interface UsePostsReturn {
   posts: PostRow[];
@@ -20,10 +24,23 @@ export function usePosts(): UsePostsReturn {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await authFetch("/api/posts");
-      if (!res.ok) throw new Error("Failed to fetch posts");
-      
-      setPosts(asWireList(await res.json()).map(toPostRow));
+      // The Hub's table filters and sorts in the browser, so it wants the
+      // Creator's whole archive — but as bounded pages that carry no Post
+      // bodies, rather than one unbounded response with every body in it.
+      const rows: PostRow[] = [];
+      let cursor: string | undefined;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+        const res = await authFetch(`/api/posts${query}`);
+        if (!res.ok) throw new Error("Failed to fetch posts");
+
+        const { items, nextCursor } = asWirePage(await res.json());
+        rows.push(...items.map(toPostRow));
+        if (!nextCursor) break;
+        cursor = nextCursor;
+      }
+
+      setPosts(rows);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       setPosts([]);

@@ -1,9 +1,9 @@
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 import BlogCard from "./BlogCard";
 
 // BlogCard ships with `opacity-0` (revealed by BlogList's anime.js stagger).
 // There's no animator on the article page, so force the cards visible here.
-export default function RelatedPosts({ posts }: { posts: Post[] }) {
+export default function RelatedPosts({ posts }: { posts: PostSummary[] }) {
   if (posts.length === 0) return null;
 
   return (

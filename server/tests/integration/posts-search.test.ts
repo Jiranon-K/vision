@@ -75,7 +75,9 @@ function search(term: string, cookies: string[]) {
     .query({ search: term });
 }
 
-const titles = (body: { title: string }[]) => body.map((p) => p.title);
+// A listing answers a page, not an array.
+const titles = (body: { items: { title: string }[] }) =>
+  body.items.map((p) => p.title);
 
 describe('Post search treats the term as literal text', () => {
   it('matches a term containing regex metacharacters instead of erroring', async () => {
@@ -96,7 +98,7 @@ describe('Post search treats the term as literal text', () => {
     // nothing. What must never happen is the opposite: `.*` evaluated as a
     // pattern would have returned every Post the Creator owns.
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(0);
+    expect(res.body.items).toHaveLength(0);
   });
 
   it('keeps case-insensitive matching', async () => {
@@ -151,7 +153,7 @@ describe('Search covers the fields a Creator would expect', () => {
     await createPost(cookies, { title: 'Carpentry Notes' });
 
     const res = await search('carpet', cookies);
-    expect(res.body).toHaveLength(0);
+    expect(res.body.items).toHaveLength(0);
   });
 });
 
@@ -164,7 +166,7 @@ describe('Search obeys the rules the list obeys', () => {
     await createPost(b, { title: 'Shared Subject Matter' });
 
     const res = await search('shared subject', a);
-    expect(res.body).toHaveLength(1);
+    expect(res.body.items).toHaveLength(1);
   });
 
   it('includes the Creator’s own Drafts', async () => {
@@ -205,7 +207,7 @@ describe('Search edge cases', () => {
 
     const res = await search('nothingmatchesthis', cookies);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(0);
+    expect(res.body.items).toHaveLength(0);
   });
 
   it('treats a term below the minimum length as no search', async () => {
@@ -213,7 +215,7 @@ describe('Search edge cases', () => {
 
     const res = await search('a', cookies);
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(3);
+    expect(res.body.items).toHaveLength(3);
   });
 
   it('searches non-Latin content', async () => {

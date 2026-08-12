@@ -23,6 +23,9 @@ export interface IPost extends Document {
    */
   previousSlugs: string[];
   coverImage?: string;
+  /** Supplied by `timestamps: true`; declared so the cursor can read it. */
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const PostSchema = new Schema<IPost>(

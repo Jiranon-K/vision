@@ -128,7 +128,7 @@ describe('The Hub list is scoped to its owner', () => {
 
     const res = await request(app).get('/api/posts').set('Cookie', a);
     expect(res.status).toBe(200);
-    expect(res.body.map((p: { title: string }) => p.title).sort()).toEqual([
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
       'A draft',
       'A published',
     ]);
@@ -148,7 +148,7 @@ describe('The Hub list is scoped to its owner', () => {
 
     const res = await request(app).get('/api/posts').set('Cookie', admin);
     expect(res.status).toBe(200);
-    expect(res.body.map((p: { title: string }) => p.title).sort()).toEqual([
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
       'Mine',
       'Theirs',
     ]);
@@ -164,17 +164,17 @@ describe('The Hub list is scoped to its owner', () => {
     const byCategory = await request(app)
       .get('/api/posts?category=SEO')
       .set('Cookie', a);
-    expect(byCategory.body).toHaveLength(1);
+    expect(byCategory.body.items).toHaveLength(1);
 
     const bySearch = await request(app)
       .get('/api/posts?search=Shared')
       .set('Cookie', a);
-    expect(bySearch.body).toHaveLength(1);
+    expect(bySearch.body.items).toHaveLength(1);
 
     const byStatus = await request(app)
       .get('/api/posts?status=Draft')
       .set('Cookie', a);
-    expect(byStatus.body).toHaveLength(1);
+    expect(byStatus.body.items).toHaveLength(1);
   });
 
   it('returns 404 when a Creator fetches another Creator’s Draft by id', async () => {
@@ -219,9 +219,9 @@ describe('Draft visibility for anonymous callers', () => {
 
     const res = await request(app).get('/api/posts/public');
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body).toHaveLength(1);
-    expect(res.body[0].status).toBe('Published');
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].status).toBe('Published');
   });
 
   it('lists Published Posts from every Creator, without owner ids', async () => {
@@ -232,11 +232,11 @@ describe('Draft visibility for anonymous callers', () => {
     await createPost(b, { status: 'Published', title: 'From B' });
 
     const res = await request(app).get('/api/posts/public');
-    expect(res.body.map((p: { title: string }) => p.title).sort()).toEqual([
+    expect(res.body.items.map((p: { title: string }) => p.title).sort()).toEqual([
       'From A',
       'From B',
     ]);
-    for (const post of res.body) {
+    for (const post of res.body.items) {
       expect(post.owner).toBeUndefined();
     }
   });
@@ -247,7 +247,7 @@ describe('Draft visibility for anonymous callers', () => {
 
     const res = await request(app).get('/api/posts/public?status=Draft');
     expect(res.status).toBe(200);
-    expect(res.body).toHaveLength(0);
+    expect(res.body.items).toHaveLength(0);
   });
 
   it('returns 404 for a draft fetched by id without auth', async () => {

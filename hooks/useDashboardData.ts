@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { authFetch } from "@/lib/api";
-import { asWireList, toDashboardPost } from "@/lib/post-contract";
+import { asWirePage, toDashboardPost } from "@/lib/post-contract";
 import type { DashboardStat, ViewsDataPoint, DashboardPost } from "@/types/types";
+
+const RECENT_POSTS = 4;
 
 interface DashboardData {
   stats: DashboardStat[];
@@ -28,7 +30,9 @@ export function useDashboardData(isAuthed: boolean) {
     try {
       const [statsRes, postsRes, viewsRes] = await Promise.all([
         authFetch("/api/analytics"),
-        authFetch("/api/posts"),
+        // Recent Posts shows four. Asking for one page of that size is the
+        // whole request, rather than the whole archive sliced down afterwards.
+        authFetch(`/api/posts?limit=${RECENT_POSTS}`),
         authFetch("/api/analytics/views"),
       ]);
 
@@ -42,11 +46,11 @@ export function useDashboardData(isAuthed: boolean) {
         viewsRes.json(),
       ]);
 
-      const normalizedPosts = asWireList(postsRaw).map(toDashboardPost);
+      const normalizedPosts = asWirePage(postsRaw).items.map(toDashboardPost);
 
       setData({
         stats: stats || [],
-        posts: normalizedPosts.slice(0, 4),
+        posts: normalizedPosts,
         viewsData: viewsData || [],
         isLoading: false,
         error: null,

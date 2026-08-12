@@ -142,7 +142,7 @@ describe('Growth Analytics is scoped to one Creator', () => {
     const list = await request(app).get('/api/posts').set('Cookie', a);
     const stats = await request(app).get('/api/analytics').set('Cookie', a);
 
-    expect(statValue(stats.body, 'Posts')).toBe(String(list.body.length));
+    expect(statValue(stats.body, 'Posts')).toBe(String(list.body.items.length));
   });
 });
 

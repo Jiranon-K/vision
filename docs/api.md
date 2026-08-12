@@ -33,16 +33,25 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 
 ## Posts — `/api/posts`
 
-| Method | Endpoint      | Auth     | Description                                                                                      |
-| ------ | ------------- | -------- | ------------------------------------------------------------------------------------------------ |
-| GET    | `/`           | yes      | The Hub list: the caller's own Posts. An admin sees all. Filters: `category`, `status`, `search` |
-| GET    | `/public`     | —        | The Reader list: Published Posts, without owner ids. Filters: `category`, `search`               |
-| GET    | `/:id`        | optional | A single Post by id. A Draft is readable by its owner or an admin only                           |
-| GET    | `/slug/:slug` | —        | A Published Post by Slug — what the public blog reads                                            |
-| POST   | `/:id/view`   | —        | Record a View                                                                                    |
-| POST   | `/`           | yes      | Create a Post. `readTime` and `slug` are derived server-side                                     |
-| PUT    | `/:id`        | yes      | Update a Post. Owner or admin only                                                               |
-| DELETE | `/:id`        | yes      | Delete a Post. Owner or admin only                                                               |
+| Method | Endpoint      | Auth     | Description                                                                                                 |
+| ------ | ------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
+| GET    | `/`           | yes      | The Hub list: the caller's own Posts. An admin sees all. Filters: `category`, `status`, `search`. Paginated |
+| GET    | `/public`     | —        | The Reader list: Published Posts, without owner ids. Filters: `category`, `search`. Paginated               |
+| GET    | `/:id`        | optional | A single Post by id. A Draft is readable by its owner or an admin only                                      |
+| GET    | `/slug/:slug` | —        | A Published Post by Slug — what the public blog reads                                                       |
+| POST   | `/:id/view`   | —        | Record a View                                                                                               |
+| POST   | `/`           | yes      | Create a Post. `readTime` and `slug` are derived server-side                                                |
+| PUT    | `/:id`        | yes      | Update a Post. Owner or admin only                                                                          |
+| DELETE | `/:id`        | yes      | Delete a Post. Owner or admin only                                                                          |
+
+Both listings answer `{ "items": [...], "nextCursor": "..." }`. `nextCursor` is
+present only when more Posts exist; pass it back as `?cursor=` for the next
+page. `?limit=` defaults to 20 and is clamped to 50 — a size above the maximum
+is clamped rather than refused, a malformed one is refused. The cursor is opaque
+and its composition may change.
+
+A listed Post omits `content`: listing and reading are different requests with
+different payloads. `GET /:id` and `GET /slug/:slug` still return the full Post.
 
 ## Analytics — `/api/analytics`
 

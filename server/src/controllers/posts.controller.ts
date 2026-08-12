@@ -28,6 +28,12 @@ import {
   slugIsTaken,
 } from '../utils/slug';
 import { isDuplicateKeyError } from '../utils/duplicateKey';
+import {
+  encodeCursor,
+  readCursor,
+  readLimit,
+  type Cursor,
+} from '../utils/pagination';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
 
@@ -78,6 +84,76 @@ const applyListFilters = (
   };
 };
 
+// The listing representation, named rather than "the full Post with fields
+// removed": naming it makes an accidental addition visible, where subtracting
+// from a full record invites the next person to add one back. `content` is
+// excluded at the database — projecting is what makes the request cheap;
+// loading and discarding only makes the response smaller.
+const LISTING_FIELDS = '-content -coverImage';
+
+/**
+ * One page of a listing, plus how to ask for the next. No total count: counting
+ * the whole collection on every page defeats the purpose of paginating it.
+ */
+async function listPage(
+  filter: Record<string, unknown>,
+  sort: SortSpec,
+  select: string,
+  limit: number,
+  cursor?: Cursor
+): Promise<{ items: unknown[]; nextCursor?: string }> {
+  const searching = 'score' in sort;
+
+  const query = Post.find(searching ? filter : withCursor(filter, cursor))
+    .select(select)
+    .sort(sort)
+    // One more than asked for, so "is there another page" needs no second query.
+    .limit(limit + 1);
+
+  if (searching && cursor?.kind === 'offset') {
+    query.skip(cursor.offset);
+  }
+
+  const rows = await query;
+  const hasMore = rows.length > limit;
+  const items = hasMore ? rows.slice(0, limit) : rows;
+
+  if (!hasMore) {
+    return { items };
+  }
+
+  if (searching) {
+    const offset = (cursor?.kind === 'offset' ? cursor.offset : 0) + limit;
+    return { items, nextCursor: encodeCursor({ kind: 'offset', offset }) };
+  }
+
+  const last = items[items.length - 1];
+  return {
+    items,
+    nextCursor: encodeCursor({
+      kind: 'created',
+      createdAt: last.createdAt as Date,
+      id: String(last._id),
+    }),
+  };
+}
+
+// Newest first, with the id breaking a tie, so a cursor is unambiguous even
+// when two Posts share a creation timestamp.
+function withCursor(
+  filter: Record<string, unknown>,
+  cursor?: Cursor
+): Record<string, unknown> {
+  if (cursor?.kind !== 'created') return filter;
+  return {
+    ...filter,
+    $or: [
+      { createdAt: { $lt: cursor.createdAt } },
+      { createdAt: cursor.createdAt, _id: { $lt: cursor.id } },
+    ],
+  };
+}
+
 // The Smart Creator Hub's list: the Posts this Creator owns, Draft and
 // Published alike. Ownership is a filter rather than a check — a filter applied
 // after the query has already pulled every Creator's Drafts into the process.
@@ -100,10 +176,15 @@ export const getPosts = async (
 
   const shape = applyListFilters(filter, req.query);
 
-  const posts = await Post.find(shape.filter)
-    .select('-coverImage')
-    .sort(shape.sort);
-  res.json(posts);
+  res.json(
+    await listPage(
+      shape.filter,
+      shape.sort,
+      LISTING_FIELDS,
+      readLimit(req.query),
+      readCursor(req.query)
+    )
+  );
 };
 
 // The Reader's list. It takes no session into account at all: branching on
@@ -116,10 +197,15 @@ export const getPublicPosts = async (
   const filter: Record<string, unknown> = { status: 'Published' };
   const shape = applyListFilters(filter, req.query);
 
-  const posts = await Post.find(shape.filter)
-    .select('-coverImage -owner')
-    .sort(shape.sort);
-  res.json(posts);
+  res.json(
+    await listPage(
+      shape.filter,
+      shape.sort,
+      `${LISTING_FIELDS} -owner`,
+      readLimit(req.query),
+      readCursor(req.query)
+    )
+  );
 };
 
 export const getPost = async (

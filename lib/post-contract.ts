@@ -7,37 +7,46 @@ import type { DashboardPost, PostRow } from "@/types/types";
 
 export type PostStatus = "Published" | "Draft";
 
-/** Fields every posts endpoint returns. */
+/**
+ * What a listing endpoint returns per Post. Listing and reading are different
+ * requests with different payloads: content is the bulk of a Post and no
+ * listing displays it.
+ */
 export interface WirePostSummary {
   _id: string;
   title: string;
+  excerpt: string;
   category: string;
   status: PostStatus;
   date: string | number | Date;
   readTime: string;
   views: number;
-  /** Present only on authenticated reads. */
+  featured: boolean;
+  slug: string;
+  author: { name: string; role: string };
+  createdAt: string;
+  updatedAt: string;
+  /** Present only on the Hub listing. */
   owner?: string;
 }
 
-/** What the single-post and public-list endpoints return: the full document. */
+/** What the single-post endpoints return: the full document. */
 export interface WirePost extends WirePostSummary {
-  excerpt: string;
   content: string;
-  author: { name: string; role: string };
-  featured: boolean;
-  slug: string;
   coverImage?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-/** A Post as the app uses it. */
-export interface Post {
+/** One page of a listing, plus how to ask for the next. */
+export interface WirePage<T> {
+  items: T[];
+  nextCursor?: string;
+}
+
+/** A Post as a listing shows it. */
+export interface PostSummary {
   id: string;
   title: string;
   excerpt: string;
-  content: string;
   category: string;
   status: PostStatus;
   author: { name: string; role: string };
@@ -46,9 +55,14 @@ export interface Post {
   featured: boolean;
   views: number;
   slug: string;
-  coverImage?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** A Post as the app uses it when it has been read in full. */
+export interface Post extends PostSummary {
+  content: string;
+  coverImage?: string;
 }
 
 export function formatPostDate(date: string | number | Date): string {
@@ -65,6 +79,11 @@ export function formatPostDate(date: string | number | Date): string {
 }
 
 export function toPost(wire: WirePost): Post {
+  const { _id, date, ...rest } = wire;
+  return { ...rest, id: _id, date: formatPostDate(date) };
+}
+
+export function toPostSummary(wire: WirePostSummary): PostSummary {
   const { _id, date, ...rest } = wire;
   return { ...rest, id: _id, date: formatPostDate(date) };
 }
@@ -93,7 +112,12 @@ export function toDashboardPost(wire: WirePostSummary): DashboardPost {
   };
 }
 
-/** Endpoints that return a list can return anything on error; this narrows it. */
-export function asWireList<T extends WirePostSummary>(payload: unknown): T[] {
-  return Array.isArray(payload) ? (payload as T[]) : [];
+/** Endpoints that return a page can return anything on error; this narrows it. */
+export function asWirePage<T extends WirePostSummary>(
+  payload: unknown
+): WirePage<T> {
+  const page = payload as WirePage<T> | undefined;
+  return Array.isArray(page?.items)
+    ? { items: page.items, nextCursor: page.nextCursor }
+    : { items: [] };
 }

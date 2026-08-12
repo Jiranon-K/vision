@@ -10,7 +10,7 @@ import ShareButtons from "@/components/blog/ShareButtons";
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import ViewTracker from "@/components/blog/ViewTracker";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
 
 export const revalidate = 300;
@@ -102,7 +102,7 @@ export default async function BlogPostPage({
 
   // Related: prefer same category, fall back to latest. coverImage is excluded
   // from the list endpoint, so this payload stays lean.
-  let related: Post[] = [];
+  let related: PostSummary[] = [];
   try {
     const others = (await getPublishedPosts()).filter(
       (p) => p.slug !== post.slug,

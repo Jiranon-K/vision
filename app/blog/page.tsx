@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import NewsletterCta from "@/components/blog/NewsletterCta";
 import BlogList from "@/components/blog/BlogList";
 import { getPublishedPosts } from "@/lib/posts";
-import type { Post } from "@/lib/post-contract";
+import type { PostSummary } from "@/lib/post-contract";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 export default async function BlogPage() {
-  let posts: Post[] = [];
+  let posts: PostSummary[] = [];
   try {
     posts = await getPublishedPosts();
   } catch {
