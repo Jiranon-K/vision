@@ -1,6 +1,6 @@
 # 01 — The frontend moves into `src/`, and the layout rules start warning
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -64,3 +64,22 @@ A move is verified by the checks that already exist.
 - Moving anything into `features/` or `shared/`.
 - Renaming files to kebab-case.
 - The server.
+
+## Evidence
+
+- `bun run verify:full` exited 0 on 2026-09-26: frontend, server and harness
+  typecheck; lint with 0 errors (2 pre-existing warnings); server tests 29
+  files, 237 passed; harness tests; `next build` compiled, with
+  `src/middleware.ts` registered as the proxy; Playwright 24 passed.
+- The new rules were probed with throwaway files (deleted before commit): a
+  deep feature import, a feature import from `shared/`, a sibling-module
+  internal import, a module import from `platform/`, and `BadName.ts` each
+  produced one warning; `../b/index` produced none.
+- `docker build .` was **not** run: Docker is not installed on the machine that
+  made this change. The Dockerfile copies the whole build context and names no
+  moved folder, so no change is expected — confirm on the next machine with
+  Docker.
+- Before starting, `bun run verify:fast` failed 8 server suites with
+  `MongoMemoryServer ... failed to start within 10000ms` and passed 237/237 on
+  an immediate rerun: load-dependent flakiness, unrelated to this ticket and
+  tracked separately.

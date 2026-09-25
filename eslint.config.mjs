@@ -63,7 +63,46 @@ const local = {
         };
       },
     },
+
+    // One case convention for every file (ADR 0007). A rename that differs
+    // only in case works on Windows and breaks the Linux build.
+    "file-name-kebab-case": {
+      meta: {
+        type: "suggestion",
+        docs: { description: "require kebab-case file names" },
+        schema: [],
+      },
+      create(context) {
+        return {
+          Program(node) {
+            const name = context.filename.split(/[\\/]/).pop();
+            if (/^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(name)) return;
+            context.report({
+              node,
+              message: `Name files in kebab-case: \`${name}\` (ADR 0007).`,
+            });
+          },
+        };
+      },
+    },
   },
+};
+
+// Where the layout of ADR 0007 is enforced. These folders fill up one ticket
+// at a time (docs/tickets/codebase-layout/); the rules warn until ticket 17.
+const LAYOUT = "warn";
+const FEATURE_ENTRY =
+  "Import a feature through its entry file — `@/features/x` or `@/features/x/server` (ADR 0007).";
+const MODULE_ENTRY = "Import a server module through its entry file, `modules/x/index` (ADR 0007).";
+const NO_FEATURE_IN_SHARED = "shared/ never imports a feature (ADR 0007).";
+const NO_MODULE_IN_PLATFORM = "platform/ never imports a module (ADR 0007).";
+const intoFeature = {
+  group: ["@/features/*/*", "!@/features/*/server"],
+  message: FEATURE_ENTRY,
+};
+const intoModule = {
+  regex: "(^|/)modules/[^/]+/(?!index(\\.js)?$)",
+  message: MODULE_ENTRY,
 };
 
 const eslintConfig = defineConfig([
@@ -100,7 +139,7 @@ const eslintConfig = defineConfig([
     // Without this, components grow their own fetches one at a time and the
     // credential and caching decisions in lib/api.ts and lib/posts.ts quietly
     // stop being the only ones.
-    files: ["app/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
     rules: {
       "no-restricted-syntax": [
         "error",
@@ -119,6 +158,58 @@ const eslintConfig = defineConfig([
           message:
             "Don't decide permissions from a role. Render from the `permissions` the server sent with the resource — see `allows` in lib/post-contract.ts (ADR 0004).",
         })),
+      ],
+    },
+  },
+  {
+    files: [
+      "src/app/**/*.{ts,tsx}",
+      "src/features/**/*.{ts,tsx}",
+      "src/shared/**/*.{ts,tsx}",
+      "server/src/modules/**/*.{ts,tsx}",
+      "server/src/platform/**/*.{ts,tsx}",
+    ],
+    rules: { "local/file-name-kebab-case": LAYOUT },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: { "no-restricted-imports": [LAYOUT, { patterns: [intoFeature] }] },
+  },
+  {
+    files: ["src/shared/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        LAYOUT,
+        { patterns: [{ group: ["@/features", "@/features/**"], message: NO_FEATURE_IN_SHARED }] },
+      ],
+    },
+  },
+  {
+    // Tests are exempt: seeding a database through a model is setup, not coupling.
+    files: ["server/src/**/*.{ts,tsx}", "server/scripts/**/*.ts"],
+    rules: { "no-restricted-imports": [LAYOUT, { patterns: [intoModule] }] },
+  },
+  {
+    // Inside a module, a sibling module is `../other/…`; only its index is public.
+    files: ["server/src/modules/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        LAYOUT,
+        {
+          patterns: [
+            intoModule,
+            { regex: "^\\.\\./[^./][^/]*/(?!index(\\.js)?$)", message: MODULE_ENTRY },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["server/src/platform/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        LAYOUT,
+        { patterns: [{ regex: "(^|/)modules(/|$)", message: NO_MODULE_IN_PLATFORM }] },
       ],
     },
   },

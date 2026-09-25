@@ -8,13 +8,13 @@ Two deployables that share nothing but an HTTP contract.
 - **Backend** — an Express API over MongoDB, in `server/`. It owns Posts,
   Creators, sessions and the analytics documents.
 
-Sessions are httpOnly cookies. `middleware.ts` gates `/dashboard/*` on cookie
-presence for the redirect, and `hooks/useAuth.ts` confirms with `GET /api/auth/me`
+Sessions are httpOnly cookies. `src/middleware.ts` gates `/dashboard/*` on cookie
+presence for the redirect, and `src/hooks/useAuth.ts` confirms with `GET /api/auth/me`
 once the page mounts — the cookie check is a fast path, not the authorization.
 
-The Smart Creator Hub fetches through one seam. `lib/query.ts` decides cache
+The Smart Creator Hub fetches through one seam. `src/lib/query.ts` decides cache
 keys, freshness windows, retry policy and what a change to a Post invalidates;
-the hooks in `hooks/` are the interface every screen consumes, and no screen
+the hooks in `src/hooks/` are the interface every screen consumes, and no screen
 knows a query library is behind them. Session expiry is answered once, at the
 query layer, so several refused requests produce one redirect. The public
 marketing pages and the blog are untouched by it — they fetch on the server.
@@ -35,7 +35,7 @@ anything new.
 | Animation | Anime.js 4, via a shared `AnimationProvider`      |
 | Markdown  | react-markdown, remark-gfm, rehype-slug/highlight |
 | Toasts    | sonner                                            |
-| Hub data  | TanStack Query, behind the hooks in `hooks/`      |
+| Hub data  | TanStack Query, behind the hooks in `src/hooks/`  |
 | Fonts     | Space Grotesk, Geist Mono (`next/font/google`)    |
 | E2E       | Playwright                                        |
 
@@ -56,12 +56,15 @@ anything new.
 
 ```text
 vision/
-├── app/                 # Next.js App Router — marketing, blog, auth, dashboard
-├── components/          # Feature-co-located React components (+ ui/ primitives)
-├── hooks/               # useAuth, useDashboardData, useAutosaveDraft, …
-├── lib/                 # Shared utilities, the Post wire contract, constants
-├── types/               # Shared TypeScript interfaces
-├── middleware.ts        # Cookie gate for /dashboard/*
+├── src/                 # Next.js frontend
+│   ├── app/             # App Router — marketing, blog, auth, dashboard
+│   ├── features/        # One folder per domain feature (ADR 0007, migrating)
+│   ├── shared/          # What every feature may use (ADR 0007, migrating)
+│   ├── components/      # Feature-co-located React components (+ ui/ primitives)
+│   ├── hooks/           # useAuth, useDashboardData, useAutosaveDraft, …
+│   ├── lib/             # Shared utilities, the Post wire contract, constants
+│   ├── types/           # Shared TypeScript interfaces
+│   └── middleware.ts    # Cookie gate for /dashboard/*
 ├── public/              # Static assets
 ├── server/src/          # Express API: routes, controllers, models, schemas, emails
 ├── e2e/                 # Playwright suite, fixtures and screenshot specs
@@ -69,6 +72,9 @@ vision/
 ├── docs/                # This documentation, ADRs, tickets, images
 └── Dockerfile           # Multi-stage production build for the frontend
 ```
+
+`src/components/`, `src/hooks/`, `src/lib/` and `src/types/` empty into
+`features/` and `shared/` over the tickets in `docs/tickets/codebase-layout/`.
 
 ## Screenshots
 
