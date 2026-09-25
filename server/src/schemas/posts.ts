@@ -18,6 +18,14 @@ export const postSchema = z.object({
 
 export const updatePostSchema = postSchema.partial();
 
+export const withholdSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(1, 'A reason is required')
+    .max(1000, 'Reason is too long'),
+});
+
 // A Creator asks for a suggestion before the Post has ever been saved, so this
 // takes content directly rather than a Post id. The ceiling matches the 5mb
 // JSON body limit in spirit — generous, but not unbounded.

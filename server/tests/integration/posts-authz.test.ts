@@ -55,19 +55,19 @@ function createPost(
 }
 
 describe('Post ownership authorization', () => {
-  it('sets owner + author on create and stamps role', async () => {
+  it('sets owner + author on create, and stamps no role', async () => {
     const author = await register('author@test.local');
     const res = await createPost(author);
     expect(res.status).toBe(201);
     expect(res.body.owner).toBeTruthy();
-    expect(res.body.author.role).toBe('Author');
+    expect(res.body.author.role).toBeUndefined();
   });
 
-  it('marks an admin-created post author.role as Admin', async () => {
+  it('stamps no role on an admin-created post either', async () => {
     const admin = await register('admin@test.local');
     const res = await createPost(admin);
     expect(res.status).toBe(201);
-    expect(res.body.author.role).toBe('Admin');
+    expect(res.body.author.role).toBeUndefined();
   });
 
   it('blocks a non-owner author from editing or deleting (403)', async () => {
@@ -101,18 +101,79 @@ describe('Post ownership authorization', () => {
     expect(put.body.title).toBe('Updated Title');
   });
 
-  it('lets an admin edit any post', async () => {
-    const a = await register('someone@test.local');
-    const created = await createPost(a);
-    const id = created.body._id;
+  async function storedPost(id: string) {
+    return mongoose.connection
+      .db!.collection('posts')
+      .findOne({ _id: new mongoose.Types.ObjectId(id) });
+  }
 
+  it('refuses an admin editing another Creator’s post, and leaves it unchanged', async () => {
     const admin = await register('admin@test.local');
+    const a = await register('someone@test.local');
+    const created = await createPost(a, { status: 'Published' });
+    const id = created.body._id;
+    const before = await storedPost(id);
+
     const put = await request(app)
       .put(`/api/posts/${id}`)
       .set('Cookie', admin)
-      .send({ title: 'Admin Edit' });
+      .send({ title: 'Admin Edit', content: 'rewritten' });
+    expect(put.status).toBe(403);
+    expect(await storedPost(id)).toEqual(before);
+  });
+
+  it('refuses an admin deleting another Creator’s post, and it still exists', async () => {
+    const admin = await register('admin@test.local');
+    const a = await register('someone@test.local');
+    const created = await createPost(a);
+
+    const del = await request(app)
+      .delete(`/api/posts/${created.body._id}`)
+      .set('Cookie', admin);
+    expect(del.status).toBe(403);
+    expect(await storedPost(created.body._id)).not.toBeNull();
+  });
+
+  it('refuses an admin publishing another Creator’s Draft', async () => {
+    const admin = await register('admin@test.local');
+    const a = await register('someone@test.local');
+    const created = await createPost(a, { status: 'Draft' });
+
+    const put = await request(app)
+      .put(`/api/posts/${created.body._id}`)
+      .set('Cookie', admin)
+      .send({ status: 'Published' });
+    expect(put.status).toBe(403);
+    expect((await storedPost(created.body._id))!.status).toBe('Draft');
+  });
+
+  it('lets an admin edit, publish and delete their own post', async () => {
+    const admin = await register('admin@test.local');
+    const created = await createPost(admin, { status: 'Draft' });
+    const id = created.body._id;
+
+    const put = await request(app)
+      .put(`/api/posts/${id}`)
+      .set('Cookie', admin)
+      .send({ title: 'Mine', status: 'Published' });
     expect(put.status).toBe(200);
-    expect(put.body.title).toBe('Admin Edit');
+    const del = await request(app).delete(`/api/posts/${id}`).set('Cookie', admin);
+    expect(del.status).toBe(200);
+  });
+
+  it('lets the owner publish and delete their own post', async () => {
+    const a = await register('owner2@test.local');
+    const created = await createPost(a, { status: 'Draft' });
+    const id = created.body._id;
+
+    const put = await request(app)
+      .put(`/api/posts/${id}`)
+      .set('Cookie', a)
+      .send({ status: 'Published' });
+    expect(put.status).toBe(200);
+    expect(put.body.status).toBe('Published');
+    const del = await request(app).delete(`/api/posts/${id}`).set('Cookie', a);
+    expect(del.status).toBe(200);
   });
 });
 

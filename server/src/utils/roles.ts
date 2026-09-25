@@ -1,7 +1,6 @@
-// Admin designation is driven by the ADMIN_EMAILS env var (comma-separated).
-// Any user whose email matches is treated as an admin: promoted on register and
-// self-healed on login, so admin status survives DB resets without a manual step.
-export function isAdminEmail(email: string): boolean {
+import User from '../models/User';
+
+function isListedAdminEmail(email: string): boolean {
   const raw = process.env.ADMIN_EMAILS;
   if (!raw || !email) {
     return false;
@@ -13,4 +12,9 @@ export function isAdminEmail(email: string): boolean {
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean)
     .includes(target);
+}
+
+export async function bootstrapsFirstAdmin(email: string): Promise<boolean> {
+  if (!isListedAdminEmail(email)) return false;
+  return !(await User.exists({ role: 'admin' }));
 }

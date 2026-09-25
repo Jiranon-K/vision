@@ -9,7 +9,7 @@ export interface IPost extends Document {
   owner: mongoose.Types.ObjectId;
   author: {
     name: string;
-    role: string;
+    byline?: string;
   };
   date: Date;
   readTime: string;
@@ -23,6 +23,14 @@ export interface IPost extends Document {
    */
   previousSlugs: string[];
   coverImage?: string;
+  withheld: boolean;
+  withholdings: {
+    by: mongoose.Types.ObjectId;
+    at: Date;
+    reason: string;
+    liftedBy?: mongoose.Types.ObjectId;
+    liftedAt?: Date;
+  }[];
   /** Supplied by `timestamps: true`; declared so the cursor can read it. */
   createdAt: Date;
   updatedAt: Date;
@@ -42,7 +50,7 @@ const PostSchema = new Schema<IPost>(
     owner: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     author: {
       name: { type: String, required: true },
-      role: { type: String, required: true },
+      byline: { type: String },
     },
     date: { type: Date, default: Date.now },
     readTime: { type: String, required: true },
@@ -51,6 +59,21 @@ const PostSchema = new Schema<IPost>(
     slug: { type: String, required: true, unique: true },
     previousSlugs: { type: [String], default: [] },
     coverImage: { type: String },
+    withheld: { type: Boolean, default: false },
+    withholdings: {
+      type: [
+        {
+          _id: false,
+          by: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+          at: { type: Date, required: true },
+          reason: { type: String, required: true },
+          liftedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+          liftedAt: { type: Date },
+        },
+      ],
+      default: [],
+      select: false,
+    },
   },
   { timestamps: true }
 );
@@ -79,4 +102,23 @@ PostSchema.index(
   }
 );
 
-export default mongoose.model<IPost>('Post', PostSchema);
+const Post = mongoose.model<IPost>('Post', PostSchema);
+
+export async function syncCreatorByline(
+  owner: mongoose.Types.ObjectId,
+  byline: string
+): Promise<void> {
+  if (byline) {
+    await Post.updateMany(
+      { owner, 'author.byline': { $ne: byline } },
+      { $set: { 'author.byline': byline } }
+    );
+  } else {
+    await Post.updateMany(
+      { owner, 'author.byline': { $exists: true } },
+      { $unset: { 'author.byline': '' } }
+    );
+  }
+}
+
+export default Post;

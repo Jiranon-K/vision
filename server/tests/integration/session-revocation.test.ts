@@ -205,7 +205,7 @@ describe('Access and refresh tokens are cryptographically separate', () => {
         id: new mongoose.Types.ObjectId().toString(),
         email: 'forged@test.local',
         name: 'forged',
-        role: 'author',
+        role: 'creator',
         type: 'refresh',
         sid: 'made-up',
       },

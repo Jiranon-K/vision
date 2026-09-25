@@ -4,7 +4,7 @@ import PostEditorForm from "@/components/dashboard/editor/PostEditorForm";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function NewPostPage() {
-  const { isLoading, isAuthed, user } = useAuth();
+  const { isLoading, isAuthed } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen bg-brand-gray" />;
@@ -14,5 +14,5 @@ export default function NewPostPage() {
     return null;
   }
 
-  return <PostEditorForm mode="create" currentUser={user} />;
+  return <PostEditorForm mode="create" />;
 }

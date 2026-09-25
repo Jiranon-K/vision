@@ -30,6 +30,7 @@ export interface EditorTopBarProps {
    *  neither control rather than a disabled one — a control that can never
    *  be used shouldn't occupy the eye (ticket 08). */
   showSave: boolean;
+  showPublish?: boolean;
   /** Persists the Post exactly as it stands, status untouched — distinct
    *  from `onOpenPublish` so a Draft can be saved to the server without
    *  ever reaching the Publish sheet (ticket 04). Surfaced as "Save now",
@@ -91,6 +92,7 @@ export default function EditorTopBar({
   statusAccent,
   saving,
   showSave,
+  showPublish = true,
   onSave,
   onOpenPublish,
   onOpenDetails,
@@ -257,7 +259,7 @@ export default function EditorTopBar({
         </div>
       )}
       <DetailsAction onClick={onOpenDetails} />
-      {showSave && <PublishAction onClick={onOpenPublish} />}
+      {showSave && showPublish && <PublishAction onClick={onOpenPublish} />}
     </header>
   );
 }

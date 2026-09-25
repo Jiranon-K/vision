@@ -33,16 +33,32 @@ anonymous otherwise — an anonymous caller sees Published Posts only.
 
 ## Posts — `/api/posts`
 
-| Method | Endpoint      | Auth     | Description                                                                                                 |
-| ------ | ------------- | -------- | ----------------------------------------------------------------------------------------------------------- |
-| GET    | `/`           | yes      | The Hub list: the caller's own Posts. An admin sees all. Filters: `category`, `status`, `search`. Paginated |
-| GET    | `/public`     | —        | The Reader list: Published Posts, without owner ids. Filters: `category`, `search`. Paginated               |
-| GET    | `/:id`        | optional | A single Post by id. A Draft is readable by its owner or an admin only                                      |
-| GET    | `/slug/:slug` | —        | A Published Post by Slug — what the public blog reads                                                       |
-| POST   | `/:id/view`   | —        | Record a View                                                                                               |
-| POST   | `/`           | yes      | Create a Post. `readTime` and `slug` are derived server-side                                                |
-| PUT    | `/:id`        | yes      | Update a Post. Owner or admin only                                                                          |
-| DELETE | `/:id`        | yes      | Delete a Post. Owner or admin only                                                                          |
+| Method | Endpoint        | Auth     | Description                                                                                                                                                                         |
+| ------ | --------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/`             | yes      | The Hub list: the caller's own Posts. An admin sees all. Filters: `category`, `status`, `search`. Paginated                                                                         |
+| GET    | `/public`       | —        | The Reader list: Published Posts, without owner ids. Filters: `category`, `search`. Paginated                                                                                       |
+| GET    | `/:id`          | optional | A single Post by id. A Draft is readable by its owner or an admin only                                                                                                              |
+| GET    | `/slug/:slug`   | —        | A Published Post by Slug — what the public blog reads                                                                                                                               |
+| POST   | `/:id/view`     | —        | Record a View                                                                                                                                                                       |
+| POST   | `/`             | yes      | Create a Post. `readTime` and `slug` are derived server-side                                                                                                                        |
+| PUT    | `/:id`          | yes      | Update or publish a Post. Its Creator only — an Admin is refused with 403 (ADR 0006)                                                                                                |
+| DELETE | `/:id`          | yes      | Delete a Post. Its Creator only — an Admin is refused with 403 (ADR 0006)                                                                                                           |
+| POST   | `/:id/withhold` | yes      | Withhold a Published Post. Admin only. Body `{ "reason": "..." }`, recorded and never shown to the Creator. Answers with the Post's `owner`, `status`, `withheld` and `permissions` |
+| DELETE | `/:id/withhold` | yes      | Lift a withholding. Any Admin. The record of who withheld it, when and why is kept. Answers as above                                                                                |
+
+Every Post in a response to a signed-in caller — the Hub list, `/:id`, and the
+create and update responses — carries `permissions`: the actions that caller may
+perform on it, drawn from `edit`, `publish`, `delete`, `withhold` and `restore`. The server is the only
+author of these answers and the dashboard renders its controls from them
+([ADR 0004](adr/0004-server-owns-authorization-rules.md)). A response to an
+anonymous Reader carries no `permissions` field at all, and an absent field
+means no permissions.
+
+A **Withheld** Post (`withheld: true`, a field only signed-in responses carry) is absent from every Reader path — the
+public list, search, `/slug/:slug`, an anonymous `/:id` — answers 404 at its
+Slug, and records no Views. Its Creator still sees it in the Hub, marked
+Withheld, and may still edit it; publishing it does not make it visible. The
+reason recorded with a withholding is never part of any response.
 
 Both listings answer `{ "items": [...], "nextCursor": "..." }`. `nextCursor` is
 present only when more Posts exist; pass it back as `?cursor=` for the next

@@ -7,22 +7,7 @@ import User from '../src/models/User';
 import Post from '../src/models/Post';
 
 async function findAdmin() {
-  const byRole = await User.findOne({ role: 'admin' });
-  if (byRole) return byRole;
-
-  // Fallback: match ADMIN_EMAILS even if the role hasn't been persisted yet.
-  const emails = (process.env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => e.trim())
-    .filter(Boolean);
-  for (const email of emails) {
-    const escaped = email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const user = await User.findOne({
-      email: { $regex: `^${escaped}$`, $options: 'i' },
-    });
-    if (user) return user;
-  }
-  return null;
+  return User.findOne({ role: 'admin' });
 }
 
 async function main(): Promise<void> {
@@ -37,7 +22,7 @@ async function main(): Promise<void> {
   const admin = await findAdmin();
   if (!admin) {
     console.error(
-      'No admin user found. Run "bun run promote-admin <email>" (or log in as an admin) first.'
+      'No Admin found. Register the first Admin with an email listed in ADMIN_EMAILS first.'
     );
     await mongoose.disconnect();
     process.exit(1);

@@ -1,14 +1,16 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { ROLES, type Role } from '../authz/roles';
 
 export interface IUser extends Document {
   email: string;
   password: string;
-  role: 'admin' | 'author';
+  role: Role;
   profile: {
     name: string;
     bio: string;
     avatar: string;
+    byline: string;
   };
   notifications: {
     email: {
@@ -48,11 +50,12 @@ const UserSchema = new Schema<IUser>(
   {
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'author'], default: 'author' },
+    role: { type: String, enum: ROLES, required: true, default: 'creator' },
     profile: {
       name: { type: String, default: '' },
       bio: { type: String, default: '' },
       avatar: { type: String, default: '' },
+      byline: { type: String, default: '' },
     },
     notifications: {
       email: {

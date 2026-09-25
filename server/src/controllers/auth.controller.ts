@@ -15,11 +15,11 @@ import {
   verifyEmailSchema,
 } from '../schemas/auth';
 import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
-import { isAdminEmail } from '../utils/roles';
+import { bootstrapsFirstAdmin } from '../utils/roles';
+import { isRole } from '../authz/roles';
 
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const REMEMBER_ME_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
-
 
 function getValidationIssues(validationError: { issues: Array<{ path: Array<string | number>; message: string }> }) {
   return validationError.issues.map((issue) => ({
@@ -105,6 +105,20 @@ export async function reissueSessionAfterPasswordChange(
   await respondWithTokens(res, user, rememberMe);
 }
 
+function refuseUnknownRole(
+  res: Response,
+  user: InstanceType<typeof User>
+): boolean {
+  if (isRole(user.role)) return false;
+  logger.error(
+    { userId: String(user._id) },
+    'Refused a session for a user whose stored role is not recognised'
+  );
+  clearAuthCookies(res);
+  res.status(401).json({ error: 'This account cannot sign in. Please contact support.' });
+  return true;
+}
+
 function sanitizeUser(user: InstanceType<typeof User>) {
   return {
     id: user._id,
@@ -129,7 +143,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const { email, password, name } = validation.data;
 
-
     const passwordCheck = validatePasswordStrength(password);
     if (!passwordCheck.isValid) {
       res.status(400).json({
@@ -145,14 +158,13 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     const user = new User({
       email,
       password,
-      role: isAdminEmail(email) ? 'admin' : 'author',
+      role: (await bootstrapsFirstAdmin(email)) ? 'admin' : 'creator',
       profile: { name: name || '' },
       verificationToken: hashToken(verificationToken),
       verificationTokenExpiry,
@@ -166,7 +178,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       logger.error({ err: sendErr }, 'Failed to send verification email');
       // Registration still succeeds; user can request resend later
     }
-
 
     await respondWithTokens(res, user, false);
 
@@ -194,7 +205,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const { email, password, rememberMe } = validation.data;
 
-
     const lockStatus = await isAccountLocked(email);
     if (lockStatus.locked) {
       res.status(423).json({
@@ -217,16 +227,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-
     await resetFailedLogin(email);
 
-
-    // Self-heal admin role from ADMIN_EMAILS so promotions take effect on next
-    // login without a manual DB edit. Only persist when the role actually changes.
-    if (isAdminEmail(user.email) && user.role !== 'admin') {
-      user.role = 'admin';
-      await user.save();
-    }
+    if (refuseUnknownRole(res, user)) return;
 
     await respondWithTokens(res, user, rememberMe || false);
 
@@ -289,7 +292,6 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-
     let payload;
     try {
       payload = verifyRefreshToken(refreshToken);
@@ -298,7 +300,6 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       res.status(401).json({ error: 'Invalid or expired refresh token' });
       return;
     }
-
 
     const user = await loadWithSessions(payload.id);
     const session = user?.sessions?.find(
@@ -317,6 +318,7 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (refuseUnknownRole(res, user)) return;
 
     const tokenPayload = {
       id: user._id.toString(),
@@ -365,12 +367,10 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 
     const user = await User.findOne({ email });
 
-
     if (!user) {
       res.json({ message: 'If an account exists with this email, a password reset link has been sent.' });
       return;
     }
-
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetExpiry = new Date(Date.now() + 60 * 60 * 1000);
@@ -425,7 +425,6 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       res.status(400).json({ error: 'Invalid or expired reset token' });
       return;
     }
-
 
     user.password = newPassword;
     user.resetPasswordToken = undefined;

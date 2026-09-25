@@ -9,8 +9,9 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "promote-admin": "tsx scripts/promote-admin.ts",
     "backfill-owner": "tsx scripts/backfill-owner.ts",
+    "clear-post-author-role": "tsx scripts/clear-post-author-role.ts",
+    "rename-role": "tsx scripts/rename-role.ts",
     "excerpt-suggestion-metrics": "tsx scripts/excerpt-suggestion-metrics.ts"
   },
   "dependencies": {

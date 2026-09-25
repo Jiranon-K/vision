@@ -10,13 +10,14 @@ import EditorBottomBar from "@/components/dashboard/editor/EditorBottomBar";
 import EditorRail from "@/components/dashboard/editor/EditorRail";
 import PublishSheet from "@/components/dashboard/editor/PublishSheet";
 import DetailsDrawer from "@/components/dashboard/editor/DetailsDrawer";
+import VisibilityPanel from "@/components/dashboard/editor/VisibilityPanel";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { authFetch } from "@/lib/api";
 import { postFormSchema } from "@/lib/schemas";
-import type { CurrentUser } from "@/lib/auth";
+import { allows, toPost, type Post, type WirePost } from "@/lib/post-contract";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/lib/motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -38,7 +39,6 @@ const SPLIT_AVAILABLE_QUERY = "(min-width: 1024px)";
 interface PostEditorFormProps {
   mode: "create" | "edit";
   postId?: string;
-  currentUser: CurrentUser | null;
 }
 
 type LoadError = "notfound" | "forbidden" | "generic" | null;
@@ -80,7 +80,6 @@ function sameDraft(a: PostDraftState, b: PostDraftState): boolean {
 export default function PostEditorForm({
   mode,
   postId,
-  currentUser,
 }: PostEditorFormProps) {
   const router = useRouter();
   const invalidatePostData = useInvalidatePostData();
@@ -107,7 +106,10 @@ export default function PostEditorForm({
 
   const [baseline, setBaseline] = useState<PostDraftState>(EMPTY);
   const [updatedAtMs, setUpdatedAtMs] = useState(0);
-  const [ownerId, setOwnerId] = useState("");
+  const [access, setAccess] = useState<Pick<Post, "permissions" | "withheld">>({
+    permissions: [],
+    withheld: false,
+  });
 
   const [showRestore, setShowRestore] = useState(false);
   const [showBackConfirm, setShowBackConfirm] = useState(false);
@@ -130,12 +132,8 @@ export default function PostEditorForm({
 
   const ready = mode === "create" || (!loading && !loadError);
 
-  // The backend enforces ownership (403 on save), but mirror it in the UI so a
-  // non-owner who reaches the edit URL directly sees a read-only state.
-  const canEdit =
-    mode === "create" ||
-    currentUser?.role === "admin" ||
-    (!!ownerId && ownerId === currentUser?.id);
+  const canEdit = mode === "create" || allows(access, "edit");
+  const canPublish = mode === "create" || allows(access, "publish");
 
   const {
     existingDraft,
@@ -201,7 +199,7 @@ export default function PostEditorForm({
         return;
       }
 
-      const post = await res.json();
+      const post = toPost((await res.json()) as WirePost);
       const snapshot: PostDraftState = {
         title: post.title || "",
         content: post.content || "",
@@ -218,7 +216,7 @@ export default function PostEditorForm({
       setCoverImage(snapshot.coverImage);
       setBaseline(snapshot);
       setUpdatedAtMs(post.updatedAt ? new Date(post.updatedAt).getTime() : 0);
-      setOwnerId(String(post.owner ?? ""));
+      setAccess({ permissions: post.permissions, withheld: post.withheld });
     } catch {
       setLoadError("generic");
     } finally {
@@ -547,7 +545,7 @@ export default function PostEditorForm({
     <div ref={pageRef} className="flex h-screen overflow-hidden bg-surface-sunken">
       <EditorRail />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="relative flex min-w-0 flex-1 flex-col">
         <EditorTopBar
           entering={enterAnimation}
           onBack={handleBack}
@@ -555,6 +553,7 @@ export default function PostEditorForm({
           statusAccent={statusAccent}
           saving={saving}
           showSave={canEdit}
+          showPublish={canPublish}
           onSave={handleSave}
           onOpenPublish={() => setPublishSheetOpen(true)}
           onOpenDetails={() => setDetailsOpen(true)}
@@ -567,13 +566,7 @@ export default function PostEditorForm({
           dirty={isDirty}
         />
 
-        {!canEdit && (
-          <div className="shrink-0 px-4 py-3">
-            <Alert tone="neutral">
-              You don&apos;t own this Post — you can view it, but not edit it.
-            </Alert>
-          </div>
-        )}
+        <VisibilityPanel withheld={access.withheld} readOnly={!canEdit} />
 
         <div
           ref={contentRef}

@@ -18,6 +18,8 @@ const buttonVariants = cva(
           "bg-destructive text-destructive-foreground hover:bg-error-strong active:scale-[0.98]",
         outline:
           "border-2 border-border-strong bg-transparent text-foreground hover:bg-surface-inverse hover:text-text-inverse active:scale-[0.98]",
+        danger:
+          "border-2 border-error bg-transparent text-error-strong hover:bg-error-subtle active:scale-[0.98]",
         ghost: "text-foreground hover:bg-state-hover active:bg-state-active",
         link: "text-foreground underline-offset-4 hover:underline",
       },

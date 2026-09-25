@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { BlogPost } from "@/types/types";
+import CreatorByline from "@/components/blog/CreatorByline";
+import { initialsOf } from "@/lib/utils";
 
 const FeaturedCard = ({ post }: { post: BlogPost }) => (
   <Link
@@ -25,19 +27,13 @@ const FeaturedCard = ({ post }: { post: BlogPost }) => (
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-white/10">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-brand-lime/20 flex items-center justify-center text-brand-lime font-bold text-sm">
-            {post.author.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
+        <div className="flex min-w-0 items-center gap-4">
+          <div className="w-10 h-10 shrink-0 rounded-full bg-brand-lime/20 flex items-center justify-center text-brand-lime font-bold text-sm">
+            {initialsOf(post.author.name)}
           </div>
-          <div>
-            <p className="text-white text-sm font-medium">{post.author.name}</p>
-            <p className="text-white/40 text-xs">{post.author.role}</p>
-          </div>
+          <CreatorByline creator={post.author} variant="featured" />
         </div>
-        <div className="flex items-center gap-4 text-white/40 text-sm">
+        <div className="flex shrink-0 items-center gap-4 whitespace-nowrap text-white/40 text-sm">
           <span>{post.date}</span>
           <span>·</span>
           <span>{post.readTime}</span>

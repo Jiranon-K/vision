@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function EditPostPage() {
   const params = useParams();
   const postId = params.id as string;
-  const { isLoading, isAuthed, user } = useAuth();
+  const { isLoading, isAuthed } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen bg-brand-gray" />;
@@ -17,5 +17,5 @@ export default function EditPostPage() {
     return null;
   }
 
-  return <PostEditorForm mode="edit" postId={postId} currentUser={user} />;
+  return <PostEditorForm mode="edit" postId={postId} />;
 }

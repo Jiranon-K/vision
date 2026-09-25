@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import User from '../models/User';
+import { syncCreatorByline } from '../models/Post';
 import { AuthRequest } from '../middleware/auth';
 import { validatePasswordStrength } from '../utils/password';
 import { changePasswordSchema } from '../schemas/auth';
@@ -36,7 +37,7 @@ export const updateProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { name, bio, avatar } = req.body;
+    const { name, bio, avatar, byline } = req.body;
 
     const user = await User.findByIdAndUpdate(
       req.user!.id,
@@ -44,6 +45,7 @@ export const updateProfile = async (
         'profile.name': name,
         'profile.bio': bio,
         'profile.avatar': avatar,
+        ...(typeof byline === 'string' ? { 'profile.byline': byline } : {}),
       },
       { new: true }
     ).select('-password');
@@ -51,6 +53,10 @@ export const updateProfile = async (
     if (!user) {
       res.status(404).json({ error: 'User not found' });
       return;
+    }
+
+    if (typeof byline === 'string') {
+      await syncCreatorByline(user._id, byline);
     }
 
     res.json({
@@ -81,7 +87,6 @@ export const changePassword = async (
     }
 
     const { currentPassword, newPassword } = validation.data;
-
 
     const passwordCheck = validatePasswordStrength(newPassword);
     if (!passwordCheck.isValid) {

@@ -9,6 +9,8 @@ import {
   deletePost,
   incrementViews,
   suggestPostExcerpt,
+  withholdPost,
+  restorePost,
 } from '../controllers/posts.controller';
 import { auth, optionalAuth } from '../middleware/auth';
 import { recordViewLimiter, suggestExcerptLimiter } from '../config/rateLimit';
@@ -30,5 +32,7 @@ router.post('/:id/view', recordViewLimiter, incrementViews);
 router.post('/', auth, createPost);
 router.put('/:id', auth, updatePost);
 router.delete('/:id', auth, deletePost);
+router.post('/:id/withhold', auth, withholdPost);
+router.delete('/:id/withhold', auth, restorePost);
 
 export default router;
