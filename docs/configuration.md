@@ -39,11 +39,23 @@ cp server/.env.example server/.env
 | `RESEND_API_KEY`               | yes      | [Resend](https://resend.com) API key — verification and password-reset email                                               |
 | `EMAIL_FROM`                   | yes      | Sender address for outgoing email                                                                                          |
 | `EMAIL_FROM_NAME`              | no       | Sender display name                                                                                                        |
-| `ADMIN_EMAILS`                 | no       | Comma-separated addresses promoted to `admin` on register, self-healed on login                                            |
+| `ADMIN_EMAILS`                 | no       | Bootstrap only: a listed address registering on a deployment with no Admin becomes the first Admin. See [Admins](#admins)  |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | no       | Google AI Studio API key. When set, Excerpt Suggestions are backed by Gemini                                               |
 | `AI_EXCERPT_MODEL`             | no       | Overrides the Gemini model used for Excerpt Suggestions (default `gemini-3.1-flash-lite`)                                  |
 | `AI_PROVIDER`                  | no       | Set to `stub` to force a deterministic fake provider for Excerpt Suggestions — Playwright/local use only, never production |
 | `AI_SUGGESTION_TIMEOUT_MS`     | no       | How long to wait on a provider before falling back to the derived Excerpt (default `8000`)                                 |
+
+## Admins
+
+The database is the only answer to who is an Admin: the `role` field on the user record.
+
+`ADMIN_EMAILS` has exactly one job — giving a fresh deployment its first Admin. When an account registers with a listed address and no Admin exists yet, it is stored as an Admin. Once any Admin exists the variable has no effect: it never promotes on sign-in, and it cannot put back Admin status that was removed in the database. An account that registered before its address was listed is not promoted by listing it.
+
+Every later change — granting Admin status to someone else, or taking it away — is an edit to that account's `role` in the database. Losing Admin status takes effect within one access-token lifetime (`JWT_ACCESS_EXPIRES_IN`), since a refresh re-reads the record.
+
+A stored role is `admin` or `creator` and nothing else. A record holding any other value is refused a session at sign-in and refresh rather than guessed at.
+
+The customer's stored role used to be `author`. Before deploying this release, run `bun run rename-role author creator` in `server/`, or every Creator still stored as `author` is refused at sign-in. Rolling back to a release that predates the rename means running it the other way, `bun run rename-role creator author`, before the old build goes out. Both directions are safe to repeat.
 
 ## Scripts
 
@@ -72,8 +84,9 @@ cp server/.env.example server/.env
 | `bun dev`                                        | API with `tsx watch` on `:3001`                                                                                                          |
 | `bun run build` / `bun start`                    | Compile to `dist/` / run the compiled build                                                                                              |
 | `bun run test`                                   | Vitest, against `mongodb-memory-server`                                                                                                  |
-| `bun run promote-admin <email>`                  | Promote an existing Creator to `admin`                                                                                                   |
 | `bun run backfill-owner`                         | Assign `owner` to legacy Posts (needs an admin)                                                                                          |
+| `bun run clear-post-author-role`                 | Remove the role word stamped onto Posts created before the Byline existed. Safe to re-run                                                |
+| `bun run rename-role <from> <to>`                | Move every account stored with one role value to another. Reversible by swapping the arguments; safe to re-run                           |
 | `bun run excerpt-suggestion-metrics [--days=30]` | Report the Excerpt Suggestion adoption and kept-unedited thresholds — see [excerpt-suggestion-metrics.md](excerpt-suggestion-metrics.md) |
 
 ### `harness/`

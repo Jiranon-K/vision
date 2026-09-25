@@ -1,5 +1,6 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
+import type { Role } from '../authz/roles';
 
 const JWT_SECRET: string = process.env.JWT_SECRET ?? (() => {
   throw new Error('JWT_SECRET is required');
@@ -26,14 +27,14 @@ export interface TokenPayload {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'author';
+  role: Role;
 }
 
 export interface RefreshTokenPayload {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'author';
+  role: Role;
   type: 'refresh';
   /** Identifies the device this token was issued to, so one can be signed out alone. */
   sid: string;
