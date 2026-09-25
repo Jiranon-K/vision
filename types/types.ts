@@ -1,13 +1,12 @@
+import type { PostCreator } from "@/lib/post-contract";
+
 export interface BlogPost {
   id: string;
   title: string;
   excerpt: string;
   category: string;
   slug: string;
-  author: {
-    name: string;
-    role: string;
-  };
+  author: PostCreator;
   date: string;
   readTime: string;
   featured: boolean;

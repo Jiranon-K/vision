@@ -7,6 +7,11 @@ import type { DashboardPost, PostRow } from "@/types/types";
 
 export type PostStatus = "Published" | "Draft";
 
+export interface PostCreator {
+  name: string;
+  byline?: string;
+}
+
 /**
  * What a listing endpoint returns per Post. Listing and reading are different
  * requests with different payloads: content is the bulk of a Post and no
@@ -23,7 +28,7 @@ export interface WirePostSummary {
   views: number;
   featured: boolean;
   slug: string;
-  author: { name: string; role: string };
+  author: PostCreator;
   createdAt: string;
   updatedAt: string;
   /** Present only on the Hub listing. */
@@ -49,7 +54,7 @@ export interface PostSummary {
   excerpt: string;
   category: string;
   status: PostStatus;
-  author: { name: string; role: string };
+  author: PostCreator;
   date: string;
   readTime: string;
   featured: boolean;

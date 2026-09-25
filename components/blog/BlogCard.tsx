@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { BlogPost } from "@/types/types";
 import ArrowIcon from "./ArrowIcon";
+import CreatorByline from "@/components/blog/CreatorByline";
+import { initialsOf } from "@/lib/utils";
 
 const BlogCard = ({ post }: { post: BlogPost }) => (
   <Link
@@ -24,21 +26,16 @@ const BlogCard = ({ post }: { post: BlogPost }) => (
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-brand-dark/5">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-brand-dark flex items-center justify-center text-brand-lime font-bold text-xs">
-            {post.author.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="w-8 h-8 shrink-0 rounded-full bg-brand-dark flex items-center justify-center text-brand-lime font-bold text-xs">
+            {initialsOf(post.author.name)}
           </div>
-          <div>
-            <p className="text-brand-dark text-sm font-medium">
-              {post.author.name}
-            </p>
-            <p className="text-brand-dark/40 text-xs">{post.date}</p>
+          <div className="min-w-0">
+            <CreatorByline creator={post.author} />
+            <p className="mt-0.5 text-brand-dark/40 text-xs">{post.date}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-brand-dark/50 group-hover:text-brand-lime transition-colors duration-300">
+        <div className="flex shrink-0 items-center gap-2 text-brand-dark/50 group-hover:text-brand-lime transition-colors duration-(--duration-slow)">
           <span className="text-sm font-medium">{post.readTime}</span>
           <ArrowIcon />
         </div>

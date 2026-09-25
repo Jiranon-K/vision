@@ -9,6 +9,8 @@ import TableOfContents from "@/components/blog/TableOfContents";
 import ShareButtons from "@/components/blog/ShareButtons";
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import ViewTracker from "@/components/blog/ViewTracker";
+import CreatorByline from "@/components/blog/CreatorByline";
+import { initialsOf } from "@/lib/utils";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
 import type { PostSummary } from "@/lib/post-contract";
 import { SITE_URL, SITE_NAME } from "@/lib/site";
@@ -165,17 +167,12 @@ export default async function BlogPostPage({
         </h1>
 
         <div className="flex items-center gap-4 pb-8 mb-8 border-b border-brand-dark/10">
-          <div className="w-11 h-11 rounded-full bg-brand-dark flex items-center justify-center text-brand-lime font-bold text-sm">
-            {post.author.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")}
+          <div className="w-11 h-11 shrink-0 rounded-full bg-brand-dark flex items-center justify-center text-brand-lime font-bold text-sm">
+            {initialsOf(post.author.name)}
           </div>
-          <div>
-            <p className="text-brand-dark text-sm font-semibold">
-              {post.author.name}
-            </p>
-            <p className="text-brand-dark/40 text-xs">
+          <div className="min-w-0">
+            <CreatorByline creator={post.author} variant="page" />
+            <p className="mt-1 text-brand-dark/40 text-xs">
               {formatDate(post.date)} · {post.readTime}
             </p>
           </div>
