@@ -6,8 +6,8 @@ import { cookiesOf, setupTestApp } from '../support/testApp';
 const testApp = setupTestApp({ connect: { monitorCommands: true }, syncIndexes: true });
 const { api } = testApp;
 
-let Post: typeof import('../../src/models/Post').default;
-let policy: typeof import('../../src/authz/postPolicy');
+let Post: typeof import('../../src/modules/posts/post.model').default;
+let policy: typeof import('../../src/modules/posts/policy');
 
 const commands: CommandStartedEvent[] = [];
 
@@ -15,8 +15,8 @@ beforeAll(async () => {
   mongoose.connection.getClient().on('commandStarted', (event) => {
     commands.push(event);
   });
-  Post = (await import('../../src/models/Post')).default;
-  policy = await import('../../src/authz/postPolicy');
+  Post = (await import('../../src/modules/posts/post.model')).default;
+  policy = await import('../../src/modules/posts/policy');
 });
 
 const ALICE = new mongoose.Types.ObjectId();

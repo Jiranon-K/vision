@@ -20,7 +20,7 @@ contract.
 
   ```text
   modules/creators/
-  ├── index.ts                 # exports router
+  ├── index.ts                 # exports what other modules call
   ├── creators.routes.ts       # still mounted at /api/settings
   ├── creators.controller.ts
   └── creators.schema.ts

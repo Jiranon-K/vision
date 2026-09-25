@@ -51,9 +51,16 @@ fact about reading, not a property of a Post.
 **Each feature is entered through one file.** A frontend feature exposes
 `index.ts`; a feature with code that must only run on the server also exposes
 `server.ts`, which imports `server-only`. A server module's `index.ts` exposes
-its router and only the functions another module actually calls. Anything not
-exported from an entry file is internal, and nothing outside the feature
-imports it.
+only the functions and types another module actually calls; its router is a
+second entry, `x.routes.ts`, which only `server/src/index.ts` imports to mount
+it. Anything not exported from an entry file is internal, and nothing outside
+the feature imports it.
+
+The router is kept out of `index.ts` because a router drags in the session
+middleware, the rate limiters and everything they read at import time. A module
+that only wanted a helper from Posts would pay for all of it, and two modules
+whose routers use each other's helpers would import in a circle. (Amended during
+ticket 03, when putting the router in `index.ts` did both.)
 
 **Imports run one way.** `app → features → shared` on the frontend,
 `index.ts → modules → platform` on the server. `shared/` and `platform/` never

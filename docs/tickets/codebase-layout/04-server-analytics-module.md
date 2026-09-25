@@ -21,7 +21,7 @@ The route `POST /api/posts/:id/view` keeps its URL; its handler in Posts calls
 
   ```text
   modules/analytics/
-  ├── index.ts                  # exports router, recordView
+  ├── index.ts                  # exports recordView
   ├── analytics.routes.ts
   ├── analytics.controller.ts
   ├── analytics.model.ts

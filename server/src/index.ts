@@ -12,7 +12,7 @@ import { httpLogger } from './platform/middleware/http-logger';
 import { errorHandler, notFoundHandler } from './platform/middleware/error-handler';
 
 import authRoutes from './routes/auth';
-import postsRoutes from './routes/posts';
+import postsRoutes from './modules/posts/posts.routes';
 import analyticsRoutes from './routes/analytics';
 import settingsRoutes from './routes/settings';
 import capabilitiesRoutes from './routes/capabilities';

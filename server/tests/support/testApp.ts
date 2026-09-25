@@ -27,7 +27,7 @@ export function setupTestApp({
 
   const syncPostIndexes = async () => {
     if (!syncIndexes) return;
-    await (await import('../../src/models/Post')).default.syncIndexes();
+    await (await import('../../src/modules/posts/post.model')).default.syncIndexes();
   };
 
   beforeAll(async () => {

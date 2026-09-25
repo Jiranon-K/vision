@@ -245,7 +245,7 @@ bun run dev:all
 \`\`\`
 `;
 
-// Mirrors normalizeSlug in server/src/utils/slug.ts.
+// Mirrors normalizeSlug in server/src/modules/posts/slug.ts.
 // Only valid for titles that are unique across the run — which every title
 // this suite creates is.
 export function slugify(title: string): string {

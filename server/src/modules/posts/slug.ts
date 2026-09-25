@@ -1,5 +1,5 @@
-import Post from '../models/Post';
-import { isDuplicateKeyError } from '../platform/duplicate-key';
+import Post from './post.model';
+import { isDuplicateKeyError } from '../../platform/duplicate-key';
 
 // \p{M} keeps combining marks. Without it a Thai title loses its vowel and tone
 // marks — "การเขียนบทความ" became "การเข-ยนบทความ" — which is not a word any

@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
-import Post from '../models/Post';
+import { Post } from '../modules/posts';
 import PostView, { startOfUtcDay } from '../models/PostView';
 import { AuthRequest } from '../middleware/auth';
 

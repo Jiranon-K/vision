@@ -5,7 +5,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 process.env['NODE_ENV'] = 'test';
 
 let mongo: MongoMemoryServer;
-let Post: typeof import('../../src/models/Post').default;
+let Post: typeof import('../../src/modules/posts/post.model').default;
 let ExcerptSuggestion: typeof import('../../src/models/ExcerptSuggestion').default;
 let computeAdoption: typeof import('../../src/reporting/excerptSuggestionMetrics').computeAdoption;
 let computeKeptUnedited: typeof import('../../src/reporting/excerptSuggestionMetrics').computeKeptUnedited;
@@ -13,7 +13,7 @@ let computeKeptUnedited: typeof import('../../src/reporting/excerptSuggestionMet
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
-  Post = (await import('../../src/models/Post')).default;
+  Post = (await import('../../src/modules/posts/post.model')).default;
   ExcerptSuggestion = (await import('../../src/models/ExcerptSuggestion')).default;
   ({ computeAdoption, computeKeptUnedited } = await import(
     '../../src/reporting/excerptSuggestionMetrics'

@@ -1,20 +1,20 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import Post from '../models/Post';
-import User from '../models/User';
-import PostView, { startOfUtcDay } from '../models/PostView';
-import ViewRecord from '../models/ViewRecord';
+import Post from './post.model';
+import User from '../../models/User';
+import PostView, { startOfUtcDay } from '../../models/PostView';
+import ViewRecord from '../../models/ViewRecord';
 import {
   VIEW_DEDUPE_WINDOW_HOURS,
   deriveReader,
   looksLikeCrawler,
-} from '../utils/readerIdentity';
+} from '../../utils/readerIdentity';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
-} from '../reporting/excerptSuggestionRecord';
-import { AuthRequest } from '../middleware/auth';
-import { badRequest, notFound, validationFailed } from '../platform/errors';
+} from '../../reporting/excerptSuggestionRecord';
+import { AuthRequest } from '../../middleware/auth';
+import { badRequest, notFound, validationFailed } from '../../platform/errors';
 import {
   READER,
   actionsForUpdate,
@@ -23,30 +23,30 @@ import {
   can,
   listScope,
   type Actor,
-} from '../authz/postPolicy';
-import { logger } from '../platform/logger';
+} from './policy';
+import { logger } from '../../platform/logger';
 import {
   postSchema,
   updatePostSchema,
   suggestExcerptSchema,
   withholdSchema,
-} from '../schemas/posts';
-import { computeReadTime, deriveExcerpt } from '../utils/postContent';
+} from './posts.schema';
+import { computeReadTime, deriveExcerpt } from './content';
 import {
   normalizeSlug,
   proposeSlug,
   saveWithUniqueSlug,
   slugIsTaken,
-} from '../utils/slug';
-import { isDuplicateKeyError } from '../platform/duplicate-key';
+} from './slug';
+import { isDuplicateKeyError } from '../../platform/duplicate-key';
 import {
   encodeCursor,
   readCursor,
   readLimit,
   type Cursor,
-} from '../platform/pagination';
-import { suggestExcerpt } from '../ai/excerptSuggestion';
-import { resolveGenerateText } from '../ai/provider';
+} from '../../platform/pagination';
+import { suggestExcerpt } from '../../ai/excerptSuggestion';
+import { resolveGenerateText } from '../../ai/provider';
 
 // The Creator's own text must never be read as syntax: a term is a phrase to
 // match, not an expression to evaluate. `$text` treats a quoted string as a

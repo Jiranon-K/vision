@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeReadTime, deriveExcerpt } from '../../src/utils/postContent';
+import { computeReadTime, deriveExcerpt } from './content';
 
 describe('computeReadTime', () => {
   it('formats as "<n> min read"', () => {
