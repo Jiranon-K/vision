@@ -46,7 +46,7 @@ async function makePost(overrides: Partial<{
     readTime: '1 min read',
     slug: `post-${new mongoose.Types.ObjectId().toString()}`,
     owner: OWNER,
-    author: { name: 'Author', role: 'Author' },
+    author: { name: 'A Creator' },
   });
   await post.save();
   if (overrides.createdAt) {

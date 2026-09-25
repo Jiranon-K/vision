@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from '../models/Post';
+import User from '../models/User';
 import PostView, { startOfUtcDay } from '../models/PostView';
 import ViewRecord from '../models/ViewRecord';
 import {
@@ -13,12 +14,22 @@ import {
   claimOrphanSuggestion,
 } from '../reporting/excerptSuggestionRecord';
 import { AuthRequest } from '../middleware/auth';
-import { badRequest, forbidden, notFound, validationFailed } from '../errors';
+import { badRequest, notFound, validationFailed } from '../errors';
+import {
+  READER,
+  actionsForUpdate,
+  advertisedActions,
+  authorize,
+  can,
+  listScope,
+  type Actor,
+} from '../authz/postPolicy';
 import { logger } from '../logger';
 import {
   postSchema,
   updatePostSchema,
   suggestExcerptSchema,
+  withholdSchema,
 } from '../schemas/posts';
 import { computeReadTime, deriveExcerpt } from '../utils/postContent';
 import {
@@ -60,14 +71,20 @@ interface ListShape {
 // Category and search narrow a list the same way for both audiences; who may
 // see which Posts is decided by the caller, not here.
 const applyListFilters = (
-  filter: Record<string, unknown>,
+  scope: Record<string, unknown>,
+  narrowing: Record<string, unknown>,
   query: Request['query']
 ): ListShape => {
   const { category, search } = query;
 
   if (category && category !== 'All') {
-    filter.category = category;
+    narrowing = { ...narrowing, category };
   }
+
+  const collides = Object.keys(narrowing).some((key) => key in scope);
+  const filter: Record<string, unknown> = collides
+    ? { $and: [scope, narrowing] }
+    : { ...scope, ...narrowing };
 
   const term = typeof search === 'string' ? search.trim() : '';
   if (term.length < MIN_SEARCH_LENGTH) {
@@ -91,6 +108,16 @@ const applyListFilters = (
 // loading and discarding only makes the response smaller.
 const LISTING_FIELDS = '-content -coverImage';
 
+const ACCESS_FIELDS = 'owner status withheld';
+
+type PostDocument = InstanceType<typeof Post>;
+
+function present(post: PostDocument, actor: Actor): Record<string, unknown> {
+  const permissions = advertisedActions(actor, post);
+  const { withheld, ...body } = post.toJSON() as Record<string, unknown>;
+  return permissions ? { ...body, withheld, permissions } : body;
+}
+
 /**
  * One page of a listing, plus how to ask for the next. No total count: counting
  * the whole collection on every page defeats the purpose of paginating it.
@@ -101,7 +128,7 @@ async function listPage(
   select: string,
   limit: number,
   cursor?: Cursor
-): Promise<{ items: unknown[]; nextCursor?: string }> {
+): Promise<{ items: PostDocument[]; nextCursor?: string }> {
   const searching = 'score' in sort;
 
   const query = Post.find(searching ? filter : withCursor(filter, cursor))
@@ -161,30 +188,24 @@ export const getPosts = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const filter: Record<string, unknown> = {};
-
-  // Moderation depends on an admin seeing across Creators, so the role widens
-  // the constraint rather than skipping it.
-  if (req.user!.role !== 'admin') {
-    filter.owner = req.user!.id;
-  }
+  const narrowing: Record<string, unknown> = {};
 
   const { status } = req.query;
   if (status && status !== 'All') {
-    filter.status = status;
+    narrowing.status = status;
   }
 
-  const shape = applyListFilters(filter, req.query);
+  const actor = req.actor!;
+  const shape = applyListFilters(listScope(actor), narrowing, req.query);
 
-  res.json(
-    await listPage(
-      shape.filter,
-      shape.sort,
-      LISTING_FIELDS,
-      readLimit(req.query),
-      readCursor(req.query)
-    )
+  const page = await listPage(
+    shape.filter,
+    shape.sort,
+    LISTING_FIELDS,
+    readLimit(req.query),
+    readCursor(req.query)
   );
+  res.json({ ...page, items: page.items.map((post) => present(post, actor)) });
 };
 
 // The Reader's list. It takes no session into account at all: branching on
@@ -194,14 +215,13 @@ export const getPublicPosts = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const filter: Record<string, unknown> = { status: 'Published' };
-  const shape = applyListFilters(filter, req.query);
+  const shape = applyListFilters(listScope(READER), {}, req.query);
 
   res.json(
     await listPage(
       shape.filter,
       shape.sort,
-      `${LISTING_FIELDS} -owner`,
+      `${LISTING_FIELDS} -owner -withheld`,
       readLimit(req.query),
       readCursor(req.query)
     )
@@ -213,17 +233,8 @@ export const getPost = async (
   res: Response
 ): Promise<void> => {
   const post = await Post.findById(req.params.id);
-  // A Post the caller neither owns nor can read publicly answers as missing:
-  // a distinct refusal would confirm the id exists.
-  const canRead =
-    post &&
-    (post.status === 'Published' ||
-      (req.user &&
-        (req.user.role === 'admin' || String(post.owner) === req.user.id)));
-  if (!canRead) {
-    throw notFound('Post not found');
-  }
-  res.json(post);
+  authorize(req.actor!, 'read', post);
+  res.json(present(post, req.actor!));
 };
 
 export const getPostBySlug = async (
@@ -231,11 +242,11 @@ export const getPostBySlug = async (
   res: Response
 ): Promise<void> => {
   const post = await Post.findOne({
+    ...listScope(READER),
     slug: req.params.slug,
-    status: 'Published',
   });
   if (post) {
-    res.json(post);
+    res.json(present(post, READER));
     return;
   }
 
@@ -243,8 +254,8 @@ export const getPostBySlug = async (
   // so a bookmark or a link already broadcast to a channel keeps working and
   // search engines learn the new address.
   const moved = await Post.findOne({
+    ...listScope(READER),
     previousSlugs: req.params.slug,
-    status: 'Published',
   }).select('slug');
   if (moved) {
     res
@@ -269,9 +280,13 @@ export const createPost = async (
   const { title, excerpt, content, category, status, featured, coverImage } =
     validation.data;
 
-  const slug = validation.data.slug
-    ? normalizeSlug(validation.data.slug)
-    : await proposeSlug(title);
+  const [slug, creator] = await Promise.all([
+    validation.data.slug
+      ? normalizeSlug(validation.data.slug)
+      : proposeSlug(title),
+    User.findById(req.user!.id).select('profile.byline'),
+  ]);
+  const byline = creator?.profile?.byline;
 
   const post = new Post({
     title,
@@ -285,8 +300,8 @@ export const createPost = async (
     slug,
     owner: req.user!.id,
     author: {
-      name: req.user?.name || 'Unknown Author',
-      role: req.user?.role === 'admin' ? 'Admin' : 'Author',
+      name: req.user?.name || 'Unknown Creator',
+      ...(byline ? { byline } : {}),
     },
   });
 
@@ -299,7 +314,7 @@ export const createPost = async (
     req.user!.id,
     post._id as mongoose.Types.ObjectId
   );
-  res.status(201).json(post);
+  res.status(201).json(present(post, req.actor!));
 };
 
 export const updatePost = async (
@@ -312,22 +327,12 @@ export const updatePost = async (
   }
 
   const post = await Post.findById(req.params.id);
-  if (!post) {
-    throw notFound('Post not found');
-  }
-
-  if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
-    throw forbidden('You do not have permission to edit this post');
-  }
-
-  // Adopt ownership of a legacy post that predates the owner field (only an
-  // admin reaches here for an orphan; authors are rejected above). Prevents a
-  // required-field validation error on save before the backfill migration runs.
-  if (!post.owner) {
-    post.owner = new mongoose.Types.ObjectId(req.user!.id);
-  }
+  authorize(req.actor!, 'edit', post);
 
   const data = validation.data;
+  for (const action of actionsForUpdate(post, data)) {
+    authorize(req.actor!, action, post);
+  }
   const wasPublished = post.status === 'Published';
 
   if (data.title !== undefined) {
@@ -371,7 +376,7 @@ export const updatePost = async (
 
   await post.save();
 
-  res.json(post);
+  res.json(present(post, req.actor!));
 };
 
 // A provider that hangs must not hang the Creator's editor with it. 8s is
@@ -461,14 +466,16 @@ export const incrementViews = async (
     throw badRequest('Invalid id');
   }
 
-  const post = await Post.findById(req.params.id).select('owner status');
+  const post = await Post.findById(req.params.id).select(
+    'owner status withheld'
+  );
   if (!post) {
     throw notFound('Post not found');
   }
   // A Draft has no Readers, so it accumulates no Views. Previously this
   // incremented whatever id it was handed, without checking that a Reader
   // could have read it.
-  if (post.status !== 'Published') {
+  if (!can(READER, 'read', post)) {
     res.status(204).end();
     return;
   }
@@ -510,18 +517,63 @@ export const incrementViews = async (
   res.status(204).end();
 };
 
+export const withholdPost = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const validation = withholdSchema.safeParse(req.body);
+  if (!validation.success) {
+    throw validationFailed(validation.error.issues);
+  }
+
+  const post = await Post.findById(req.params.id).select(ACCESS_FIELDS);
+  authorize(req.actor!, 'withhold', post);
+
+  await Post.updateOne(
+    { _id: post._id, withheld: { $ne: true } },
+    {
+      $set: { withheld: true },
+      $push: {
+        withholdings: {
+          by: req.user!.id,
+          at: new Date(),
+          reason: validation.data.reason,
+        },
+      },
+    }
+  );
+  post.withheld = true;
+  res.json(present(post, req.actor!));
+};
+
+export const restorePost = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const post = await Post.findById(req.params.id).select(ACCESS_FIELDS);
+  authorize(req.actor!, 'restore', post);
+
+  await Post.updateOne(
+    { _id: post._id, withheld: true },
+    {
+      $set: {
+        withheld: false,
+        'withholdings.$[open].liftedBy': req.user!.id,
+        'withholdings.$[open].liftedAt': new Date(),
+      },
+    },
+    { arrayFilters: [{ 'open.liftedAt': { $exists: false } }] }
+  );
+  post.withheld = false;
+  res.json(present(post, req.actor!));
+};
+
 export const deletePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
   const post = await Post.findById(req.params.id);
-  if (!post) {
-    throw notFound('Post not found');
-  }
-
-  if (req.user!.role !== 'admin' && String(post.owner) !== req.user!.id) {
-    throw forbidden('You do not have permission to delete this post');
-  }
+  authorize(req.actor!, 'delete', post);
 
   await post.deleteOne();
   // Totals describe Posts that exist, so the rollup goes with the Post.
