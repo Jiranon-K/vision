@@ -21,7 +21,7 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "{app,components,hooks,lib,types,scripts,e2e}/**/*.{ts,tsx}": [
+    "{src,scripts,e2e}/**/*.{ts,tsx}": [
       "eslint --fix",
       "bash -c 'tsc --noEmit'"
     ],
@@ -29,7 +29,7 @@
       "eslint --fix",
       "bash -c 'cd harness && tsc --noEmit'"
     ],
-    "{app,components,hooks,lib,types,scripts}/**/*.{js,jsx}": [
+    "{src,scripts}/**/*.{js,jsx}": [
       "eslint --fix"
     ],
     "*.{ts,tsx}": [

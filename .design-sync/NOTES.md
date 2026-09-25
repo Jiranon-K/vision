@@ -8,7 +8,7 @@ Vision is a Next.js app: no `dist/`, no `main`/`module`/`exports`, and
 `node_modules/vision` does not exist. Three consequences:
 
 - **`.design-sync/ds-entry.ts` is the bundle entry** (`cfg.entry`) — a barrel
-  written purely for the sync. **Adding a component to `components/ui/` means
+  written purely for the sync. **Adding a component to `src/components/ui/` means
   adding it to that barrel**, or it never reaches `window.VisionDS`.
 - Without `cfg.entry`, the converter dies on
   `ENOENT … node_modules/vision/package.json`. Passing `--entry <any file in the
@@ -32,7 +32,7 @@ Next itself compiles (`.next/static/chunks/*.css`) and splits it in two:
 The app never emitted `.d.ts`, so every component contract came out as
 `[key: string]: unknown` — the design agent got the components but none of their
 props. `.design-sync/tsconfig.dts.json` emits real declarations for
-`components/ui/` into `dist/types/`, which the converter finds ahead of the
+`src/components/ui/` into `dist/types/`, which the converter finds ahead of the
 repo's own `types/` directory (it scans `build/ts` → `dist/types` → `types`).
 
 That is the third stage of `cfg.buildCmd`:
@@ -93,7 +93,7 @@ Popover:
 `LogoIcon` hardcoded `fill="#b9ff66"` while every other icon uses `currentColor`,
 so it painted lime-on-lime and vanished on brand surfaces. Changed to
 `fill="currentColor"`, with `className="text-brand-lime"` added at its only call
-site (`components/dashboard/Sidebar.tsx`) to preserve the existing appearance.
+site (`src/components/dashboard/Sidebar.tsx`) to preserve the existing appearance.
 
 ## Known render warns
 
@@ -101,9 +101,9 @@ None. The final validate run was clean — 30/30 previews render, no warnings.
 
 ## Re-sync risks
 
-- **The barrel goes stale silently.** A component added to `components/ui/` but not
+- **The barrel goes stale silently.** A component added to `src/components/ui/` but not
   to `.design-sync/ds-entry.ts` simply never appears; nothing errors. Diff the
-  barrel against `components/ui/` on every sync.
+  barrel against `src/components/ui/` on every sync.
 - **`cfg.cssEntry` and `cfg.extraFonts` point into `.cache/`, which is gitignored.**
   On a fresh clone they do not exist until `cfg.buildCmd` runs. Always run it.
 - **next/font filenames are content-hashed.** Every `bun run build` can rename the
