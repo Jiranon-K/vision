@@ -43,7 +43,7 @@ services:
       # Development-only values. Generate real ones for anything else.
       JWT_SECRET: local-compose-access-secret-not-for-any-real-deploy
       JWT_REFRESH_SECRET: local-compose-refresh-secret-not-for-any-real-deploy
-      # server/src/emails/client.ts builds a Resend client straight from this
+      # server/src/platform/emails/client.ts builds a Resend client straight from this
       # and has no stub path, so it must be present and must not be real.
       RESEND_API_KEY: re_compose_fake_key
       EMAIL_FROM: noreply@vision.local

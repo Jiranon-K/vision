@@ -1,7 +1,7 @@
 import type { Store, ClientRateLimitInfo, IncrementResponse } from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { createClient, type RedisClientType } from 'redis';
-import { logger } from '../logger';
+import { logger } from './logger';
 
 // This is the seam. It has had one adapter and a warning that changed nothing:
 // production printed "consider Redis" and then used the in-memory store anyway,

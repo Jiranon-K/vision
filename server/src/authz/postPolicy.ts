@@ -1,4 +1,4 @@
-import { forbidden, notFound } from '../errors';
+import { forbidden, notFound } from '../platform/errors';
 
 export type Actor =
   | { kind: 'reader' }

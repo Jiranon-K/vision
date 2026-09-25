@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
     testTimeout: 30_000,
     // The first run on a clean machine (or in CI) downloads the in-memory
     // MongoDB binary inside beforeAll, which overruns the 10s default.

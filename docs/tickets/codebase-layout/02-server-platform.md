@@ -1,6 +1,6 @@
 # 02 — What every server module shares becomes `platform/`
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -43,3 +43,19 @@ Move it into `server/src/platform/`, which by ADR 0007 imports no module.
 
 - Any module folder.
 - Changing what any of these files does.
+
+## Evidence
+
+- `bun run verify:full` exited 0 on 2026-09-26: lint 0 errors (2 pre-existing
+  warnings); server tests 29 files, 237 passed — the same count as before, so
+  the two tests now beside their files in `platform/` are collected from
+  `src/**`; `next build` compiled; Playwright 24 passed.
+- `npx eslint server/src` reports nothing, including the rule that `platform/`
+  imports no module. Nothing moved into `platform/` imports a model.
+- `cd server && bun run build` exited 0 and `dist/` contains no `*.test.*`
+  file. `docker compose build` was **not** run: Docker is not installed on the
+  machine that made this change.
+- Found along the way: the root ESLint config ignores `dist/**` but not
+  `server/dist/**`, so a local server build makes `bun run lint` fail on
+  compiled output. The build output was deleted before verifying; the ignore
+  is not changed here.

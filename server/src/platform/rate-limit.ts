@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import { createStore } from './rateLimitStore';
+import { createStore } from './rate-limit-store';
 
 // Credential and spend limiters refuse when the shared store cannot answer;
 // the general budget keeps serving. See rateLimitStore.ts for why the two

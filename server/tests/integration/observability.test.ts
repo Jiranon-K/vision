@@ -18,14 +18,14 @@ process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 
 let mongo: MongoMemoryServer;
 let app: import('express').Express;
-let createLogger: typeof import('../../src/logger').createLogger;
+let createLogger: typeof import('../../src/platform/logger').createLogger;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongo.getUri();
   await mongoose.connect(process.env.MONGODB_URI);
   app = (await import('../../src/index')).app;
-  createLogger = (await import('../../src/logger')).createLogger;
+  createLogger = (await import('../../src/platform/logger')).createLogger;
 });
 
 afterAll(async () => {

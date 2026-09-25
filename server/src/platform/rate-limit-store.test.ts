@@ -5,7 +5,7 @@ process.env['NODE_ENV'] = 'test';
 const {
   selectedStoreKind,
   assertStoreIsUsable,
-} = await import('../../src/config/rateLimitStore');
+} = await import('./rate-limit-store');
 
 const originalEnv = { ...process.env };
 

@@ -7,7 +7,7 @@ import {
   type Actor,
   type PostResource,
 } from '../../src/authz/postPolicy';
-import { HttpError } from '../../src/errors';
+import { HttpError } from '../../src/platform/errors';
 
 const ALICE = '64b000000000000000000001';
 const BOB = '64b000000000000000000002';
