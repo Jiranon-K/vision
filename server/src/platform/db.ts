@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { logger } from '../logger';
+import { logger } from './logger';
 
 const MAX_ATTEMPTS = Number(process.env.MONGODB_CONNECT_ATTEMPTS) || 8;
 const BASE_DELAY_MS = Number(process.env.MONGODB_CONNECT_BASE_DELAY_MS) || 500;

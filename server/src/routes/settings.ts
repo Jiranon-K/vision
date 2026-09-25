@@ -7,7 +7,7 @@ import {
   updateNotifications,
 } from '../controllers/settings.controller';
 import { auth } from '../middleware/auth';
-import { validateBody } from '../middleware/validate';
+import { validateBody } from '../platform/middleware/validate';
 import { profileSchema, notificationSchema, changePasswordSchema } from '../schemas/auth';
 
 const router = Router();

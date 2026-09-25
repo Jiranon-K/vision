@@ -13,7 +13,7 @@ import {
   restorePost,
 } from '../controllers/posts.controller';
 import { auth, optionalAuth } from '../middleware/auth';
-import { recordViewLimiter, suggestExcerptLimiter } from '../config/rateLimit';
+import { recordViewLimiter, suggestExcerptLimiter } from '../platform/rate-limit';
 
 const router = Router();
 

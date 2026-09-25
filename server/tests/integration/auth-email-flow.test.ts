@@ -17,7 +17,7 @@ const { sendResetMock, sendVerifyMock } = vi.hoisted(() => ({
   sendResetMock: vi.fn(),
   sendVerifyMock: vi.fn(),
 }));
-vi.mock('../../src/emails/send', () => ({
+vi.mock('../../src/platform/emails/send', () => ({
   sendResetPasswordEmail: sendResetMock,
   sendVerificationEmail: sendVerifyMock,
 }));

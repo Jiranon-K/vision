@@ -12,7 +12,7 @@ import {
   resendVerification,
 } from '../controllers/auth.controller';
 import { auth } from '../middleware/auth';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter, resendVerificationLimiter } from '../config/rateLimit';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resendVerificationLimiter } from '../platform/rate-limit';
 
 const router = Router();
 

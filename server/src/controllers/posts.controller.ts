@@ -14,7 +14,7 @@ import {
   claimOrphanSuggestion,
 } from '../reporting/excerptSuggestionRecord';
 import { AuthRequest } from '../middleware/auth';
-import { badRequest, notFound, validationFailed } from '../errors';
+import { badRequest, notFound, validationFailed } from '../platform/errors';
 import {
   READER,
   actionsForUpdate,
@@ -24,7 +24,7 @@ import {
   listScope,
   type Actor,
 } from '../authz/postPolicy';
-import { logger } from '../logger';
+import { logger } from '../platform/logger';
 import {
   postSchema,
   updatePostSchema,
@@ -38,13 +38,13 @@ import {
   saveWithUniqueSlug,
   slugIsTaken,
 } from '../utils/slug';
-import { isDuplicateKeyError } from '../utils/duplicateKey';
+import { isDuplicateKeyError } from '../platform/duplicate-key';
 import {
   encodeCursor,
   readCursor,
   readLimit,
   type Cursor,
-} from '../utils/pagination';
+} from '../platform/pagination';
 import { suggestExcerpt } from '../ai/excerptSuggestion';
 import { resolveGenerateText } from '../ai/provider';
 

@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import crypto from 'crypto';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/auth';
-import { logger } from '../logger';
+import { logger } from '../platform/logger';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken, newSessionId } from '../utils/token';
-import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../utils/cookies';
+import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../platform/cookies';
 import { validatePasswordStrength } from '../utils/password';
 import { trackFailedLogin, resetFailedLogin, isAccountLocked } from '../middleware/loginSecurity';
 import {
@@ -14,7 +14,7 @@ import {
   resetPasswordSchema,
   verifyEmailSchema,
 } from '../schemas/auth';
-import { sendResetPasswordEmail, sendVerificationEmail } from '../emails/send';
+import { sendResetPasswordEmail, sendVerificationEmail } from '../platform/emails/send';
 import { bootstrapsFirstAdmin } from '../utils/roles';
 import { isRole } from '../authz/roles';
 

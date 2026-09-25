@@ -8,7 +8,7 @@ process.env.JWT_REFRESH_SECRET = 'test-secret-for-vitest-refresh';
 });
 
 const { mockSend } = vi.hoisted(() => ({ mockSend: vi.fn() }));
-vi.mock('../../src/emails/client', async () => {
+vi.mock('./client', async () => {
   return {
     resend: { emails: { send: mockSend } },
     EMAIL_FROM: 'noreply@test.local',
@@ -18,7 +18,7 @@ vi.mock('../../src/emails/client', async () => {
   };
 });
 
-import { sendResetPasswordEmail, sendVerificationEmail } from '../../src/emails/send';
+import { sendResetPasswordEmail, sendVerificationEmail } from './send';
 
 describe('sendResetPasswordEmail', () => {
   beforeEach(() => {

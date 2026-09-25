@@ -167,7 +167,7 @@ isolated worktree plus a well-considered list of forbidden actions:
 | Editing `.github/`, `.husky/`, `skills-lock.json`      | The agent must not edit the rules that check it |
 
 The E2E environment is composed explicitly and never inherits the developer's
-shell: `server/src/emails/client.ts` builds a Resend client straight from the
+shell: `server/src/platform/emails/client.ts` builds a Resend client straight from the
 environment with no stub path, so a real API key reaching the suite would send a
 real email on every registration — all night.
 

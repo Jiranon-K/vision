@@ -1,5 +1,5 @@
 import type { Request } from 'express';
-import { badRequest } from '../errors';
+import { badRequest } from './errors';
 
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 50;

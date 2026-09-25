@@ -1,6 +1,6 @@
 import { resend, formatFromAddress, FRONTEND_URL } from './client';
-import { ResetPasswordEmail } from './templates/ResetPasswordEmail';
-import { VerifyEmail } from './templates/VerifyEmail';
+import { ResetPasswordEmail } from './templates/reset-password-email';
+import { VerifyEmail } from './templates/verify-email';
 
 export async function sendResetPasswordEmail(
   to: string,

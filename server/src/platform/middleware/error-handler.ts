@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { HttpError } from '../errors';
 import { logger } from '../logger';
-import { getRequestId } from './requestId';
+import { getRequestId } from './request-id';
 
 interface BodyParserError extends Error {
   status?: number;
