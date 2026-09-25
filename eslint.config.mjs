@@ -109,6 +109,16 @@ const eslintConfig = defineConfig([
           message:
             "Call the API through hooks/ or lib/, not directly. They own credentials, caching, and the 401 refresh.",
         },
+        ...[
+          "MemberExpression[property.name='role']",
+          "MemberExpression[computed=true][property.value='role']",
+          "ObjectPattern > Property[key.name='role']",
+          "ObjectPattern > Property[key.value='role']",
+        ].map((selector) => ({
+          selector,
+          message:
+            "Don't decide permissions from a role. Render from the `permissions` the server sent with the resource — see `allows` in lib/post-contract.ts (ADR 0004).",
+        })),
       ],
     },
   },

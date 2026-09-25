@@ -375,6 +375,13 @@
   --animate-dot-breathe: dot-breathe 4s ease-in-out infinite;
   --animate-dot-pulse: dot-pulse 0.5s var(--ease-out);
 
+  --animate-panel-in: panel-in var(--duration-slow) var(--ease-out) both;
+
+  @keyframes panel-in {
+    from { opacity: 0; transform: translateX(1rem); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
   @keyframes dot-breathe {
     0%,
     100% {

@@ -7,6 +7,15 @@ import type { DashboardPost, PostRow } from "@/types/types";
 
 export type PostStatus = "Published" | "Draft";
 
+export type PostPermission = "edit" | "publish" | "delete" | "withhold" | "restore";
+
+export function allows(
+  post: { permissions?: readonly PostPermission[] } | null | undefined,
+  action: PostPermission,
+): boolean {
+  return post?.permissions?.includes(action) ?? false;
+}
+
 export interface PostCreator {
   name: string;
   byline?: string;
@@ -33,6 +42,8 @@ export interface WirePostSummary {
   updatedAt: string;
   /** Present only on the Hub listing. */
   owner?: string;
+  withheld?: boolean;
+  permissions?: PostPermission[];
 }
 
 /** What the single-post endpoints return: the full document. */
@@ -62,6 +73,8 @@ export interface PostSummary {
   slug: string;
   createdAt: string;
   updatedAt: string;
+  withheld: boolean;
+  permissions: PostPermission[];
 }
 
 /** A Post as the app uses it when it has been read in full. */
@@ -83,14 +96,21 @@ export function formatPostDate(date: string | number | Date): string {
   });
 }
 
+function normaliseAccess(wire: WirePostSummary) {
+  return {
+    withheld: wire.withheld === true,
+    permissions: Array.isArray(wire.permissions) ? wire.permissions : [],
+  };
+}
+
 export function toPost(wire: WirePost): Post {
   const { _id, date, ...rest } = wire;
-  return { ...rest, id: _id, date: formatPostDate(date) };
+  return { ...rest, ...normaliseAccess(wire), id: _id, date: formatPostDate(date) };
 }
 
 export function toPostSummary(wire: WirePostSummary): PostSummary {
   const { _id, date, ...rest } = wire;
-  return { ...rest, id: _id, date: formatPostDate(date) };
+  return { ...rest, ...normaliseAccess(wire), id: _id, date: formatPostDate(date) };
 }
 
 export function toPostRow(wire: WirePostSummary): PostRow {
@@ -102,7 +122,7 @@ export function toPostRow(wire: WirePostSummary): PostRow {
     date: formatPostDate(wire.date),
     views: wire.views,
     readTime: wire.readTime,
-    owner: String(wire.owner ?? ""),
+    ...normaliseAccess(wire),
   };
 }
 

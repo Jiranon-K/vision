@@ -3,84 +3,107 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PostRow as PostRowType } from "@/types/types";
+import { allows } from "@/lib/post-contract";
+import { cn } from "@/lib/utils";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { EditIcon, DeleteIcon } from "@/components/ui/Icons";
+import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { LockIcon } from "@/components/ui/Icons";
 
 interface PostRowProps {
   post: PostRowType;
   onDelete?: (id: string) => void;
-  canEdit?: boolean;
 }
 
-export default function PostRow({ post, onDelete, canEdit = true }: PostRowProps) {
+const statusTone = {
+  Published: "brand",
+  Draft: "neutral",
+} as const;
+
+const rowAction = "px-3 py-1.5 text-sm";
+
+export default function PostRow({ post, onDelete }: PostRowProps) {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const statusStyles = {
-    Published: "bg-brand-lime text-brand-dark",
-    Draft: "bg-brand-gray text-brand-dark/50",
-  };
-
-  const handleEdit = () => {
-    router.push(`/dashboard/posts/${post.id}/edit`);
-  };
-
-  const handleDelete = () => {
-    setShowConfirm(true);
-  };
-
-  const confirmDelete = () => {
-    if (onDelete) {
-      onDelete(post.id);
-    }
-    setShowConfirm(false);
-  };
+  const canEdit = allows(post, "edit");
+  const canDelete = allows(post, "delete");
+  const readOnly = !canEdit && !canDelete;
+  const open = () => router.push(`/dashboard/posts/${post.id}/edit`);
 
   return (
     <>
-      <div className="post-row flex items-center justify-between bg-white rounded-[16px] border-2 border-brand-dark p-4 shadow-[4px_4px_0px_0px_#191A23] hover:-translate-y-1 hover:shadow-none transition-all duration-200 opacity-0">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-brand-dark line-clamp-1">{post.title}</h3>
-          <div className="flex items-center gap-3 mt-2 text-sm text-brand-dark/50">
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusStyles[post.status]}`}>
-              {post.status}
-            </span>
-            <span className="px-2 py-0.5 bg-brand-gray rounded-full text-xs font-medium">
-              {post.category}
-            </span>
-            <span>{post.date}</span>
-            <span>{post.readTime}</span>
+      <div
+        className={cn(
+          "post-row overflow-hidden rounded-2xl border-2 bg-surface opacity-0 shadow-hard transition-all",
+          "hover:-translate-y-0.5 hover:shadow-hard-lg",
+          post.withheld ? "border-warning" : "border-border-strong",
+        )}
+      >
+        <div className="flex items-center justify-between gap-4 p-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="line-clamp-1 font-semibold text-foreground">{post.title}</h3>
+              {readOnly && (
+                <Badge tone="neutral" appearance="outline" size="sm" className="shrink-0 border font-medium">
+                  <LockIcon className="h-3 w-3" />
+                  Read-only
+                </Badge>
+              )}
+            </div>
+            <div className="mt-2 flex items-center gap-3 text-sm text-text-muted">
+              <Badge tone={statusTone[post.status]} size="sm" className="font-medium">
+                {post.status}
+              </Badge>
+              <Badge tone="neutral" size="sm" className="font-medium">
+                {post.category}
+              </Badge>
+              <span>{post.date}</span>
+              <span>{post.readTime}</span>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-6 ml-4">
-          <span className="text-sm font-medium text-brand-dark/60 whitespace-nowrap">
+          <span className="whitespace-nowrap text-sm font-medium text-text-muted">
             {post.views > 0 ? post.views.toLocaleString() : "-"} views
           </span>
 
-          {canEdit ? (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleEdit}
-                aria-label={`Edit ${post.title}`}
-                className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-brand-dark/60 hover:border-brand-dark hover:text-brand-dark transition-all duration-200"
-              >
-                <EditIcon />
-              </button>
-              <button
-                onClick={handleDelete}
-                aria-label={`Delete ${post.title}`}
-                className="p-2 rounded-[10px] bg-brand-gray border-2 border-brand-dark/20 text-red-500 hover:border-red-500 hover:text-red-600 transition-all duration-200"
-              >
-                <DeleteIcon />
-              </button>
-            </div>
+          {readOnly ? (
+            <Button variant="outline" onClick={open} aria-label={`Open ${post.title}`} className={rowAction}>
+              Open
+            </Button>
           ) : (
-            <span className="text-xs font-medium text-brand-dark/30 italic whitespace-nowrap">
-              read-only
-            </span>
+            <div className="flex shrink-0 gap-2">
+              {canEdit && (
+                <Button variant="outline" onClick={open} aria-label={`Edit ${post.title}`} className={rowAction}>
+                  Edit
+                </Button>
+              )}
+              {canDelete && (
+                <Button
+                  variant="danger"
+                  onClick={() => setShowConfirm(true)}
+                  aria-label={`Delete ${post.title}`}
+                  className={rowAction}
+                >
+                  Delete
+                </Button>
+              )}
+            </div>
           )}
         </div>
+
+        {post.withheld && (
+          <Alert
+            tone="warning"
+            role="note"
+            aria-label="Withheld"
+            className="rounded-none border-0 border-t-2 px-4 py-2.5 motion-safe:animate-fade-in"
+          >
+            <span className="font-semibold">Withheld by Vision.</span> Readers can&apos;t see this Post.
+            {canEdit && " You can still edit it, but publishing won't bring it back."}
+          </Alert>
+        )}
       </div>
 
       <ConfirmDialog
@@ -90,7 +113,10 @@ export default function PostRow({ post, onDelete, canEdit = true }: PostRowProps
         confirmText="ลบ"
         cancelText="ยกเลิก"
         danger
-        onConfirm={confirmDelete}
+        onConfirm={() => {
+          onDelete?.(post.id);
+          setShowConfirm(false);
+        }}
         onCancel={() => setShowConfirm(false)}
       />
     </>

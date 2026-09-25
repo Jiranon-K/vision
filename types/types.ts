@@ -1,4 +1,5 @@
-import type { PostCreator } from "@/lib/post-contract";
+import type { PostCreator, PostSummary } from "@/lib/post-contract";
+import type { AccountRole } from "@/lib/auth";
 
 export interface BlogPost {
   id: string;
@@ -12,7 +13,7 @@ export interface BlogPost {
   featured: boolean;
 }
 
-export interface PostRow {
+export interface PostRow extends Pick<PostSummary, "withheld" | "permissions"> {
   id: string;
   title: string;
   category: string;
@@ -20,7 +21,6 @@ export interface PostRow {
   date: string;
   views: number;
   readTime: string;
-  owner: string;
 }
 
 export interface DashboardStat {
@@ -70,15 +70,15 @@ export interface EngagementData {
   value: number;
 }
 
-
 export interface AuthUser {
   id: string;
   email: string;
-  role: "admin" | "author";
+  role: AccountRole;
   profile: {
     name: string;
     bio: string;
     avatar: string;
+    byline: string;
   };
   emailVerified: boolean;
 }

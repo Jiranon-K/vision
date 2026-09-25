@@ -20,15 +20,18 @@ export const getRememberMe = (): boolean => {
   return localStorage.getItem(REMEMBER_ME_KEY) === 'true';
 };
 
+export type AccountRole = "admin" | "creator";
+
 export interface CurrentUser {
   id: string;
   email: string;
-  role: "admin" | "author";
+  role: AccountRole;
   emailVerified: boolean;
   profile: {
     name: string;
     bio?: string;
     avatar?: string;
+    byline?: string;
   };
 }
 
