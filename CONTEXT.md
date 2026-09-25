@@ -11,12 +11,16 @@ A single piece of writing authored in Vision — the only unit of content the pl
 _Avoid_: Article, Blog post, Entry, Story
 
 **Draft**:
-A Post that is not visible to Readers. The state a Post is in before it is published.
+A Post its Creator has not released. Invisible to Readers, and the Creator may publish it at will — unlike a Withheld Post, whose invisibility is not the Creator's to undo.
 _Avoid_: Unpublished, Pending
 
 **Published**:
-A Post that is visible to Readers on the public blog.
+A Post its Creator has released to Readers. Visible on the public blog unless it is Withheld.
 _Avoid_: Live, Public
+
+**Withheld**:
+A Published Post that Vision has stopped showing to Readers. Only an Admin can withhold or restore one; the Creator can still edit it but cannot make it visible again.
+_Avoid_: Taken down, Banned, Suspended, Hidden, Unpublished
 
 **Slug**:
 The URL-safe identifier a Published Post is read at. Stable and unique across Posts.
@@ -43,6 +47,14 @@ _Avoid_: Highlighted, Pinned, Top post
 **Creator**:
 A person with an account who writes and publishes Posts through the dashboard, and whom those Posts are attributed to. The customer of the product.
 _Avoid_: User, Author, Blogger, Publisher, Writer, Account
+
+**Byline**:
+The short self-description a Creator writes about themselves, shown to Readers beneath their name on a Post. Chosen by the Creator, and unrelated to what they are permitted to do.
+_Avoid_: Title, Role, Job title, Tagline
+
+**Admin**:
+A member of Vision's own staff, who can read every Creator's Posts and Withhold one. Not a senior Creator and not a tier above one — a different kind of person entirely.
+_Avoid_: Superuser, Owner, Moderator, Staff, Editor
 
 **Reader**:
 Anyone who reads the public marketing pages or the blog. Never signed in; readership requires no account.
