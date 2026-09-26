@@ -1,4 +1,4 @@
-import type { PostCreator } from "@/lib/post-contract";
+import { type PostCreator } from "@/features/posts";
 import { cn } from "@/shared/lib/utils";
 
 const VARIANTS = {

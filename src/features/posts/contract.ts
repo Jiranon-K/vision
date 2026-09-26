@@ -1,4 +1,4 @@
-import type { DashboardPost, PostRow } from "@/types/types";
+import type { DashboardPost, PostRow } from "./types";
 
 // The single place that knows what the API returns for a Post. Before this
 // module the wire shape was declared in three files and the `_id` -> `id`

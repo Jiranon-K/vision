@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { animate } from "animejs";
-import PostsHeader from "@/components/dashboard/posts/PostsHeader";
-import FilterBar from "@/components/dashboard/posts/FilterBar";
-import PostsTable from "@/components/dashboard/posts/PostsTable";
+import { PostsHeader, FilterBar, PostsTable, usePosts } from "@/features/posts";
 import { useAuth } from "@/features/auth";
-import { usePosts } from "@/hooks/usePosts";
 import { toast } from "sonner";
 import { PostRowSkeleton } from "@/shared/ui/skeleton";
 

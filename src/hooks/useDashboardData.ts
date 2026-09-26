@@ -1,10 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { asWirePage, toDashboardPost } from "@/lib/post-contract";
+import { asWirePage, toDashboardPost, type DashboardPost } from "@/features/posts";
 import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
 import { useStats, useViewsTrend } from "@/hooks/useAnalytics";
-import type { DashboardPost } from "@/types/types";
 
 const RECENT_POSTS = 4;
 

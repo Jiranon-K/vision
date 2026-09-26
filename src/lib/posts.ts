@@ -5,7 +5,7 @@ import {
   type Post,
   type PostSummary,
   type WirePost,
-} from "@/lib/post-contract";
+} from "@/features/posts";
 
 // Fall back to the local backend rather than "" — an empty base produces a
 // relative URL, which server-side fetch (RSC/sitemap/build) rejects.

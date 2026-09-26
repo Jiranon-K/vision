@@ -1,6 +1,6 @@
 "use client";
 
-import { categories, statusFilters } from "@/lib/constants";
+import { categories, statusFilters } from "../categories";
 
 interface FilterBarProps {
   searchQuery: string;
