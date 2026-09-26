@@ -1,6 +1,6 @@
 # 15 — The blog becomes a feature with a server entry
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -40,3 +40,29 @@ build.
 ## Out of Scope
 
 - Marketing's featured Posts (ticket 16).
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 237 passed (`--maxWorkers=2`, see
+  ticket 07); harness 37 passed; `next build` compiled; Playwright 24 passed,
+  including `blog.spec.ts` (2).
+- **The server entry holds.** A throwaway `"use client"` component importing
+  `getPublishedPosts` from `@/features/blog/server`, rendered from a
+  throwaway page, made `bun run build` exit 1 with Turbopack's "You're
+  importing a component that needs "server-only"". Both files were deleted
+  before the verification run. That build left `.next/types` referring to the
+  deleted page, which failed the next `tsc --noEmit` until the generated types
+  were removed — worth knowing before repeating the probe.
+- `lib/posts.ts` became `features/blog/server.ts` with `import "server-only"`.
+  `incrementPostViews` runs in the browser (from `ViewTracker`), so it moved to
+  `features/blog/api.ts`, still an uncredentialed `fetch` so how a View is
+  counted does not change; its base URL is declared there as well, because a
+  client file cannot import `server.ts`.
+- `server-only` was added to `dependencies` with bun. `package-lock.json` was
+  not updated; it has not changed since the initial commit and `bun.lock` is
+  the lockfile CI installs from.
+- `BlogPost` moved from `types/types.ts` to `features/blog/types.ts`. The Home
+  page's `FeaturedPosts` reads through `@/features/blog/server` and its grid
+  renders `BlogCard` from `@/features/blog`.

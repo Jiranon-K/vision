@@ -1,3 +1,4 @@
+import "server-only";
 import {
   asWirePage,
   toPost,
@@ -78,17 +79,4 @@ export async function getPostBySlug(
   }
 
   return toPost((await res.json()) as WirePost);
-}
-
-// Fire-and-forget view counter (client-side beacon). Swallows all errors —
-// a failed view ping must never surface to the reader.
-export async function incrementPostViews(id: string): Promise<void> {
-  try {
-    await fetch(`${API_BASE_URL}/api/posts/${encodeURIComponent(id)}/view`, {
-      method: "POST",
-      keepalive: true,
-    });
-  } catch {
-    // ignore
-  }
 }

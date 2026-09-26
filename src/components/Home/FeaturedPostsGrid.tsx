@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import BlogCard from "@/components/blog/BlogCard";
+import { BlogCard } from "@/features/blog";
 import { type PostSummary } from "@/features/posts";
 
 const FeaturedPostsGrid = ({ posts }: { posts: PostSummary[] }) => {

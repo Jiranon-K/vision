@@ -1,7 +1,7 @@
 import Link from "next/link";
-import type { BlogPost } from "@/types/types";
-import ArrowIcon from "./ArrowIcon";
-import CreatorByline from "@/components/blog/CreatorByline";
+import type { BlogPost } from "../types";
+import ArrowIcon from "./arrow-icon";
+import CreatorByline from "./creator-byline";
 import { initialsOf } from "@/shared/lib/utils";
 
 const BlogCard = ({ post }: { post: BlogPost }) => (
