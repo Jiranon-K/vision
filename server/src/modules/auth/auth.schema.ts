@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-const passwordSchema = z
+// Shared with the Creators module, whose password change applies the same rule.
+export const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
   .refine(
@@ -32,11 +33,6 @@ export const loginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'Current password is required'),
-  newPassword: passwordSchema,
-});
-
 export const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
@@ -48,28 +44,4 @@ export const resetPasswordSchema = z.object({
 
 export const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Verification token is required'),
-});
-
-export const profileSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  bio: z.string().max(500).optional(),
-  avatar: z.string().optional(),
-  byline: z.string().trim().max(120, 'Byline is too long').optional(),
-});
-
-export const notificationSchema = z.object({
-  notifications: z.object({
-    email: z.object({
-      newComments: z.boolean(),
-      newFollowers: z.boolean(),
-      weeklyDigest: z.boolean(),
-      marketingEmails: z.boolean(),
-    }),
-    push: z.object({
-      enabled: z.boolean(),
-      postUpdates: z.boolean(),
-      systemAlerts: z.boolean(),
-    }),
-    frequency: z.enum(['daily', 'weekly', 'monthly']),
-  }),
 });

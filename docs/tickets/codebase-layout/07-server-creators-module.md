@@ -1,6 +1,6 @@
 # 07 — Settings becomes the Creators module
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -44,3 +44,28 @@ contract.
 ## Out of Scope
 
 - Changing any `/api/settings` URL.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: frontend, server and harness typecheck; lint 0 errors (2
+  pre-existing warnings) and nothing under `server/`; server tests 29 files,
+  237 passed; harness 37 passed; `next build` compiled; Playwright 24 passed.
+  The server tests ran with `bunx vitest run --maxWorkers=2` rather than
+  `bun run test`: with default parallelism, two runs failed 13–18 suites with
+  `MongoMemoryServer ... failed to start within 10000ms` while another
+  application on the machine held ~17 GB of memory and the CPU was at 88%.
+  The failures were all in database start-up, none in an assertion.
+- The capabilities route and controller describe which optional features the
+  server has on — today only Excerpt Suggestion — so they moved to
+  `modules/excerpt-suggestion/` (`capabilities.routes.ts`, still mounted at
+  `/api/capabilities`), neither to Creators nor to Posts. Decided with the
+  owner.
+- `changePasswordSchema`, `profileSchema` and `notificationSchema` moved from
+  `auth.schema.ts` to `creators.schema.ts`; auth exports `passwordSchema` so
+  both password rules stay one rule.
+- Creators has no `index.ts`: no other module calls into it. It gets one when
+  something does.
+- `server/src/` contains only `index.ts`, `platform/`, `modules/` and
+  `migrations/`. `docs/architecture.md` describes the server as modules and
+  platform.

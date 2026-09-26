@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getCapabilities } from '../controllers/capabilities.controller';
+import { getCapabilities } from './capabilities.controller';
 
 const router = Router();
 

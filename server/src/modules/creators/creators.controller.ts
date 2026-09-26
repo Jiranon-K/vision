@@ -1,12 +1,12 @@
 import { Response } from 'express';
-import { syncCreatorByline } from '../modules/posts';
+import { syncCreatorByline } from '../posts';
 import {
   User,
   validatePasswordStrength,
-  changePasswordSchema,
   reissueSessionAfterPasswordChange,
   type AuthRequest,
-} from '../modules/auth';
+} from '../auth';
+import { changePasswordSchema } from './creators.schema';
 
 // `profile` is a nested path, so Mongoose hands back a subdocument on some
 // query shapes and a plain object on others. Normalize before spreading.

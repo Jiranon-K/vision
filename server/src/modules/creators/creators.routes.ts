@@ -5,10 +5,10 @@ import {
   changePassword,
   getNotifications,
   updateNotifications,
-} from '../controllers/settings.controller';
-import { auth } from '../modules/auth';
-import { validateBody } from '../platform/middleware/validate';
-import { profileSchema, notificationSchema, changePasswordSchema } from '../modules/auth';
+} from './creators.controller';
+import { auth } from '../auth';
+import { validateBody } from '../../platform/middleware/validate';
+import { profileSchema, notificationSchema, changePasswordSchema } from './creators.schema';
 
 const router = Router();
 
