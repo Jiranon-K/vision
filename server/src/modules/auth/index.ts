@@ -9,9 +9,4 @@ export { READER, actorFrom, type Actor } from './actor';
 export { default as User, type IUser } from './user.model';
 export { validatePasswordStrength } from './password';
 export { reissueSessionAfterPasswordChange } from './auth.controller';
-// Settings' schemas, until ticket 07 moves them to the Creators module.
-export {
-  changePasswordSchema,
-  profileSchema,
-  notificationSchema,
-} from './auth.schema';
+export { passwordSchema } from './auth.schema';

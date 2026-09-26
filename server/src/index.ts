@@ -14,8 +14,8 @@ import { errorHandler, notFoundHandler } from './platform/middleware/error-handl
 import authRoutes from './modules/auth/auth.routes';
 import postsRoutes from './modules/posts/posts.routes';
 import analyticsRoutes from './modules/analytics/analytics.routes';
-import settingsRoutes from './routes/settings';
-import capabilitiesRoutes from './routes/capabilities';
+import settingsRoutes from './modules/creators/creators.routes';
+import capabilitiesRoutes from './modules/excerpt-suggestion/capabilities.routes';
 
 export const app = express();
 const PORT = process.env.PORT || 3001;

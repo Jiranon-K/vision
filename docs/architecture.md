@@ -66,7 +66,8 @@ vision/
 │   ├── types/           # Shared TypeScript interfaces
 │   └── middleware.ts    # Cookie gate for /dashboard/*
 ├── public/              # Static assets
-├── server/src/          # Express API: routes, controllers, models, schemas, emails
+├── server/src/          # Express API: modules/ (posts, auth, creators, analytics,
+│                        #   excerpt-suggestion) and platform/ (ADR 0007)
 ├── e2e/                 # Playwright suite, fixtures and screenshot specs
 ├── harness/             # Agent harness (own package.json and tests)
 ├── docs/                # This documentation, ADRs, tickets, images
