@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { getProfileRequest, updateProfileRequest } from "@/lib/api";
+import { getProfileRequest, updateProfileRequest } from "../api";
 import { toast } from "sonner";
 
 export default function ProfileSettings() {

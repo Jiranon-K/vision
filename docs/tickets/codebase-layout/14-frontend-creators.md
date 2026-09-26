@@ -1,6 +1,6 @@
 # 14 — Settings becomes the Creators feature
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -32,3 +32,16 @@ stays `/dashboard/settings`.
 ## Out of Scope
 
 - Any change to the settings screen.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (the 2
+  pre-existing warnings, now reported in `features/creators/`); server tests
+  237 passed (`--maxWorkers=2`, see ticket 07); harness 37 passed;
+  `next build` compiled; Playwright 24 passed.
+- After ticket 09, `src/lib/api.ts` held only the settings calls, so it moved
+  whole to `features/creators/api.ts` rather than being emptied and deleted.
+  `src/lib/api.ts` and `src/components/dashboard/` no longer exist.
+- `ChangePasswordRequest` in `types/types.ts` is imported by nothing and was
+  left with the other unused auth types noted in ticket 09.
