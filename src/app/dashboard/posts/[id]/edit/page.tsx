@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import PostEditorForm from "@/components/dashboard/editor/PostEditorForm";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 
 export default function EditPostPage() {
   const params = useParams();

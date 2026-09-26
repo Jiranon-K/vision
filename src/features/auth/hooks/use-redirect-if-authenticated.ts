@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated } from "../session";
 import { toast } from "sonner";
 
 const AUTH_CHECK_TIMEOUT_MS = 5000;

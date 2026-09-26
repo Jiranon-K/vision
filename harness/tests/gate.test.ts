@@ -12,7 +12,7 @@ describe('slow-tier gating by path', () => {
   it('runs E2E when the diff touches the UI', () => {
     expect(touchesUi(['src/app/blog/page.tsx'])).toBe(true);
     expect(touchesUi(['src/shared/layout/footer.tsx'])).toBe(true);
-    expect(touchesUi(['src/hooks/useAuth.ts'])).toBe(true);
+    expect(touchesUi(['src/features/auth/hooks/use-auth.ts'])).toBe(true);
     expect(touchesUi(['src/middleware.ts'])).toBe(true);
   });
 

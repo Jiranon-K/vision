@@ -7,7 +7,7 @@ import SettingsTabs from "@/components/dashboard/settings/SettingsTabs";
 import ProfileSettings from "@/components/dashboard/settings/ProfileSettings";
 import AccountSettings from "@/components/dashboard/settings/AccountSettings";
 import NotificationSettings from "@/components/dashboard/settings/NotificationSettings";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<"profile" | "account" | "notifications">("profile");

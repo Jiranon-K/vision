@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, type CurrentUser } from "@/lib/auth";
+import { getCurrentUser, type CurrentUser } from "../session";
 
 export function useAuth(redirectToLogin = true) {
   const router = useRouter();

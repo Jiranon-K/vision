@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 import { animate, stagger } from "animejs";
 import dynamic from "next/dynamic";
 import StatsCard from "@/components/dashboard/StatsCard";

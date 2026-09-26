@@ -3,11 +3,15 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { verifyEmailRequest, resendVerificationRequest } from "@/lib/api";
-import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { AuthResult } from "@/components/auth/AuthResult";
-import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
+import {
+  verifyEmailRequest,
+  resendVerificationRequest,
+  SERVICE_UNAVAILABLE,
+  AuthShell,
+  AuthResult,
+  AuthFormAlert,
+  type AuthBanner,
+} from "@/features/auth";
 import { Spinner } from "@/shared/ui/spinner";
 
 type Phase = "verifying" | "verified" | "failed";
