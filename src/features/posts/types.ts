@@ -1,6 +1,6 @@
 import type { PostSummary } from "./contract";
 
-export interface PostRow extends Pick<PostSummary, "withheld" | "permissions"> {
+export interface PostRow extends Pick<PostSummary, "withheld" | "permissions" | "delivery"> {
   id: string;
   title: string;
   category: string;

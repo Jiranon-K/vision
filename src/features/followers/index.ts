@@ -6,5 +6,6 @@ export { default as FollowLinkPage } from "./components/follow-link-page";
 export { default as DeliverSection, type DeliverSectionProps } from "./components/deliver-section";
 export { default as FollowersScreen } from "./components/followers-screen";
 export { default as FollowersBand } from "./components/followers-band";
+export { default as DeliveredBadge } from "./components/delivered-badge";
 export { useFollowerSummary } from "./hooks/use-followers";
 export type { FollowerFigures, FollowerRow, FollowerSummary, FollowOutcome } from "./types";

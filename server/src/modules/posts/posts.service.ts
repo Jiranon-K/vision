@@ -119,10 +119,16 @@ const ACCESS_FIELDS = 'owner status withheld';
 
 type PostDocument = InstanceType<typeof Post>;
 
+// How many Followers a Post reached is the Creator's figure (ADR 0009): its
+// owner sees it, an Admin sees it as a count, and nobody else learns it.
+const seesDelivery = (actor: Actor, post: PostDocument): boolean =>
+  actor.kind === 'admin' || (actor.kind === 'creator' && String(post.owner) === actor.id);
+
 function present(post: PostDocument, actor: Actor): PresentedPost {
   const permissions = advertisedActions(actor, post);
-  const { withheld, ...body } = post.toJSON() as Record<string, unknown>;
-  return permissions ? { ...body, withheld, permissions } : body;
+  const { withheld, delivery, ...body } = post.toJSON() as Record<string, unknown>;
+  const visible = seesDelivery(actor, post) && delivery ? { ...body, delivery } : body;
+  return permissions ? { ...visible, withheld, permissions } : visible;
 }
 
 /**
@@ -225,7 +231,7 @@ export async function listPublishedPosts(
   const page = await listPage(
     shape.filter,
     shape.sort,
-    `${LISTING_FIELDS} -owner -withheld`,
+    `${LISTING_FIELDS} -owner -withheld -delivery`,
     readLimit(query),
     readCursor(query)
   );

@@ -96,4 +96,23 @@ test.describe('the Creator publishing', () => {
     await expect(deliver).toBeChecked();
     await expect(sheet.getByText('via Vision')).toBeVisible();
   });
+
+  // Jiranon-K/vision#30: the Posts list says which Posts reached the Followers.
+  test('a delivered Post says so in the Posts list, and a quiet one does not', async ({ page, request }) => {
+    const post = await seededPost(request);
+    await confirmFollower(request, post._id, 'e2e.list@example.com');
+
+    const make = (title: string, deliver: boolean) =>
+      request.post(`${API_URL}/api/posts`, {
+        data: { title, content: 'Written for the list.', category: 'SEO', status: 'Published', deliver },
+      });
+    expect((await make('Delivered for the list', true)).status()).toBe(201);
+    expect((await make('Published quietly for the list', false)).status()).toBe(201);
+
+    await page.goto('/dashboard/posts');
+    const row = (title: string) => page.locator('.post-row').filter({ hasText: title });
+    await expect(row('Delivered for the list').getByText(/^Delivered to \d+ Followers?$/)).toBeVisible();
+    await expect(row('Published quietly for the list')).toBeVisible();
+    await expect(row('Published quietly for the list').getByText(/^Delivered to/)).toHaveCount(0);
+  });
 });
