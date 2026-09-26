@@ -1,10 +1,10 @@
 "use client";
 
-import AutosaveStatusSlot, { type AutosaveStatus } from "./AutosaveStatusSlot";
-import PostStatusSlot from "./PostStatusSlot";
-import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
-import SaveNowAction from "./SaveNowAction";
-import type { EditorMode } from "./types";
+import AutosaveStatusSlot, { type AutosaveStatus } from "./autosave-status-slot";
+import PostStatusSlot from "./post-status-slot";
+import EditorModeSwitchSlot from "./editor-mode-switch-slot";
+import SaveNowAction from "./save-now-action";
+import type { EditorMode } from "../types";
 
 export interface EditorBottomBarProps {
   status: "Draft" | "Published";

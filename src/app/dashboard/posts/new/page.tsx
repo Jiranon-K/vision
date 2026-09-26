@@ -1,6 +1,6 @@
 "use client";
 
-import PostEditorForm from "@/components/dashboard/editor/PostEditorForm";
+import { PostEditorForm } from "@/features/editor";
 import { useAuth } from "@/features/auth";
 
 export default function NewPostPage() {

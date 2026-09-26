@@ -1,7 +1,7 @@
 "use client";
 
 import Markdown from "@/shared/markdown/markdown";
-import type { MarkdownPreviewProps } from "./types";
+import type { MarkdownPreviewProps } from "../types";
 
 export default function MarkdownPreview({ content }: MarkdownPreviewProps) {
   if (!content.trim()) {

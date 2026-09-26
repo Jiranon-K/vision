@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
-import DetailsAction from "./DetailsAction";
-import PublishAction from "./PublishAction";
-import PostStatusSlot from "./PostStatusSlot";
-import AutosaveStatusSlot, { type AutosaveStatus } from "./AutosaveStatusSlot";
-import EditorMeterSlot from "./EditorMeterSlot";
-import EditorModeSwitchSlot from "./EditorModeSwitchSlot";
-import SaveNowAction from "./SaveNowAction";
-import type { EditorMode } from "./types";
+import DetailsAction from "./details-action";
+import PublishAction from "./publish-action";
+import PostStatusSlot from "./post-status-slot";
+import AutosaveStatusSlot, { type AutosaveStatus } from "./autosave-status-slot";
+import EditorMeterSlot from "./editor-meter-slot";
+import EditorModeSwitchSlot from "./editor-mode-switch-slot";
+import SaveNowAction from "./save-now-action";
+import type { EditorMode } from "../types";
 
 export interface EditorTopBarProps {
   /** Flips true once the writing surface has started its own entrance —

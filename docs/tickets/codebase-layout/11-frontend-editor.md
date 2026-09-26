@@ -1,6 +1,6 @@
 # 11 — The editor becomes a feature
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -33,3 +33,21 @@ it: only the editor uses it (ADR 0007).
 ## Out of Scope
 
 - Any change to the editor's behaviour.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 237 passed (`--maxWorkers=2`, see
+  ticket 07); harness 37 passed; `next build` compiled; Playwright 24 passed,
+  including `editor-slash-menu` (4) and `excerpt-suggestion` (1).
+- The visual specs are evidence, not comparisons (see ticket 09). Run on their
+  own, `editor-frame-visual` and `excerpt-suggestion-visual` passed 5/5 and
+  wrote every frame and state to `test-results/`; the split view and the
+  filled Excerpt Suggestion were inspected by eye and render as before.
+- `index.ts` exports only `PostEditorForm`: the new and edit routes are the
+  only callers. `postFormSchema` was cut from `lib/schemas.ts` into
+  `features/editor/post-form-schema.ts`; what remains in `lib/schemas.ts` is
+  the six unused auth schemas noted in ticket 09.
+- `components/editor-rail.tsx` still imports `sidebarNavItems` from
+  `@/lib/constants`; ticket 12 moves that list into the Hub feature.

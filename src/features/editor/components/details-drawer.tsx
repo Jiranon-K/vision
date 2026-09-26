@@ -1,8 +1,8 @@
 "use client";
 
-import MetadataForm from "./MetadataForm";
-import SlideOverPanel from "./SlideOverPanel";
-import type { MetadataFormProps } from "./types";
+import MetadataForm from "./metadata-form";
+import SlideOverPanel from "./slide-over-panel";
+import type { MetadataFormProps } from "../types";
 
 export interface DetailsDrawerProps extends MetadataFormProps {
   open: boolean;

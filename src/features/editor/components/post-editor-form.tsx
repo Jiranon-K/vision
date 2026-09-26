@@ -4,19 +4,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { animate, set } from "animejs";
 import { toast } from "sonner";
-import SplitEditor from "@/components/dashboard/editor/SplitEditor";
-import EditorTopBar from "@/components/dashboard/editor/EditorTopBar";
-import EditorBottomBar from "@/components/dashboard/editor/EditorBottomBar";
-import EditorRail from "@/components/dashboard/editor/EditorRail";
-import PublishSheet from "@/components/dashboard/editor/PublishSheet";
-import DetailsDrawer from "@/components/dashboard/editor/DetailsDrawer";
-import VisibilityPanel from "@/components/dashboard/editor/VisibilityPanel";
+import SplitEditor from "./split-editor";
+import EditorTopBar from "./editor-top-bar";
+import EditorBottomBar from "./editor-bottom-bar";
+import EditorRail from "./editor-rail";
+import PublishSheet from "./publish-sheet";
+import DetailsDrawer from "./details-drawer";
+import VisibilityPanel from "./visibility-panel";
 import ConfirmDialog from "@/shared/ui/confirm-dialog";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { Alert } from "@/shared/ui/alert";
 import { authFetch } from "@/shared/lib/api";
-import { postFormSchema } from "@/lib/schemas";
+import { postFormSchema } from "../post-form-schema";
 import {
   allows,
   toPost,
@@ -27,13 +27,13 @@ import {
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import type { EditorMode } from "@/components/dashboard/editor/types";
-import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
+import type { EditorMode } from "../types";
+import type { AutosaveStatus } from "./autosave-status-slot";
 import {
   draftKey,
   useAutosaveDraft,
   type PostDraftState,
-} from "@/hooks/useAutosaveDraft";
+} from "../hooks/use-autosave-draft";
 
 // Two panes of prose only both keep a readable measure at lg (1024px) and
 // up — the same width Tailwind's own `lg:` breakpoint already treats as

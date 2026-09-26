@@ -12,7 +12,7 @@ import {
   CodeIcon,
   HorizontalRuleIcon,
 } from "@/shared/ui/icons";
-import type { SlashMenuOption } from "./types";
+import type { SlashMenuOption } from "../types";
 
 // Block-level insertions only, matching direction 1b's toolbar rule from the
 // other side: these are exactly what ticket 06 dropped (headings, lists,

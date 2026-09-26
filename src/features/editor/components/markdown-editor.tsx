@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
-import { applyHeading, applyBlockInsert, applyWrap, detectSlashQuery, type SlashQuery } from "./markdownOps";
-import { getCaretCoordinates } from "./caretCoordinates";
-import SlashMenu, { filterSlashOptions, type SlashMenuAnchor } from "./SlashMenu";
-import type { MarkdownEditorProps, SlashMenuOption } from "./types";
+import { applyHeading, applyBlockInsert, applyWrap, detectSlashQuery, type SlashQuery } from "../markdown-ops";
+import { getCaretCoordinates } from "../caret-coordinates";
+import SlashMenu, { filterSlashOptions, type SlashMenuAnchor } from "./slash-menu";
+import type { MarkdownEditorProps, SlashMenuOption } from "../types";
 
 // Keyed by `code`, not `key`: holding Alt changes the character a digit row
 // key produces on several layouts, so `key` would be "1" for some Creators

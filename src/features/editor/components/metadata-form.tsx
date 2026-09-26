@@ -11,7 +11,7 @@ import { Alert } from "@/shared/ui/alert";
 import ConfirmDialog from "@/shared/ui/confirm-dialog";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { DURATION_BASE, EASE_OUT } from "@/shared/lib/motion";
-import type { MetadataFormProps } from "./types";
+import type { MetadataFormProps } from "../types";
 
 // Below this, a "summary" would just echo the content back — the button stays
 // visible but disabled rather than firing a request that can't say anything.

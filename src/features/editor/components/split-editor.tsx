@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
-import MarkdownToolbar from "./MarkdownToolbar";
-import MarkdownEditor from "./MarkdownEditor";
-import MarkdownPreview from "./MarkdownPreview";
-import PostTitleField from "./PostTitleField";
-import type { SplitEditorProps } from "./types";
+import MarkdownToolbar from "./markdown-toolbar";
+import MarkdownEditor from "./markdown-editor";
+import MarkdownPreview from "./markdown-preview";
+import PostTitleField from "./post-title-field";
+import type { SplitEditorProps } from "../types";
 
 // A pane fades in from a small horizontal offset the moment it mounts —
 // which, because the editor/preview panes are conditionally rendered by

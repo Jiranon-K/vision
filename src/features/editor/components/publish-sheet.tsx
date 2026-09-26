@@ -5,7 +5,7 @@ import { categories } from "@/features/posts";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Alert } from "@/shared/ui/alert";
-import SlideOverPanel from "./SlideOverPanel";
+import SlideOverPanel from "./slide-over-panel";
 
 export interface PublishChecklistItem {
   id: string;
