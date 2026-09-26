@@ -44,6 +44,14 @@ export interface WirePostSummary {
   owner?: string;
   withheld?: boolean;
   permissions?: PostPermission[];
+  /** Present once the Post has been delivered to its Creator's Followers. */
+  delivery?: PostDelivery;
+}
+
+/** A Post's one Delivery (CONTEXT.md): when, and to how many Followers. */
+export interface PostDelivery {
+  followers: number;
+  at: string;
 }
 
 /** What the single-post endpoints return: the full document. */
@@ -75,6 +83,7 @@ export interface PostSummary {
   updatedAt: string;
   withheld: boolean;
   permissions: PostPermission[];
+  delivery?: PostDelivery;
 }
 
 /** A Post as the app uses it when it has been read in full. */

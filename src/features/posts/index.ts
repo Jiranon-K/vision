@@ -10,6 +10,7 @@ export {
   toPostSummary,
   type Post,
   type PostCreator,
+  type PostDelivery,
   type PostPermission,
   type PostStatus,
   type PostSummary,

@@ -11,10 +11,14 @@ test.describe('the Hub fetches through one seam', () => {
   test('two screens needing the same data make one request between them', async ({
     page,
   }) => {
+    // The two queries both screens share: the stat cards and the weekly trend.
+    // The analytics screen also reads data only it shows (the Followers band's
+    // /api/analytics/followers); that first request is not a repeat.
+    const SHARED = /\/api\/analytics(\/views)?(\?|$)/;
     const analyticsCalls: string[] = [];
     page.on('request', (request) => {
       const url = request.url();
-      if (url.includes('/api/analytics')) analyticsCalls.push(url);
+      if (SHARED.test(new URL(url).pathname + new URL(url).search)) analyticsCalls.push(url);
     });
 
     await page.goto('/dashboard');

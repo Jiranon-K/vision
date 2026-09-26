@@ -46,4 +46,5 @@ export {
   PlusIcon,
   UploadIcon,
   ChartIcon,
+  FollowersIcon,
 } from "../src/shared/ui/icons";

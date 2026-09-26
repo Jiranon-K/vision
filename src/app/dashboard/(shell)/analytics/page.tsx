@@ -11,6 +11,7 @@ import {
 } from "@/features/analytics";
 import { useAuth } from "@/features/auth";
 import { StatsCardSkeleton } from "@/shared/ui/skeleton";
+import { FollowersBand } from "@/features/followers";
 
 const AnalyticsChart = dynamic(
   () => import("@/features/analytics").then((m) => m.AnalyticsChart),
@@ -96,6 +97,8 @@ export default function AnalyticsPage() {
           Track your content performance and engagement metrics.
         </p>
       </div>
+
+        <FollowersBand enabled={isAuthed} />
 
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {showSkeleton ? (

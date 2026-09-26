@@ -248,3 +248,12 @@ export function HorizontalRuleIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function FollowersIcon({ className }: IconProps) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M2.5 5l7.5 6 7.5-6" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  );
+}

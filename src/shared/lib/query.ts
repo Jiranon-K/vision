@@ -64,4 +64,8 @@ export const queryKeys = {
   analytics: ["analytics"] as const,
   analyticsStats: () => ["analytics", "stats"] as const,
   analyticsViews: () => ["analytics", "views"] as const,
+  analyticsFollowers: () => ["analytics", "followers"] as const,
+  followers: ["followers"] as const,
+  followersList: () => ["followers", "list"] as const,
+  followersSummary: () => ["followers", "summary"] as const,
 };

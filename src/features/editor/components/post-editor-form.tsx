@@ -21,9 +21,12 @@ import {
   allows,
   toPost,
   type Post,
+  type PostDelivery,
   type WirePost,
   useInvalidatePostData,
 } from "@/features/posts";
+import { DeliverSection } from "@/features/followers";
+import { useAuth } from "@/features/auth";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
@@ -100,6 +103,12 @@ export default function PostEditorForm({
   const [status, setStatus] = useState<"Draft" | "Published">("Draft");
   const [excerpt, setExcerpt] = useState("");
   const [coverImage, setCoverImage] = useState("");
+  // Delivering to Followers is the default when publishing (ADR 0009); the
+  // Creator unticks it in the Publish sheet. `delivery` is the Post's one
+  // Delivery, once it has had it.
+  const [deliver, setDeliver] = useState(true);
+  const [delivery, setDelivery] = useState<PostDelivery>();
+  const { user } = useAuth();
 
   // Write is the default per the ticket, regardless of viewport.
   const [editorMode, setEditorMode] = useState<EditorMode>("write");
@@ -222,6 +231,7 @@ export default function PostEditorForm({
       setBaseline(snapshot);
       setUpdatedAtMs(post.updatedAt ? new Date(post.updatedAt).getTime() : 0);
       setAccess({ permissions: post.permissions, withheld: post.withheld });
+      setDelivery(post.delivery);
     } catch {
       setLoadError("generic");
     } finally {
@@ -365,7 +375,7 @@ export default function PostEditorForm({
   // request for different reasons, they fire the same request for whatever
   // `status` currently holds. What differs is only what each caller does
   // once it resolves (see handleSave / handlePublishConfirm below).
-  const persist = async (): Promise<boolean> => {
+  const persist = async ({ deliver: deliverNow = false } = {}): Promise<boolean> => {
     if (!canEdit) {
       toast.error("You don't have permission to edit this Post.");
       return false;
@@ -391,7 +401,15 @@ export default function PostEditorForm({
         method,
         headers: { "Content-Type": "application/json" },
         // readTime + excerpt fallback are derived server-side.
-        body: JSON.stringify({ title, content, category, status, coverImage, excerpt }),
+        body: JSON.stringify({
+          title,
+          content,
+          category,
+          status,
+          coverImage,
+          excerpt,
+          ...(deliverNow ? { deliver: true } : {}),
+        }),
       });
 
       if (res.ok) {
@@ -447,7 +465,9 @@ export default function PostEditorForm({
   // top bar's slow crossfade before leaving.
   const handlePublishConfirm = async () => {
     const wasPublished = baseline.status === "Published";
-    if (!(await persist())) return;
+    // Only the save that makes the Post Published may deliver it.
+    const publishing = !wasPublished && status === "Published";
+    if (!(await persist({ deliver: publishing && deliver }))) return;
 
     setPublishSheetOpen(false);
     const justPublished = !wasPublished && status === "Published";
@@ -664,6 +684,18 @@ export default function PostEditorForm({
         confirmLabel={publishConfirmLabel}
         pending={saving}
         onConfirm={handlePublishConfirm}
+        deliverSection={
+          delivery || (status === "Published" && baseline.status !== "Published") ? (
+            <DeliverSection
+              deliver={deliver}
+              onDeliverChange={setDeliver}
+              delivery={delivery}
+              creatorName={user?.profile.name || "You"}
+              title={title}
+              excerpt={excerpt}
+            />
+          ) : null
+        }
       />
     </div>
   );
