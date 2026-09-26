@@ -85,8 +85,63 @@ const local = {
         };
       },
     },
+
+    // The marketing site once sold what Vision never built, twice over: ADR
+    // 0008 recorded it and the copy stayed. The claims that were false are
+    // named here, so they cannot come back without someone deleting a line
+    // (Jiranon-K/vision#35).
+    "no-retired-claims": {
+      meta: {
+        type: "problem",
+        docs: { description: "keep claims about unbuilt or retired features off the marketing copy" },
+        schema: [],
+      },
+      create(context) {
+        const check = (node, text) => {
+          const claim = RETIRED_CLAIMS.find(({ pattern }) => pattern.test(text));
+          if (claim) context.report({ node, message: `${claim.why} (Jiranon-K/vision#35).` });
+        };
+        return {
+          Literal(node) {
+            if (typeof node.value === "string") check(node, node.value);
+          },
+          TemplateElement(node) {
+            check(node, node.value.cooked ?? node.value.raw);
+          },
+          JSXText(node) {
+            check(node, node.value.replace(/\s+/g, " "));
+          },
+        };
+      },
+    },
   },
 };
+
+const RETIRED_CLAIMS = [
+  { pattern: /multi-?channel sync|social sync/i, why: "Multi-Channel Sync is retired: Vision never posts on a social channel (ADR 0008, 0009)" },
+  { pattern: /broadcast/i, why: "Vision does not broadcast a Post anywhere; a Delivery reaches Followers by email (ADR 0009)" },
+  { pattern: /(instantly|automatically|one[- ]click|single click)[^.]*(social|facebook|twitter|linkedin|instagram)/i, why: "Vision never posts on a social channel for the Creator (ADR 0008)" },
+  { pattern: /content boosting/i, why: "Content Boosting is retired and was never built" },
+  { pattern: /\bsubscri(be|bers?|ption)\b/i, why: "A Reader follows a Creator; say Follower, not Subscriber (CONTEXT.md)" },
+  { pattern: /฿\s*[1-9]|\/mo\b|per (month|year)|(monthly|yearly) (plan|billing)|\b(starter|pro|business) plan\b/i, why: "No Plan is sold during the Free beta (ADR 0008)" },
+  { pattern: /real-time|AI[- ](powered|driven|writing)/i, why: "Growth Analytics is not real-time, and Vision's only AI is an optional Excerpt suggestion" },
+  { pattern: /\b(comments|reactions)\b/i, why: "Posts have no comments or reactions" },
+];
+
+// Every file that holds marketing copy: the public pages, their sections and
+// the site-wide description, footer and social preview.
+const MARKETING_COPY = [
+  "src/features/marketing/**/*.{ts,tsx}",
+  "src/features/blog/components/creator-cta.tsx",
+  "src/app/page.tsx",
+  "src/app/pricing/page.tsx",
+  "src/app/services/page.tsx",
+  "src/app/blog/page.tsx",
+  "src/app/opengraph-image.tsx",
+  "src/shared/layout/footer.tsx",
+  "src/shared/layout/navbar.tsx",
+  "src/shared/lib/site.ts",
+];
 
 // Where the layout of ADR 0007 is enforced: features and modules are entered
 // through their entry files, shared/ and platform/ import neither, and every
@@ -177,6 +232,10 @@ const eslintConfig = defineConfig([
   {
     files: ["src/**/*.{ts,tsx}"],
     rules: { "no-restricted-imports": [LAYOUT, { patterns: [intoFeature] }] },
+  },
+  {
+    files: MARKETING_COPY,
+    rules: { "local/no-retired-claims": "error" },
   },
   {
     files: ["src/shared/**/*.{ts,tsx}"],

@@ -93,8 +93,8 @@ const Services = () => {
         </div>
         <div className="max-w-[580px] opacity-0">
           <p className="text-lg font-normal leading-6">
-            Empowering your digital presence with tools designed for creators
-            and businesses alike. Here&apos;s what you can do on Vision:
+            Everything a Creator needs to write, publish, and keep the Readers
+            they reach. All of it is free while Vision is in beta:
           </p>
         </div>
       </div>
@@ -121,6 +121,9 @@ const Services = () => {
                     {line}
                   </span>
                 ))}
+                <p className={`${service.textColor} mt-3 max-w-[240px] text-base leading-snug opacity-80`}>
+                  {service.description}
+                </p>
               </div>
               <div className="flex items-center gap-4">
                 <ArrowIcon

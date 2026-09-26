@@ -1,129 +1,42 @@
-export const plans = [
-  {
-    name: "Starter",
-    price: { monthly: 0, yearly: 0 },
-    description: "Perfect for those just starting their journey",
-    features: [
-      "Smart Creator Hub",
-      "Search Visibility (Basic)",
-      "Support: Community",
-    ],
-    cta: "Start for Free",
-    highlight: false,
-  },
-  {
-    name: "Pro",
-    price: { monthly: 690, yearly: 550 },
-    description: "For creators who want to grow faster",
-    features: [
-      "Smart Creator Hub",
-      "Search Visibility (Advanced)",
-      "Audience Connect",
-      "Content Boosting (Limited)",
-      "Support: Email",
-    ],
-    cta: "Get Pro Plan",
-    highlight: true,
-    badge: "Most Popular",
-  },
-  {
-    name: "Business",
-    price: { monthly: 1690, yearly: 1390 },
-    description: "Full solution for businesses and brands",
-    features: [
-      "Smart Creator Hub",
-      "Search Visibility (Priority)",
-      "Audience Connect",
-      "Content Boosting (Unlimited)",
-      "Multi-Channel Sync",
-      "Growth Analytics (Real-time)",
-      "Support: 24/7 Priority",
-    ],
-    cta: "Contact Sales",
-    highlight: false,
-  },
-];
-
-export const pricingFeatures = [
-  {
-    id: "smart-hub",
-    name: "Smart Creator Hub",
-    tooltip:
-      "An AI-powered creator hub that helps you write, edit, and optimize your content.",
-    starter: true,
-    pro: true,
-    business: true,
-  },
-  {
-    id: "search-visibility",
-    name: "Search Visibility",
-    tooltip:
-      "Boost your content's visibility on search engines with automatic SEO optimization.",
-    starter: "Basic",
-    pro: "Advanced",
-    business: "Priority",
-  },
-  {
-    id: "audience-connect",
-    name: "Audience Connect",
-    tooltip:
-      "Connect and build relationships with your followers through audience analysis tools.",
-    starter: false,
-    pro: true,
-    business: true,
-  },
-  {
-    id: "content-boosting",
-    name: "Content Boosting",
-    tooltip:
-      "Expand your content's reach with an automated cross-platform promotion system.",
-    starter: false,
-    pro: "Limited",
-    business: "Unlimited",
-  },
-  {
-    id: "multi-channel",
-    name: "Multi-Channel Sync",
-    tooltip:
-      "Sync and publish content to all social media platforms simultaneously in a single click.",
-    starter: false,
-    pro: false,
-    business: true,
-  },
-  {
-    id: "growth-analytics",
-    name: "Growth Analytics",
-    tooltip:
-      "Real-time growth dashboard with deep reports and AI-driven recommendations.",
-    starter: false,
-    pro: false,
-    business: "Real-time",
-  },
-  {
-    id: "support",
-    name: "Support",
-    tooltip:
-      "A support team ready to help you throughout your journey, from onboarding to growth.",
-    starter: "Community",
-    pro: "Email",
-    business: "24/7 Priority",
-  },
-];
+// No Plan is sold during the Free beta (ADR 0008): one offer, everything built.
+export const freeBeta = {
+  name: "Free beta",
+  description: "Every Creator gets every part of Vision we've built.",
+  features: [
+    "Smart Creator Hub",
+    "Search Visibility",
+    "Audience Connect: Followers by email",
+    "Deliveries to your Followers",
+    "Growth Analytics",
+    "Export your Followers anytime",
+  ],
+  cta: "Start writing",
+};
 
 export const faqs = [
   {
-    question: "Can I change my plan later?",
+    question: "Is it really free?",
     answer:
-      "Yes, you can upgrade or downgrade your plan at any time through your account settings.",
+      "Yes. During the beta every Creator has every Capability Vision has built, and nothing is charged. There is no card to enter.",
   },
   {
-    question: "Is there a yearly payment offer?",
+    question: "What happens when the beta ends?",
     answer:
-      "Yes! By choosing the yearly plan, you can save up to 20% compared to monthly billing.",
+      "If Vision ever starts charging, you'll get an email before anything changes. Your Followers stay yours, and exporting them stays free.",
   },
   {
-    question: "Is the Business plan right for me?",
+    question: "Who owns my Followers?",
     answer:
-      "It's ideal for agencies or brands managing multiple channels simultaneously and requiring real-time analytics for precise decision-making.",
+      "You do. You can see every Follower in your Hub and export the list as a CSV whenever you like. Vision never shows your Followers to other Creators.",
+  },
+  {
+    question: "Why might a Delivery take more than a day?",
+    answer:
+      "During the beta, Vision delivers a limited number of emails each day across all Creators. What doesn't fit today waits in line and goes out over the following days, so every Follower still receives it.",
+  },
+  {
+    question: "Does Vision post to Facebook or X for me?",
+    answer:
+      "No. Vision never posts on a social channel for you. Share your Post's link wherever you like; Readers who enjoy it can follow you by email.",
   },
 ];

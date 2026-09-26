@@ -52,7 +52,7 @@ export default function OpengraphImage() {
               borderRadius: "16px",
             }}
           >
-            share everywhere
+            keep your Readers
           </span>
         </div>
         <div
@@ -64,7 +64,7 @@ export default function OpengraphImage() {
             maxWidth: "800px",
           }}
         >
-          The infrastructure for modern creators.
+          Readers follow you by email. Free during the beta.
         </div>
       </div>
     ),

@@ -81,14 +81,14 @@ const Header = () => {
           </h1>
 
           <p className="header-para text-xl md:text-2xl lg:text-3xl leading-relaxed text-brand-dark max-w-2xl opacity-0">
-            Experience the power of shared knowledge. Write your story, share
-            your insights, and instantly broadcast to all your social platforms.
-            Vision is where your ideas find their audience.
+            Readers follow you by email, right from the end of your Post. Your
+            next Post reaches their inbox, not a feed that decides who sees it.
+            And the list is yours: export it whenever you like.
           </p>
 
           <div className="header-cta opacity-0">
             <button onClick={() => router.push('/dashboard')} className="bg-brand-dark text-white px-10 py-5 rounded-2xl text-xl font-medium hover:bg-brand-lime hover:text-brand-dark transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg">
-              Join the Community
+              Start writing free
             </button>
           </div>
         </div>

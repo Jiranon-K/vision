@@ -4,37 +4,37 @@ export const features = [
     badge: "Create",
     title: "Rich Blog Editor",
     description:
-      "Write beautifully formatted posts with our intuitive editor. Add media, style your content, and publish in minutes — no code required.",
+      "Write in a distraction-free Markdown editor that saves as you go. Add images, format headings, and publish when you're ready — no code required.",
     bgColor: "bg-brand-gray",
     badgeBg: "bg-brand-lime",
     textColor: "text-brand-dark",
-  },
-  {
-    icon: "/as-04.png",
-    badge: "Share",
-    title: "One-Click Social Sync",
-    description:
-      "Broadcast your posts to Facebook, X (Twitter), and more with a single click. Reach your entire audience the moment you hit publish.",
-    bgColor: "bg-brand-lime",
-    badgeBg: "bg-white",
-    textColor: "text-brand-dark",
-  },
-  {
-    icon: "/as-05.png",
-    badge: "Discover",
-    title: "Search Visibility",
-    description:
-      "Get discovered by the right readers. Vision optimises every post for search engines so your content ranks and your audience grows organically.",
-    bgColor: "bg-brand-dark",
-    badgeBg: "bg-brand-lime",
-    textColor: "text-white",
   },
   {
     icon: "/services/s-2.png",
     badge: "Grow",
     title: "Audience Connect",
     description:
-      "Build a loyal following with comments, reactions, and subscriber lists. Engage readers directly and turn casual visitors into fans.",
+      "Readers follow you by email from the end of any Post. No account needed, and nobody counts until they confirm the address is theirs.",
+    bgColor: "bg-brand-lime",
+    badgeBg: "bg-white",
+    textColor: "text-brand-dark",
+  },
+  {
+    icon: "/as-04.png",
+    badge: "Deliver",
+    title: "Deliveries",
+    description:
+      "When you publish, choose to deliver the Post to your Followers. It reaches their inbox with its title and Excerpt, one click from the full Post.",
+    bgColor: "bg-brand-dark",
+    badgeBg: "bg-brand-lime",
+    textColor: "text-white",
+  },
+  {
+    icon: "/as-05.png",
+    badge: "Discover",
+    title: "Search Visibility",
+    description:
+      "Every Published Post gets its own page, search metadata, a link preview, and a place in the sitemap, so search engines can find it.",
     bgColor: "bg-brand-gray",
     badgeBg: "bg-brand-lime",
     textColor: "text-brand-dark",
@@ -44,7 +44,7 @@ export const features = [
     badge: "Analyse",
     title: "Growth Analytics",
     description:
-      "Track views, shares, and engagement in real time. Understand what resonates and double down on the content that drives results.",
+      "See the Views each Post earns, your Followers week by week, and how many Views your Deliveries brought back.",
     bgColor: "bg-brand-lime",
     badgeBg: "bg-white",
     textColor: "text-brand-dark",
@@ -54,7 +54,7 @@ export const features = [
     badge: "Control",
     title: "Smart Creator Hub",
     description:
-      "Manage all your posts, drafts, and social connections from one powerful dashboard. Your creative workflow, streamlined.",
+      "Manage your Posts, drafts, and Followers from one dashboard, and export your Followers whenever you like.",
     bgColor: "bg-brand-dark",
     badgeBg: "bg-brand-lime",
     textColor: "text-white",

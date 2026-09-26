@@ -13,8 +13,8 @@ const Process = () => {
           </h2>
         </div>
         <p className="text-xl font-normal leading-relaxed text-brand-dark/80 max-w-[600px]">
-          From your first idea to a worldwide audience — four simple steps that
-          keep you in flow and put your content in front of the right people.
+          From your first idea to Readers who come back — four simple steps,
+          with nothing to connect along the way.
         </p>
       </div>
 
