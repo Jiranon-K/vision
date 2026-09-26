@@ -50,5 +50,9 @@ View and Growth Analytics can report how many Views Deliveries brought.
 - A Delivery containing only the Excerpt costs the Follower one click to read.
   In exchange every read is counted, and the Post's Slug, not the email, is
   what a Follower shares.
+- A Follower who stops leaves an anonymous record: which Creator, when they
+  followed, when they stopped. No address and no token. It is what lets
+  Growth Analytics say how many Followers a Creator had in a past week
+  without keeping anything that points back at a person (Jiranon-K/vision#31).
 - A per-Creator home page, importing an existing list, and LINE Official
   Account delivery are left for later; none is needed to reach a Follower.

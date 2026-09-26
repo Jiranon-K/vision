@@ -2,7 +2,52 @@
 
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useFollowerFigures } from "../hooks/use-followers";
-import { CountUp } from "./motion";
+import { CountUp, STAGGER_MS } from "./motion";
+import type { FollowerFigures } from "../types";
+
+const weekLabel = (weekStart: string) =>
+  new Date(`${weekStart}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+
+// Followers week by week (Jiranon-K/vision#31): eight bars, the week under way
+// last and marked as such, each labelled with its count so the chart reads
+// without hovering.
+function WeeklyBars({ weekly }: { weekly: FollowerFigures["weekly"] }) {
+  const max = Math.max(1, ...weekly.map((w) => w.followers));
+  return (
+    <figure className="mt-8">
+      <figcaption className="text-sm text-text-inverse/60">Followers, week by week</figcaption>
+      <ol className="mt-4 flex h-40 items-end gap-2">
+        {weekly.map((week, i) => {
+          const current = i === weekly.length - 1;
+          return (
+            <li
+              key={week.weekStart}
+              className="flex h-full flex-1 flex-col items-center justify-end gap-2 motion-safe:animate-rise-in"
+              style={{ animationDelay: `${i * STAGGER_MS}ms` }}
+              aria-label={`Week of ${weekLabel(week.weekStart)}${current ? " (this week)" : ""}: ${week.followers} Followers`}
+            >
+              <span aria-hidden className="text-xs font-bold tabular-nums text-text-inverse/80">
+                {week.followers}
+              </span>
+              <span
+                aria-hidden
+                className={
+                  current
+                    ? "w-full max-w-10 rounded-md bg-accent"
+                    : "w-full max-w-10 rounded-md bg-text-inverse/25"
+                }
+                style={{ height: `${Math.max(4, (week.followers / max) * 100)}%` }}
+              />
+              <span aria-hidden className="whitespace-nowrap text-[11px] text-text-inverse/50">
+                {current ? "This week" : weekLabel(week.weekStart)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </figure>
+  );
+}
 
 // Growth Analytics' Followers band (design B, "Story band", chosen in
 // Jiranon-K/vision#29): the Audience a Creator reaches directly, told as one
@@ -16,7 +61,7 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
   }
   if (figures.isError || !figures.data) return null;
 
-  const { followers, weeklyGain, delivered, deliveries, viewsFromDeliveries } = figures.data;
+  const { followers, weeklyGain, delivered, deliveries, viewsFromDeliveries, weekly } = figures.data;
   // Of the emails delivered this week, how many brought a Reader back.
   const share = delivered > 0 ? Math.min(100, Math.round((viewsFromDeliveries / delivered) * 100)) : 0;
 
@@ -56,6 +101,8 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
           </div>
         ))}
       </div>
+
+      {weekly?.length > 0 && <WeeklyBars weekly={weekly} />}
 
       {delivered > 0 ? (
         <>

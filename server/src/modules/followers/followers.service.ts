@@ -4,12 +4,13 @@ import { User, type Actor } from '../auth';
 import { readablePostForFollowing } from '../posts';
 import { gone, notFound, validationFailed } from '../../platform/errors';
 import { logger } from '../../platform/logger';
-import { DAY_MS } from '../../platform/time';
+import { DAY_MS, startOfUtcWeek } from '../../platform/time';
 import { FRONTEND_URL } from '../../platform/emails/client';
 import { sendFollowConfirmationEmail } from '../../platform/emails/send';
 import Follower, { type IFollower } from './follower.model';
 import Delivery, { type DeliveryContent } from './delivery.model';
 import QueuedEmail from './queued-email.model';
+import Departure from './departure.model';
 import { authorize, ownCreatorId } from './policy';
 import { followSchema, tokenSchema } from './followers.schema';
 import { sendableToday } from './delivery-queue';
@@ -133,6 +134,14 @@ export async function stop(input: unknown): Promise<FollowOutcome | undefined> {
   const follower = await Follower.findOneAndDelete({ stopToken: validation.data.token });
   if (!follower) return undefined;
   await QueuedEmail.deleteMany({ follower: follower._id, state: { $in: ['waiting', 'claimed'] } });
+  // Only a confirmed Follower was ever counted, so only one leaves a trace.
+  if (follower.state === 'confirmed' && follower.confirmedAt) {
+    await Departure.create({
+      creator: follower.creator,
+      followedAt: follower.confirmedAt,
+      stoppedAt: new Date(),
+    });
+  }
   return outcomeOf(follower);
 }
 
@@ -245,6 +254,39 @@ export async function deliverPost(
   return { followers: followers.length, at: delivery.createdAt };
 }
 
+export interface WeeklyFollowers {
+  /** The Monday a UTC week starts on, as YYYY-MM-DD. */
+  weekStart: string;
+  /** Followers at the end of that week, or now for the week under way. */
+  followers: number;
+}
+
+const WEEKS = 8;
+const WEEK_MS = 7 * DAY_MS;
+
+/**
+ * Followers at the end of each of the last eight UTC weeks, oldest first.
+ * A Follower counts from the week they confirmed until the week they stopped:
+ * current Followers from their confirmation, and those who left from the
+ * anonymous record their stop kept.
+ */
+export async function weeklyFollowers(creatorId: string, now = new Date()): Promise<WeeklyFollowers[]> {
+  const creator = new mongoose.Types.ObjectId(creatorId);
+  const thisWeek = startOfUtcWeek(now);
+  const weeks = Array.from({ length: WEEKS }, (_, i) => new Date(thisWeek.getTime() - (WEEKS - 1 - i) * WEEK_MS));
+
+  return Promise.all(
+    weeks.map(async (weekStart) => {
+      const end = new Date(Math.min(weekStart.getTime() + WEEK_MS, now.getTime() + 1));
+      const [staying, departed] = await Promise.all([
+        Follower.countDocuments({ creator, state: 'confirmed', confirmedAt: { $lt: end } }),
+        Departure.countDocuments({ creator, followedAt: { $lt: end }, stoppedAt: { $gte: end } }),
+      ]);
+      return { weekStart: weekStart.toISOString().slice(0, 10), followers: staying + departed };
+    })
+  );
+}
+
 export interface DeliveryFigures {
   followers: number;
   weeklyGain: number;
@@ -252,17 +294,19 @@ export interface DeliveryFigures {
   delivered: number;
   deliveries: number;
   lastDeliveryAt?: Date;
+  weekly: WeeklyFollowers[];
 }
 
 /** Growth Analytics' view of a Creator's Followers, for the window starting at `since`. */
 export async function deliveryFigures(creatorId: string, since: Date): Promise<DeliveryFigures> {
   const creator = new mongoose.Types.ObjectId(creatorId);
-  const [followers, weeklyGain, delivered, deliveries, last] = await Promise.all([
+  const [followers, weeklyGain, delivered, deliveries, last, weekly] = await Promise.all([
     followerCount(creatorId),
     followersGainedSince(creatorId, since),
     QueuedEmail.countDocuments({ creator, state: 'sent', sentAt: { $gte: since } }),
     Delivery.countDocuments({ creator, createdAt: { $gte: since } }),
     Delivery.findOne({ creator }).sort({ createdAt: -1 }).select('createdAt').lean(),
+    weeklyFollowers(creatorId),
   ]);
-  return { followers, weeklyGain, delivered, deliveries, lastDeliveryAt: last?.createdAt };
+  return { followers, weeklyGain, delivered, deliveries, lastDeliveryAt: last?.createdAt, weekly };
 }

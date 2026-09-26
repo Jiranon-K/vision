@@ -19,6 +19,8 @@ export interface FollowerFigures {
   deliveries: number;
   lastDeliveryAt?: string;
   viewsFromDeliveries: number;
+  /** Followers at the end of each of the last eight UTC weeks, oldest first. */
+  weekly: { weekStart: string; followers: number }[];
 }
 
 /** Whom a Reader followed or stopped following, and where they came from. */
