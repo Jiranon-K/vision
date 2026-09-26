@@ -73,7 +73,7 @@ _Avoid_: Following, Traffic, Userbase
 ### Plans and capabilities
 
 **Plan**:
-A tier of paid access to Vision — Starter, Pro, or Business — priced per Creator.
+A tier of paid access to Vision — Starter, Pro, or Business — priced per Creator. No Plan is sold during the **Free beta**: every Creator has every Capability Vision has built, and nothing is charged (ADR 0008).
 _Avoid_: Tier, Package, Subscription, Product
 
 **Subscriber**:
@@ -99,7 +99,8 @@ Reaching and retaining a Creator's Audience directly.
 Amplifying the reach of a Published Post beyond its organic Audience.
 
 **Multi-Channel Sync**:
-Broadcasting one Post to multiple social channels from a single publish action.
+Preparing one Published Post for each social channel so its Creator can share it there in one click: per-channel text, a share link that opens the channel with that text filled in, and a tracked link so Growth Analytics can say which channel brought each View. Vision never posts on a channel itself; the Creator does (ADR 0008).
+_Avoid_: Auto-post, Cross-post, Broadcast
 
 **Growth Analytics**:
 Reporting on Views and Audience growth back to the Creator.
