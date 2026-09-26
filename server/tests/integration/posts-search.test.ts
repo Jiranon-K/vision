@@ -10,14 +10,14 @@ process.env.ADMIN_EMAILS = 'admin@test.local';
 
 let mongo: MongoMemoryServer;
 let app: import('express').Express;
-let Post: typeof import('../../src/models/Post').default;
+let Post: typeof import('../../src/modules/posts/post.model').default;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongo.getUri();
   await mongoose.connect(process.env.MONGODB_URI);
   app = (await import('../../src/index')).app;
-  Post = (await import('../../src/models/Post')).default;
+  Post = (await import('../../src/modules/posts/post.model')).default;
   await Post.syncIndexes();
 });
 

@@ -4,7 +4,7 @@
 // module's own logic — prompt construction and output sanitising — is
 // exercisable with a fake and carries no I/O of its own.
 
-import { safeSlice, stripMarkdown, EXCERPT_MAX } from '../utils/postContent';
+import { safeSlice, stripMarkdown, EXCERPT_MAX } from '../modules/posts';
 
 export type GenerateText = (prompt: string) => Promise<string>;
 

@@ -93,7 +93,8 @@ const local = {
 const LAYOUT = "warn";
 const FEATURE_ENTRY =
   "Import a feature through its entry file — `@/features/x` or `@/features/x/server` (ADR 0007).";
-const MODULE_ENTRY = "Import a server module through its entry file, `modules/x/index` (ADR 0007).";
+const MODULE_ENTRY =
+  "Import a server module through its entry file, `modules/x/index` — or `modules/x/x.routes` to mount it (ADR 0007).";
 const NO_FEATURE_IN_SHARED = "shared/ never imports a feature (ADR 0007).";
 const NO_MODULE_IN_PLATFORM = "platform/ never imports a module (ADR 0007).";
 const intoFeature = {
@@ -101,7 +102,7 @@ const intoFeature = {
   message: FEATURE_ENTRY,
 };
 const intoModule = {
-  regex: "(^|/)modules/[^/]+/(?!index(\\.js)?$)",
+  regex: "(^|/)modules/[^/]+/(?!(index|[^/]+\\.routes)(\\.js)?$)",
   message: MODULE_ENTRY,
 };
 

@@ -17,7 +17,7 @@ beforeAll(async () => {
   app = (await import('../../src/index')).app;
   // The unique index on slug is what the retry path reacts to, so it has to
   // exist before the concurrency case runs.
-  await (await import('../../src/models/Post')).default.syncIndexes();
+  await (await import('../../src/modules/posts/post.model')).default.syncIndexes();
 });
 
 afterAll(async () => {
@@ -28,7 +28,7 @@ afterAll(async () => {
 beforeEach(async () => {
   const collections = await mongoose.connection.db!.collections();
   for (const c of collections) await c.deleteMany({});
-  await (await import('../../src/models/Post')).default.syncIndexes();
+  await (await import('../../src/modules/posts/post.model')).default.syncIndexes();
 });
 
 const PW = 'Aa1!aaaa';

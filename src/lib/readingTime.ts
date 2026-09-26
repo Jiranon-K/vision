@@ -1,4 +1,4 @@
-// Client-side mirror of server/src/utils/postContent.ts's word/read-time
+// Client-side mirror of server/src/modules/posts/content.ts's word/read-time
 // math. Not a shared import — server/ is a separate deployable with its own
 // tsconfig (root tsconfig excludes it) — so this duplicates the approach
 // deliberately rather than reaching across the package boundary. Keep the

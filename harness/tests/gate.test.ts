@@ -17,7 +17,7 @@ describe('slow-tier gating by path', () => {
   });
 
   it('skips E2E for server-only work', () => {
-    expect(touchesUi(['server/src/controllers/posts.controller.ts'])).toBe(false);
+    expect(touchesUi(['server/src/modules/posts/posts.controller.ts'])).toBe(false);
     expect(touchesUi(['README.md', 'docs/adr/0001-x.md'])).toBe(false);
   });
 });

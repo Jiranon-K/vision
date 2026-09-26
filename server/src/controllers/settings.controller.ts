@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import User from '../models/User';
-import { syncCreatorByline } from '../models/Post';
+import { syncCreatorByline } from '../modules/posts';
 import { AuthRequest } from '../middleware/auth';
 import { validatePasswordStrength } from '../utils/password';
 import { changePasswordSchema } from '../schemas/auth';

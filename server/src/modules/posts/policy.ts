@@ -1,13 +1,9 @@
-import { forbidden, notFound } from '../platform/errors';
+import { forbidden, notFound } from '../../platform/errors';
+import type { Actor } from '../../authz/actor';
 
-export type Actor =
-  | { kind: 'reader' }
-  | { kind: 'creator'; id: string }
-  | { kind: 'admin'; id: string };
+export { READER, actorFrom, type Actor } from '../../authz/actor';
 
 type SignedIn = Exclude<Actor, { kind: 'reader' }>;
-
-export const READER: Actor = { kind: 'reader' };
 
 export const ADVERTISED_ACTIONS = [
   'edit',
@@ -27,22 +23,6 @@ export interface PostResource {
   withheld?: boolean;
 }
 
-interface SessionClaims {
-  id: string;
-  role: string;
-}
-
-export function actorFrom(claims: SessionClaims | undefined): Actor {
-  if (!claims) return READER;
-  switch (claims.role) {
-    case 'admin':
-      return { kind: 'admin', id: claims.id };
-    case 'creator':
-      return { kind: 'creator', id: claims.id };
-    default:
-      throw new Error(`Unrecognised role: ${claims.role}`);
-  }
-}
 
 const isPublic = (post: PostResource): boolean =>
   post.status === 'Published' && post.withheld !== true;

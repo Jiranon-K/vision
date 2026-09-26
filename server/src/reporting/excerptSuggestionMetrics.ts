@@ -1,4 +1,4 @@
-import Post from '../models/Post';
+import { Post } from '../modules/posts';
 import ExcerptSuggestion from '../models/ExcerptSuggestion';
 
 // The two thresholds fixed before this capability was built (see

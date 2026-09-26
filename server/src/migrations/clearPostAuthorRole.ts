@@ -1,4 +1,4 @@
-import Post from '../models/Post';
+import { Post } from '../modules/posts';
 
 export async function clearPostAuthorRole(): Promise<number> {
   const result = await Post.updateMany(

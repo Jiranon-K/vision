@@ -4,7 +4,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import User from '../src/models/User';
-import Post from '../src/models/Post';
+import { Post } from '../src/modules/posts';
 
 async function findAdmin() {
   return User.findOne({ role: 'admin' });

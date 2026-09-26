@@ -11,9 +11,9 @@ import {
   suggestPostExcerpt,
   withholdPost,
   restorePost,
-} from '../controllers/posts.controller';
-import { auth, optionalAuth } from '../middleware/auth';
-import { recordViewLimiter, suggestExcerptLimiter } from '../platform/rate-limit';
+} from './posts.controller';
+import { auth, optionalAuth } from '../../middleware/auth';
+import { recordViewLimiter, suggestExcerptLimiter } from '../../platform/rate-limit';
 
 const router = Router();
 

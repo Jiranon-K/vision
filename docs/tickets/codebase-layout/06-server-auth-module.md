@@ -20,13 +20,15 @@ Gather it into `server/src/modules/auth/`.
 
   ```text
   modules/auth/
-  ├── index.ts                # exports router, the `auth` middleware, AuthRequest
+  ├── index.ts                # exports the `auth` middleware, AuthRequest, Actor
   ├── auth.routes.ts
   ├── auth.controller.ts
   ├── auth.schema.ts
   ├── require-session.ts      # was middleware/auth.ts
   ├── login-security.ts       # was middleware/loginSecurity.ts
   ├── admin-bootstrap.ts      # was utils/roles.ts
+  ├── actor.ts                # was authz/actor.ts (split out in ticket 03)
+  ├── roles.ts                # was authz/roles.ts
   ├── token.ts
   └── password.ts
   ```
