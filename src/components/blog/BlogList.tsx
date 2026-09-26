@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import FeaturedCard from "@/components/blog/FeaturedCard";
 import BlogCard from "@/components/blog/BlogCard";
-import { categories } from "@/lib/constants";
-import type { PostSummary } from "@/lib/post-contract";
+import { categories, type PostSummary } from "@/features/posts";
 
 const BlogList = ({ posts }: { posts: PostSummary[] }) => {
   const [activeCategory, setActiveCategory] = useState("All");

@@ -17,11 +17,16 @@ import { Card } from "@/shared/ui/card";
 import { Alert } from "@/shared/ui/alert";
 import { authFetch } from "@/shared/lib/api";
 import { postFormSchema } from "@/lib/schemas";
-import { allows, toPost, type Post, type WirePost } from "@/lib/post-contract";
+import {
+  allows,
+  toPost,
+  type Post,
+  type WirePost,
+  useInvalidatePostData,
+} from "@/features/posts";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import { useInvalidatePostData } from "@/hooks/usePosts";
 import type { EditorMode } from "@/components/dashboard/editor/types";
 import type { AutosaveStatus } from "@/components/dashboard/editor/AutosaveStatusSlot";
 import {

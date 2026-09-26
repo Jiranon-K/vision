@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { DashboardPost } from "@/types/types";
+import { type DashboardPost } from "@/features/posts";
 
 interface PopularPostsProps {
   posts: DashboardPost[];

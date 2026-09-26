@@ -12,15 +12,3 @@ export const quickActions: QuickAction[] = [
   { id: "2", label: "Upload Media", icon: "upload", href: "/dashboard/media" },
   { id: "3", label: "View Analytics", icon: "chart", href: "/dashboard/analytics" },
 ];
-
-export const categories = [
-  "All",
-  "Marketing",
-  "SEO",
-  "Content",
-  "Social Media",
-  "Analytics",
-  "Branding",
-];
-
-export const statusFilters = ["All", "Published", "Draft"] as const;

@@ -12,7 +12,7 @@ import ViewTracker from "@/components/blog/ViewTracker";
 import CreatorByline from "@/components/blog/CreatorByline";
 import { initialsOf } from "@/shared/lib/utils";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
-import type { PostSummary } from "@/lib/post-contract";
+import { type PostSummary } from "@/features/posts";
 import { SITE_URL, SITE_NAME } from "@/shared/lib/site";
 
 export const revalidate = 300;

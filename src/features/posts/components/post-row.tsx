@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { PostRow as PostRowType } from "@/types/types";
-import { allows } from "@/lib/post-contract";
+import type { PostRow as PostRowType } from "../types";
+import { allows } from "../contract";
 import { cn } from "@/shared/lib/utils";
 import ConfirmDialog from "@/shared/ui/confirm-dialog";
 import { Alert } from "@/shared/ui/alert";

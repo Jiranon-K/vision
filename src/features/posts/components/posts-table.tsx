@@ -2,8 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import type { PostRow as PostRowType } from "@/types/types";
-import PostRow from "./PostRow";
+import type { PostRow as PostRowType } from "../types";
+import PostRow from "./post-row";
 
 interface PostsTableProps {
   posts: PostRowType[];

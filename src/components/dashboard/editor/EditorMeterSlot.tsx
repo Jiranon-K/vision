@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { countWords, computeReadTime } from "@/lib/readingTime";
+import { countWords, computeReadTime } from "@/features/posts";
 
 export interface EditorMeterSlotProps {
   content: string;

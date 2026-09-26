@@ -1,4 +1,4 @@
-import type { PostCreator, PostSummary } from "@/lib/post-contract";
+import { type PostCreator } from "@/features/posts";
 import { type AccountRole } from "@/features/auth";
 
 export interface BlogPost {
@@ -13,31 +13,12 @@ export interface BlogPost {
   featured: boolean;
 }
 
-export interface PostRow extends Pick<PostSummary, "withheld" | "permissions"> {
-  id: string;
-  title: string;
-  category: string;
-  status: "Published" | "Draft";
-  date: string;
-  views: number;
-  readTime: string;
-}
-
 export interface DashboardStat {
   id: string;
   label: string;
   value: string;
   change: string;
   changeType: "positive" | "negative";
-}
-
-export interface DashboardPost {
-  id: string;
-  title: string;
-  status: "Published" | "Draft";
-  views: number;
-  date: string;
-  category: string;
 }
 
 export interface QuickAction {

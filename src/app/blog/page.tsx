@@ -4,7 +4,7 @@ import Footer from "@/shared/layout/footer";
 import NewsletterCta from "@/components/blog/NewsletterCta";
 import BlogList from "@/components/blog/BlogList";
 import { getPublishedPosts } from "@/lib/posts";
-import type { PostSummary } from "@/lib/post-contract";
+import { type PostSummary } from "@/features/posts";
 
 export const metadata: Metadata = {
   title: "Blog",

@@ -158,7 +158,7 @@ const eslintConfig = defineConfig([
         ].map((selector) => ({
           selector,
           message:
-            "Don't decide permissions from a role. Render from the `permissions` the server sent with the resource — see `allows` in lib/post-contract.ts (ADR 0004).",
+            "Don't decide permissions from a role. Render from the `permissions` the server sent with the resource — see `allows` in @/features/posts (ADR 0004).",
         })),
       ],
     },

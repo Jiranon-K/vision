@@ -1,4 +1,4 @@
-import type { PostSummary } from "@/lib/post-contract";
+import { type PostSummary } from "@/features/posts";
 import BlogCard from "./BlogCard";
 
 // BlogCard ships with `opacity-0` (revealed by BlogList's anime.js stagger).

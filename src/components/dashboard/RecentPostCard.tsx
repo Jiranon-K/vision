@@ -1,6 +1,6 @@
 "use client";
 
-import type { DashboardPost } from "@/types/types";
+import { type DashboardPost } from "@/features/posts";
 
 interface RecentPostCardProps {
   post: DashboardPost;

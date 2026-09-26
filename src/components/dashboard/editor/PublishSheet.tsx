@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { categories } from "@/lib/constants";
+import { categories } from "@/features/posts";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Alert } from "@/shared/ui/alert";

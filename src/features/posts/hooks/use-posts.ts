@@ -7,9 +7,9 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { authFetch } from "@/shared/lib/api";
-import { asWirePage, toPostRow } from "@/lib/post-contract";
+import { asWirePage, toPostRow } from "../contract";
 import { ApiError, FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
-import type { PostRow } from "@/types/types";
+import type { PostRow } from "../types";
 
 // A traversal has to terminate on its own even if the server keeps offering a
 // cursor. 200 pages is far past any real archive and short of a hang.

@@ -1,6 +1,6 @@
 # 10 — Posts becomes a feature
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -35,3 +35,19 @@ Gather it into `src/features/posts/`.
 ## Out of Scope
 
 - The editor (ticket 11) and the blog (ticket 15).
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 237 passed (`--maxWorkers=2`, see
+  ticket 07); harness 37 passed; `next build` compiled; Playwright 24 passed,
+  including `post-permissions` (5), `publishing` (1) and `hub-data` (3).
+- `next build` compiles with the server-rendered blog importing the Post
+  contract from `@/features/posts`, whose index also re-exports `"use client"`
+  hooks and components.
+- `PostRow` and `DashboardPost` moved from `types/types.ts` to
+  `features/posts/types.ts`; `categories` and `statusFilters` moved from
+  `lib/constants.ts` to `features/posts/categories.ts`, leaving only the Hub's
+  navigation there for ticket 12. The ESLint `role` message now points at
+  `allows` in `@/features/posts`.
