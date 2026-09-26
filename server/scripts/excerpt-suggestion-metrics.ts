@@ -11,7 +11,7 @@ import {
   formatRate,
   ADOPTION_THRESHOLD,
   KEPT_UNEDITED_THRESHOLD,
-} from '../src/reporting/excerptSuggestionMetrics';
+} from '../src/modules/excerpt-suggestion';
 
 function parseDays(argv: string[]): number {
   const arg = argv.find((a) => a.startsWith('--days='));

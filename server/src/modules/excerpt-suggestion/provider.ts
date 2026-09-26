@@ -1,10 +1,10 @@
 // Chooses what backs the Excerpt Suggestion seam. This is the only place in
-// the repo that knows a provider's name — server/src/ai/excerptSuggestion.ts
+// the repo that knows a provider's name — server/src/modules/excerpt-suggestion/suggest-excerpt.ts
 // and everything above it only ever sees a GenerateText function (ADR 0003).
 
 import { google } from '@ai-sdk/google';
 import { generateText } from 'ai';
-import type { GenerateText } from './excerptSuggestion';
+import type { GenerateText } from './suggest-excerpt';
 
 const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
 

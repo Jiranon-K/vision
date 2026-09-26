@@ -6,17 +6,17 @@ process.env['NODE_ENV'] = 'test';
 
 let mongo: MongoMemoryServer;
 let Post: typeof import('../../src/modules/posts/post.model').default;
-let ExcerptSuggestion: typeof import('../../src/models/ExcerptSuggestion').default;
-let computeAdoption: typeof import('../../src/reporting/excerptSuggestionMetrics').computeAdoption;
-let computeKeptUnedited: typeof import('../../src/reporting/excerptSuggestionMetrics').computeKeptUnedited;
+let ExcerptSuggestion: typeof import('../../src/modules/excerpt-suggestion/excerpt-suggestion.model').default;
+let computeAdoption: typeof import('../../src/modules/excerpt-suggestion/metrics').computeAdoption;
+let computeKeptUnedited: typeof import('../../src/modules/excerpt-suggestion/metrics').computeKeptUnedited;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
   Post = (await import('../../src/modules/posts/post.model')).default;
-  ExcerptSuggestion = (await import('../../src/models/ExcerptSuggestion')).default;
+  ExcerptSuggestion = (await import('../../src/modules/excerpt-suggestion/excerpt-suggestion.model')).default;
   ({ computeAdoption, computeKeptUnedited } = await import(
-    '../../src/reporting/excerptSuggestionMetrics'
+    '../../src/modules/excerpt-suggestion/metrics'
   ));
 });
 

@@ -1,7 +1,7 @@
 # Excerpt Suggestion usage metrics
 
 Every time a Creator is issued an Excerpt Suggestion, the event is recorded
-durably (`ExcerptSuggestion`, `server/src/models/ExcerptSuggestion.ts`) —
+durably (`ExcerptSuggestion`, `server/src/modules/excerpt-suggestion/excerpt-suggestion.model.ts`) —
 which Creator, which Post if one has been saved, the suggested text, and
 when. This is queried by hand, roughly monthly, to check two thresholds that
 were fixed before the capability was built. There is no dashboard for this on
@@ -44,7 +44,7 @@ Kept unedited (threshold: fix the prompt under 40%)
 
 ## What each query does
 
-Both queries live in `server/src/reporting/excerptSuggestionMetrics.ts`
+Both queries live in `server/src/modules/excerpt-suggestion/metrics.ts`
 (`computeAdoption`, `computeKeptUnedited`) and are exercised directly in
 `server/tests/integration/excerpt-suggestion-metrics.test.ts` — read either
 for the exact logic. In outline:

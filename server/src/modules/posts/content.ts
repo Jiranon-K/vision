@@ -4,7 +4,7 @@
 // Intl.Segmenter with word granularity segments Thai and Latin correctly.
 
 const WORDS_PER_MINUTE = 200;
-// Exported so server/src/ai/excerptSuggestion.ts can bound a provider's output
+// Exported so server/src/modules/excerpt-suggestion/suggest-excerpt.ts can bound a provider's output
 // with the same Thai/emoji-safe truncation instead of a second copy of it.
 export const EXCERPT_MAX = 500;
 const EXCERPT_TARGET = 150;

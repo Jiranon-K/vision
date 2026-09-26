@@ -6,7 +6,7 @@ import { recordView, forgetViews } from '../analytics';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
-} from '../../reporting/excerptSuggestionRecord';
+} from '../excerpt-suggestion';
 import { AuthRequest } from '../../middleware/auth';
 import { badRequest, notFound, validationFailed } from '../../platform/errors';
 import {
@@ -38,8 +38,7 @@ import {
   readLimit,
   type Cursor,
 } from '../../platform/pagination';
-import { suggestExcerpt } from '../../ai/excerptSuggestion';
-import { resolveGenerateText } from '../../ai/provider';
+import { suggestExcerpt, resolveGenerateText } from '../excerpt-suggestion';
 
 // The Creator's own text must never be read as syntax: a term is a phrase to
 // match, not an expression to evaluate. `$text` treats a quoted string as a
