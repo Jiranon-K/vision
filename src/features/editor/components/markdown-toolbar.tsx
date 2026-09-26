@@ -2,8 +2,8 @@
 
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { BoldIcon, ItalicIcon, LinkIcon, ImageIcon, CodeIcon, QuoteIcon, ListIcon } from "@/shared/ui/icons";
-import { applyWrap } from "./markdownOps";
-import type { ToolbarButton, MarkdownToolbarProps } from "./types";
+import { applyWrap } from "../markdown-ops";
+import type { ToolbarButton, MarkdownToolbarProps } from "../types";
 
 // Ten buttons become seven under direction 1b's rule: a slot is earned only
 // by Markdown that needs a second value the Creator can't type in flow (a

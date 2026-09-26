@@ -1,7 +1,7 @@
 // A textarea has no API for the caret's pixel position, so this mirrors the
 // well-known technique: build a hidden div with the same box model and font
 // metrics, fill it with the text up to the caret, and measure where a marker
-// span lands. Kept out of markdownOps.ts because it touches the DOM and
+// span lands. Kept out of markdown-ops.ts because it touches the DOM and
 // can't be exercised as a pure function.
 const MIRRORED_PROPERTIES = [
   "boxSizing",
