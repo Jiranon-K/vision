@@ -1,6 +1,6 @@
 # 05 — Excerpt Suggestion becomes a module
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -45,3 +45,17 @@ Gather it into `server/src/modules/excerpt-suggestion/`.
 ## Out of Scope
 
 - Any change to the suggestion, its prompt, or its metrics.
+
+## Evidence
+
+- `bun run verify:full` exited 0 on 2026-09-26: lint 0 errors (2 pre-existing
+  warnings), `npx eslint server/src server/scripts` reports nothing; server
+  tests 29 files, 237 passed, including `save-path-provider-free` with only its
+  `vi.mock` paths changed; harness 37 passed; `next build` compiled;
+  Playwright 24 passed.
+- The Posts controller, the capabilities controller and
+  `scripts/excerpt-suggestion-metrics.ts` import through
+  `modules/excerpt-suggestion/index.ts`. Mocking `provider.ts` by path still
+  replaces what the index re-exports, which is why the ADR 0002 test holds.
+- `server/src/ai/` and `server/src/reporting/` no longer exist.
+  `docs/excerpt-suggestion-metrics.md` names the new paths.

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { suggestExcerpt } from '../../src/ai/excerptSuggestion';
+import { suggestExcerpt } from './suggest-excerpt';
 
 describe('suggestExcerpt', () => {
   it('carries the content into the prompt passed to the provider', async () => {

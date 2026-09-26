@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import ExcerptSuggestion from '../models/ExcerptSuggestion';
-import { logger } from '../platform/logger';
+import ExcerptSuggestion from './excerpt-suggestion.model';
+import { logger } from '../../platform/logger';
 
 // Writing the measurement the thresholds in docs/excerpt-suggestion-metrics.md
 // are read from. It lives beside the queries that read it rather than in the

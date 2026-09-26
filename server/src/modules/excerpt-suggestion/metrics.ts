@@ -1,5 +1,5 @@
-import { Post } from '../modules/posts';
-import ExcerptSuggestion from '../models/ExcerptSuggestion';
+import { Post } from '../posts';
+import ExcerptSuggestion from './excerpt-suggestion.model';
 
 // The two thresholds fixed before this capability was built (see
 // docs/excerpt-suggestion-metrics.md for what to do when either is missed).

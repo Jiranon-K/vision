@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vites
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
-import ExcerptSuggestion from '../../src/models/ExcerptSuggestion';
+import ExcerptSuggestion from '../../src/modules/excerpt-suggestion/excerpt-suggestion.model';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
@@ -14,7 +14,7 @@ process.env.AI_SUGGESTION_TIMEOUT_MS = '50';
 // spinning up a real network call — no test in this repo may reach a real
 // provider.
 const { generateTextMock } = vi.hoisted(() => ({ generateTextMock: vi.fn() }));
-vi.mock('../../src/ai/provider', () => ({
+vi.mock('../../src/modules/excerpt-suggestion/provider', () => ({
   resolveGenerateText: () => generateTextMock,
   excerptSuggestionAvailable: () => true,
 }));

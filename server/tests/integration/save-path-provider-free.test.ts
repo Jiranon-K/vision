@@ -16,11 +16,11 @@ const { resolveGenerateTextSpy, suggestExcerptSpy } = vi.hoisted(() => ({
   suggestExcerptSpy: vi.fn(),
 }));
 
-vi.mock('../../src/ai/provider', () => ({
+vi.mock('../../src/modules/excerpt-suggestion/provider', () => ({
   resolveGenerateText: resolveGenerateTextSpy,
   excerptSuggestionAvailable: () => false,
 }));
-vi.mock('../../src/ai/excerptSuggestion', () => ({
+vi.mock('../../src/modules/excerpt-suggestion/suggest-excerpt', () => ({
   suggestExcerpt: suggestExcerptSpy,
 }));
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
-import ExcerptSuggestion from '../../src/models/ExcerptSuggestion';
+import ExcerptSuggestion from '../../src/modules/excerpt-suggestion/excerpt-suggestion.model';
 
 process.env['NODE_ENV'] = 'test';
 process.env.JWT_SECRET = 'integration-test-secret';
