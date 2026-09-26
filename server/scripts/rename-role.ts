@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { renameRole } from '../src/migrations/renameRole';
+import { renameRole } from '../src/migrations/rename-role';
 
 async function main(): Promise<void> {
   const [from, to] = process.argv.slice(2);

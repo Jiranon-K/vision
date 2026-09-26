@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import { PASSWORD, cookiesOf, setupTestApp } from '../support/testApp';
+import { PASSWORD, cookiesOf, setupTestApp } from '../support/test-app';
 
 const { api, register } = setupTestApp();
 

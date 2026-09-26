@@ -1,6 +1,6 @@
 # 17 — The boundary and naming rules become errors
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -40,3 +40,25 @@ with the tree.
 ## Out of Scope
 
 - Any code change.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26 with the rules at
+  `error`, run one after another: typecheck (frontend, server, harness); lint
+  0 errors (2 pre-existing warnings); server tests 237 passed
+  (`--maxWorkers=2`, see ticket 07); harness 37 passed; `next build` compiled;
+  Playwright 24 passed.
+- Probed by hand, both files deleted before the run: a file in `src/app/`
+  importing `@/features/posts/hooks/use-posts` failed `bun run lint` with
+  `no-restricted-imports` ("Import a feature through its entry file …
+  (ADR 0007)"), and `src/app/FooBar.tsx` failed it with
+  `local/file-name-kebab-case`. `bun run lint` exited 1.
+- The kebab-case rule now covers `src/`, `server/src/`, `server/scripts/`,
+  `server/tests/` and `e2e/`, not only the new folders. That found three
+  files, renamed here: `migrations/clearPostAuthorRole.ts`,
+  `migrations/renameRole.ts` and `tests/support/testApp.ts`. `harness/` is its
+  own package outside ADR 0007 and is not covered.
+- Docs: `docs/architecture.md` shows the final tree and states the rules;
+  `CONTRIBUTING.md`'s lint-staged table and `harness/README.md`'s E2E trigger
+  name `src/`. A repository-wide search outside `docs/tickets/`, `docs/adr/`
+  and `docs/specs/` finds no path to a folder that no longer exists.

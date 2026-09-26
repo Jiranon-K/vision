@@ -88,9 +88,10 @@ const local = {
   },
 };
 
-// Where the layout of ADR 0007 is enforced. These folders fill up one ticket
-// at a time (docs/tickets/codebase-layout/); the rules warn until ticket 17.
-const LAYOUT = "warn";
+// Where the layout of ADR 0007 is enforced: features and modules are entered
+// through their entry files, shared/ and platform/ import neither, and every
+// file is kebab-case.
+const LAYOUT = "error";
 const FEATURE_ENTRY =
   "Import a feature through its entry file — `@/features/x` or `@/features/x/server` (ADR 0007).";
 const MODULE_ENTRY =
@@ -140,7 +141,7 @@ const eslintConfig = defineConfig([
     // and hooks/. Everything else consumes it. Without this, components grow
     // their own fetches one at a time and the credential and caching decisions
     // in shared/lib/api.ts quietly stop being the only ones.
-    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+    files: ["src/app/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
     ignores: ["src/features/*/api.ts", "src/features/*/server.ts", "src/features/*/hooks/**"],
     rules: {
       "no-restricted-syntax": [
@@ -165,11 +166,11 @@ const eslintConfig = defineConfig([
   },
   {
     files: [
-      "src/app/**/*.{ts,tsx}",
-      "src/features/**/*.{ts,tsx}",
-      "src/shared/**/*.{ts,tsx}",
-      "server/src/modules/**/*.{ts,tsx}",
-      "server/src/platform/**/*.{ts,tsx}",
+      "src/**/*.{ts,tsx}",
+      "server/src/**/*.{ts,tsx}",
+      "server/scripts/**/*.ts",
+      "server/tests/**/*.ts",
+      "e2e/**/*.ts",
     ],
     rules: { "local/file-name-kebab-case": LAYOUT },
   },

@@ -14,7 +14,7 @@ once the page mounts — the cookie check is a fast path, not the authorization.
 
 The Smart Creator Hub fetches through one seam. `src/shared/lib/query.ts` decides cache
 keys, freshness windows, retry policy and what a change to a Post invalidates;
-the hooks in `src/hooks/` are the interface every screen consumes, and no screen
+the hooks in each feature's `hooks/` are the interface every screen consumes, and no screen
 knows a query library is behind them. Session expiry is answered once, at the
 query layer, so several refused requests produce one redirect. The public
 marketing pages and the blog are untouched by it — they fetch on the server.
@@ -35,7 +35,7 @@ anything new.
 | Animation | Anime.js 4, via a shared `AnimationProvider`      |
 | Markdown  | react-markdown, remark-gfm, rehype-slug/highlight |
 | Toasts    | sonner                                            |
-| Hub data  | TanStack Query, behind the hooks in `src/hooks/`  |
+| Hub data  | TanStack Query, behind each feature's hooks       |
 | Fonts     | Space Grotesk, Geist Mono (`next/font/google`)    |
 | E2E       | Playwright                                        |
 
@@ -56,26 +56,37 @@ anything new.
 
 ```text
 vision/
-├── src/                 # Next.js frontend
-│   ├── app/             # App Router — marketing, blog, auth, dashboard
-│   ├── features/        # One folder per domain feature (ADR 0007, migrating)
-│   ├── shared/          # What every feature may use (ADR 0007, migrating)
-│   ├── components/      # Feature-co-located React components (+ ui/ primitives)
-│   ├── hooks/           # useAuth, useDashboardData, useAutosaveDraft, …
-│   ├── lib/             # Shared utilities, the Post wire contract, constants
-│   ├── types/           # Shared TypeScript interfaces
-│   └── middleware.ts    # Cookie gate for /dashboard/*
-├── public/              # Static assets
-├── server/src/          # Express API: modules/ (posts, auth, creators, analytics,
-│                        #   excerpt-suggestion) and platform/ (ADR 0007)
-├── e2e/                 # Playwright suite, fixtures and screenshot specs
-├── harness/             # Agent harness (own package.json and tests)
-├── docs/                # This documentation, ADRs, tickets, images
-└── Dockerfile           # Multi-stage production build for the frontend
+├── src/                     # Next.js frontend
+│   ├── app/                 # Routes only — marketing, blog, auth, dashboard
+│   ├── features/            # One folder per domain feature, entered through index.ts
+│   │   ├── auth/            #   sign-in, register, reset, verify, session
+│   │   ├── posts/           #   the Post wire contract, the Hub's Posts list, Categories
+│   │   ├── editor/          #   the Creator's writing surface (+ Excerpt Suggestion)
+│   │   ├── blog/            #   the Reader's side of Posts (+ server.ts)
+│   │   ├── hub/             #   the Smart Creator Hub's frame and navigation
+│   │   ├── analytics/       #   Growth Analytics
+│   │   ├── creators/        #   profile, Byline, password, notifications
+│   │   └── marketing/       #   the public pages' sections and copy (+ server.ts)
+│   ├── shared/              # What every feature may use: ui/, lib/, hooks/, markdown/, layout/
+│   └── middleware.ts        # Cookie gate for /dashboard/*
+├── public/                  # Static assets
+├── server/src/
+│   ├── modules/             # posts, auth, creators, analytics, excerpt-suggestion —
+│   │                        #   each entered through index.ts, mounted via x.routes.ts
+│   ├── platform/            # db, logger, errors, rate limits, email, request middleware
+│   ├── migrations/          # One-off data migrations, run from server/scripts/
+│   └── index.ts             # Composes the app and mounts every module's router
+├── e2e/                     # Playwright suite, fixtures and screenshot specs
+├── harness/                 # Agent harness (own package.json and tests)
+├── docs/                    # This documentation, ADRs, tickets, images
+└── Dockerfile               # Multi-stage production build for the frontend
 ```
 
-`src/components/`, `src/hooks/`, `src/lib/` and `src/types/` empty into
-`features/` and `shared/` over the tickets in `docs/tickets/codebase-layout/`.
+The folder names are the nouns in [CONTEXT.md](../CONTEXT.md). Why the code is
+laid out this way, and the rules ESLint enforces about it, are in
+[ADR 0007](adr/0007-feature-based-layout.md): import a feature or module only
+through its entry file, never import a feature from `shared/` or a module from
+`platform/`, and name every file in kebab-case.
 
 ## Screenshots
 

@@ -1,14 +1,14 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
-import { cookiesOf, setupTestApp } from '../support/testApp';
+import { cookiesOf, setupTestApp } from '../support/test-app';
 
 const testApp = setupTestApp({ adminEmails: 'staff@test.local' });
 const { api } = testApp;
 
-let clearPostAuthorRole: typeof import('../../src/migrations/clearPostAuthorRole').clearPostAuthorRole;
+let clearPostAuthorRole: typeof import('../../src/migrations/clear-post-author-role').clearPostAuthorRole;
 
 beforeAll(async () => {
-  ({ clearPostAuthorRole } = await import('../../src/migrations/clearPostAuthorRole'));
+  ({ clearPostAuthorRole } = await import('../../src/migrations/clear-post-author-role'));
 });
 
 async function register(email: string) {

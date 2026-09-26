@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import mongoose from 'mongoose';
-import { cookiesOf, setupTestApp } from '../support/testApp';
+import { cookiesOf, setupTestApp } from '../support/test-app';
 
 const { api, register } = setupTestApp({ adminEmails: 'staff@test.local', syncIndexes: true });
 

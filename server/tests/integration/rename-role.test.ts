@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
-import { setupTestApp } from '../support/testApp';
+import { setupTestApp } from '../support/test-app';
 
 const { register } = setupTestApp();
 
-let renameRole: typeof import('../../src/migrations/renameRole').renameRole;
+let renameRole: typeof import('../../src/migrations/rename-role').renameRole;
 
 beforeAll(async () => {
-  ({ renameRole } = await import('../../src/migrations/renameRole'));
+  ({ renameRole } = await import('../../src/migrations/rename-role'));
 });
 
 const RETIRED_ROLE = 'retired-role';

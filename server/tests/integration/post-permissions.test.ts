@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cookiesOf, setupTestApp } from '../support/testApp';
+import { cookiesOf, setupTestApp } from '../support/test-app';
 
 const testApp = setupTestApp({ adminEmails: 'staff@test.local' });
 const { api } = testApp;
