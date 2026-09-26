@@ -9,3 +9,10 @@ export function startOfUtcDay(at: Date): Date {
 export function startOfLastDays(days: number, now = new Date()): Date {
   return new Date(startOfUtcDay(now).getTime() - (days - 1) * DAY_MS);
 }
+
+/** UTC midnight of the Monday that starts the week `at` falls in. */
+export function startOfUtcWeek(at: Date): Date {
+  const day = startOfUtcDay(at);
+  const sinceMonday = (day.getUTCDay() + 6) % 7;
+  return new Date(day.getTime() - sinceMonday * DAY_MS);
+}

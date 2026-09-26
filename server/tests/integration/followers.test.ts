@@ -566,3 +566,79 @@ describe('a delivered Post shows it in the Posts list', () => {
     expect((await api().get(`/api/posts/${delivered.id}`)).body.delivery).toBeUndefined();
   });
 });
+
+// --- Week-by-week Follower growth (Jiranon-K/vision#31) --------------------
+
+describe('Growth Analytics shows Follower growth week by week', () => {
+  it('reports the Followers at the end of each of the last eight UTC weeks, counting a stop from the week it happened', async () => {
+    // A Wednesday. UTC weeks start on Monday, so the current week began Oct 12.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-14T12:00:00Z'));
+    try {
+      const mara = await creator();
+      const post = await publish(mara);
+      const Follower = (await import('../../src/modules/followers/follower.model')).default;
+      const confirmedOn = (email: string, iso: string) =>
+        Follower.updateOne({ email }, { $set: { confirmedAt: new Date(iso) } });
+
+      for (const email of ['early@x.com', 'a@x.com', 'b@x.com', 'c@x.com', 'd@x.com']) {
+        await followAndConfirm(post.id, email);
+      }
+      await follow(post.id, 'pending@x.com'); // never confirmed: never counted
+
+      await confirmedOn('early@x.com', '2026-07-01T09:00:00Z'); // before the window
+      await confirmedOn('a@x.com', '2026-08-26T09:00:00Z'); // week of Aug 24
+      await confirmedOn('b@x.com', '2026-09-16T09:00:00Z'); // week of Sep 14
+      await confirmedOn('c@x.com', '2026-10-06T09:00:00Z'); // week of Oct 5
+      await confirmedOn('d@x.com', '2026-10-13T09:00:00Z'); // this week
+
+      // b stops, and the stop is dated to the week of Sep 28.
+      const { stopToken } = (await Follower.findOne({ email: 'b@x.com' }))!;
+      expect((await api().post('/api/followers/stop').send({ token: stopToken })).status).toBe(200);
+      const Departure = (await import('../../src/modules/followers/departure.model')).default;
+      await Departure.updateOne({}, { $set: { stoppedAt: new Date('2026-10-01T09:00:00Z') } });
+
+      const res = await api().get('/api/analytics/followers').set('Cookie', mara);
+      expect(res.status).toBe(200);
+      expect(res.body.weekly).toEqual([
+        { weekStart: '2026-08-24', followers: 2 },
+        { weekStart: '2026-08-31', followers: 2 },
+        { weekStart: '2026-09-07', followers: 2 },
+        { weekStart: '2026-09-14', followers: 3 },
+        { weekStart: '2026-09-21', followers: 3 },
+        { weekStart: '2026-09-28', followers: 2 },
+        { weekStart: '2026-10-05', followers: 3 },
+        { weekStart: '2026-10-12', followers: 4 },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps no address for a Follower who stopped, only when they followed and stopped', async () => {
+    const mara = await creator();
+    const post = await publish(mara);
+    await followAndConfirm(post.id, 'gone@example.com');
+    const Follower = (await import('../../src/modules/followers/follower.model')).default;
+    const { stopToken } = (await Follower.findOne({ email: 'gone@example.com' }))!;
+    await api().post('/api/followers/stop').send({ token: stopToken });
+
+    const Departure = (await import('../../src/modules/followers/departure.model')).default;
+    const departures = await Departure.find().lean();
+    expect(departures).toHaveLength(1);
+    expect(Object.keys(departures[0]).sort()).toEqual(['__v', '_id', 'creator', 'followedAt', 'stoppedAt']);
+    expect(JSON.stringify(departures)).not.toContain('gone@example.com');
+  });
+
+  it('records no departure when a pending address uses a stop link', async () => {
+    const mara = await creator();
+    const post = await publish(mara);
+    await follow(post.id, 'never@example.com');
+    const Follower = (await import('../../src/modules/followers/follower.model')).default;
+    const { stopToken } = (await Follower.findOne({ email: 'never@example.com' }))!;
+    await api().post('/api/followers/stop').send({ token: stopToken });
+
+    const Departure = (await import('../../src/modules/followers/departure.model')).default;
+    expect(await Departure.countDocuments()).toBe(0);
+  });
+});
