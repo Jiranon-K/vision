@@ -1,6 +1,6 @@
 # 06 — The server says what it is doing
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -140,3 +140,9 @@ The readiness endpoint is what makes the container ticket's health configuration
 meaningful, and the correlation identifier is what makes the API edge's failure
 response actionable. The three are best done in sequence: edge, then this, then
 the container.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `b4e90c6` (feat(server): structured logs and a health check that can be trusted) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

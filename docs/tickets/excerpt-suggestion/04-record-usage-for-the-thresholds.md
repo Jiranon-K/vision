@@ -15,7 +15,7 @@ The existing analytics document is a daily rollup of Reader Views per Post. This
 
 **Blocked by:** 02 — there is nothing to record until suggestions are being issued. Independent of 03; the two can proceed in parallel.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Every issued Excerpt Suggestion is recorded durably, surviving a server restart
 - [ ] A recorded suggestion is attributable to a Creator, and to a Post once one exists
@@ -25,3 +25,9 @@ The existing analytics document is a daily rollup of Reader Views per Post. This
 - [ ] Documented, runnable queries answer both numbers: share of published Posts where a suggestion was asked for, and share of suggestions kept unedited
 - [ ] The two thresholds and what to do at each are written down next to the queries
 - [ ] No user interface is added
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `4e34cc9` (feat(server): record issued Excerpt Suggestions so the thresholds can be answered); `c91ee29` (refactor(server): move Excerpt Suggestion recording out of the Post controller) via main.
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

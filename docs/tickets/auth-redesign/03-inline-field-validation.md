@@ -8,7 +8,7 @@ Field messages go through the existing `FieldMessage` slot so the control keeps 
 
 **Blocked by:** 01 — Login page rebuilt on the new auth shell; 02 — Register page on the auth shell, with the new password strength meter.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Submitting `/login` with a malformed email shows the amber banner and a red-bordered email field with its message
 - [ ] Submitting `/register` with a password missing a rule shows the amber banner and the red-bordered password field with its message
@@ -17,3 +17,9 @@ Field messages go through the existing `FieldMessage` slot so the control keeps 
 - [ ] Field validation errors and server errors are visually distinct (amber vs red banner) and never stack on top of each other
 - [ ] Errored controls expose `aria-invalid` and are described by their message
 - [ ] A test covers a submit blocked by field validation on each page
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `defed11` (feat(auth): rebuild the auth screens on the design system); `f4d6240` (refactor(auth): address the review of the auth redesign) via PR #14 (feat/auth-redesign).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

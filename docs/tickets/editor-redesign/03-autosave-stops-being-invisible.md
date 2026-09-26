@@ -23,7 +23,7 @@ Typing must continue through a save. No spinner over the text, no disabled input
 
 **Blocked by:** 01 — the chip, the meter and Save now fill slots the frame provides.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The chip distinguishes new, writing, saving and autosaved, and never claims a save that has not happened
 - [ ] Time since the last commit is shown and re-times from zero when a commit lands
@@ -34,3 +34,9 @@ Typing must continue through a save. No spinner over the text, no disabled input
 - [ ] No animation touches the text being typed or shifts layout under the caret
 - [ ] Both themes render correctly; tokens only, no literals
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `1a70701` (feat(dashboard): tell the Creator whether their work is safe) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

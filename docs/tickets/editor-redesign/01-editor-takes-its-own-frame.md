@@ -12,7 +12,7 @@ This ticket lands the frame and the slots, not what fills them. Everything curre
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] The editor route renders the 64px top bar and no dashboard sidebar or dashboard header
 - [ ] Every other dashboard route keeps its sidebar and header, unchanged
@@ -23,3 +23,9 @@ This ticket lands the frame and the slots, not what fills them. Everything curre
 - [ ] Saving, autosaving, the title field, the split editor and Post Settings all behave exactly as before
 - [ ] Both themes render correctly; no colour, shadow, or radius is written as a literal — tokens only
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `cf86cd1` (feat(dashboard): give the editor its own frame) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

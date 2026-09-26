@@ -10,7 +10,7 @@ This ticket also lands the pieces the other auth screens will reuse: the shell (
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] `/login` renders the split card on desktop and the single-column form with the small Vision lockup on mobile
 - [ ] Fields, labels, checkbox and submit button come from `components/ui` primitives, not raw `<input>` with hardcoded colours
@@ -22,3 +22,9 @@ This ticket also lands the pieces the other auth screens will reuse: the shell (
 - [ ] No `pop-stagger` / anime.js entrance animation remains on this page
 - [ ] The auth shell, inline banner and password field are extracted as shared components the register screen can consume unchanged
 - [ ] `e2e/auth.spec.ts` passes against the new markup, including the success panel step
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `defed11` (feat(auth): rebuild the auth screens on the design system); `f4d6240` (refactor(auth): address the review of the auth redesign) via PR #14 (feat/auth-redesign).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

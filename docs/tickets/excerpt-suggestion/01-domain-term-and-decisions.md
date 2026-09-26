@@ -12,7 +12,7 @@ Two decisions need recording because a future reader will otherwise wonder why t
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] `CONTEXT.md` defines **Excerpt Suggestion** under Publishing, in the same format as the terms around it, with an _Avoid_ list
 - [ ] The definition makes clear it is distinct from an Excerpt, and what changes when a Creator accepts one
@@ -20,3 +20,9 @@ Two decisions need recording because a future reader will otherwise wonder why t
 - [ ] An ADR records the no-AI-on-the-save-path invariant, including what goes wrong if it is broken
 - [ ] An ADR records the provider seam, including the model-retirement and bring-your-own-key/self-host reasoning, and the two rejected alternatives
 - [ ] Both ADRs follow the existing numbering and format in `docs/adr/`
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `2a99dc7` (docs: record the Excerpt Suggestion term and the two decisions behind it) via main.
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

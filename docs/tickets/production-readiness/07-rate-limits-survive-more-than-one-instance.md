@@ -1,6 +1,6 @@
 # 07 — Rate limits survive more than one instance
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -128,3 +128,9 @@ nothing above one instance, and one instance is not a deployment plan.
 The container ticket should provide the shared store alongside the database in
 the local composition, so that a developer who wants to exercise the shared path
 can, without it becoming a prerequisite for those who do not.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `07d2ad2` (feat(ops): a shared rate limit store and a container for the API) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.
