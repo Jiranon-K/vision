@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Navbar from "@/shared/layout/navbar";
-import Header from "@/components/Home/Header";
-import Services from "@/components/Home/Services";
-import Process from "@/components/services/Process";
-import FeaturedPosts from "@/components/Home/FeaturedPosts";
-import Ctablock from "@/components/Home/Ctablock";
+import {
+  CtaBlock as Ctablock,
+  HomeHeader as Header,
+  HomeServices as Services,
+  Process,
+} from "@/features/marketing";
+import { FeaturedPosts } from "@/features/marketing/server";
 import Footer from "@/shared/layout/footer";
 import { SITE_URL, SITE_NAME, SITE_DESCRIPTION } from "@/shared/lib/site";
 

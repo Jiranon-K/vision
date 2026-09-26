@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { headerWords } from "@/components/data/header-data";
+import { headerWords } from "../../content/header-data";
 
 const Header = () => {
   const router = useRouter();

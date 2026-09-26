@@ -1,5 +1,5 @@
 import Link from "next/link";
-import FeaturedPostsGrid from "./FeaturedPostsGrid";
+import FeaturedPostsGrid from "./featured-posts-grid";
 import { getPublishedPosts } from "@/features/blog/server";
 import { type PostSummary } from "@/features/posts";
 

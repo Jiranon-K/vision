@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { usps, comparisons } from "@/components/data/specialization-data";
+import { usps, comparisons } from "../../content/specialization-data";
 
 const Tick = ({ yes }: { yes: boolean }) =>
   yes ? (
