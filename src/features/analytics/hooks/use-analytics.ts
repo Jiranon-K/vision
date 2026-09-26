@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
-import type { DashboardStat, ViewsDataPoint } from "@/types/types";
+import type { DashboardStat, ViewsDataPoint } from "../types";
 
 interface AnalyticsData {
   stats: DashboardStat[];

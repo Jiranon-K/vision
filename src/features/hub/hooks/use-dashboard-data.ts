@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { asWirePage, toDashboardPost, type DashboardPost } from "@/features/posts";
 import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
-import { useStats, useViewsTrend } from "@/hooks/useAnalytics";
+import { useStats, useViewsTrend } from "@/features/analytics";
 
 const RECENT_POSTS = 4;
 

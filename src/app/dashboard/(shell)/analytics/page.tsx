@@ -3,15 +3,17 @@
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import dynamic from "next/dynamic";
-import MetricCard from "@/components/dashboard/analytics/MetricCard";
-import TrafficSources from "@/components/dashboard/analytics/TrafficSources";
-import PopularPosts from "@/components/dashboard/analytics/PopularPosts";
+import {
+  MetricCard,
+  TrafficSources,
+  PopularPosts,
+  useAnalytics,
+} from "@/features/analytics";
 import { useAuth } from "@/features/auth";
-import { useAnalytics } from "@/hooks/useAnalytics";
 import { StatsCardSkeleton } from "@/shared/ui/skeleton";
 
 const AnalyticsChart = dynamic(
-  () => import("@/components/dashboard/AnalyticsChart"),
+  () => import("@/features/analytics").then((m) => m.AnalyticsChart),
   {
     loading: () => (
       <div className="bg-white rounded-[28px] border-2 border-brand-dark p-8 h-[280px] animate-pulse" />

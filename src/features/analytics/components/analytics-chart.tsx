@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useMemo, useSyncExternalStore } from "react";
 import { animate, stagger } from "animejs";
-import type { ViewsDataPoint } from "@/types/types";
+import type { ViewsDataPoint } from "../types";
 
 interface AnalyticsChartProps {
   data?: ViewsDataPoint[];

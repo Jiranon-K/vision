@@ -1,6 +1,6 @@
 # 13 — Analytics becomes a feature
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -29,3 +29,23 @@ name.
 ## Out of Scope
 
 - Any change to what analytics shows.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 237 passed (`--maxWorkers=2`, see
+  ticket 07); harness 37 passed; `next build` compiled; Playwright 24 passed,
+  including `hub-data` (3).
+- `DashboardStat`, `ViewsDataPoint`, `TrafficSource` and `EngagementData`
+  moved to `features/analytics/types.ts`; the Hub's `stats-card` and
+  `use-dashboard-data` import from `@/features/analytics`. `src/hooks/` no
+  longer exists.
+- The Hub overview and the analytics page load the chart with
+  `dynamic(() => import("@/features/analytics").then((m) => m.AnalyticsChart))`.
+  Both pages also import the feature statically, so the chart's own code no
+  longer gets a separate chunk. Its one heavy dependency, `animejs`, was
+  already in every page through `AnimationProvider`, so the cost is the
+  component's own code. The loading skeleton still renders while it mounts.
+- `EngagementData` is imported by nothing; it moved with its siblings and is
+  not exported from `index.ts`.
