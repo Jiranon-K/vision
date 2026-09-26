@@ -9,7 +9,7 @@ import RecentPostCard from "@/components/dashboard/RecentPostCard";
 import QuickActionButton from "@/components/dashboard/QuickActionButton";
 import { quickActions } from "@/lib/constants";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { StatsCardSkeleton, RecentPostSkeleton } from "@/components/ui/Skeleton";
+import { StatsCardSkeleton, RecentPostSkeleton } from "@/shared/ui/skeleton";
 
 const AnalyticsChart = dynamic(() => import("@/components/dashboard/AnalyticsChart"), {
   loading: () => <div className="bg-white rounded-[28px] border-2 border-brand-dark p-8 h-[280px] animate-pulse" />,

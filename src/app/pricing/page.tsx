@@ -1,6 +1,6 @@
-import Navbar from "@/components/Navbar";
+import Navbar from "@/shared/layout/navbar";
 import Hero from "@/components/pricing/Hero";
-import Footer from "@/components/Footer";
+import Footer from "@/shared/layout/footer";
 
 const PricingPage = () => {
   return (

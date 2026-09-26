@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AnimationProvider from "@/components/AnimationProvider";
+import AnimationProvider from "@/shared/layout/animation-provider";
 import {
   SITE_URL,
   SITE_NAME,
   SITE_TAGLINE,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
-} from "@/lib/site";
+} from "@/shared/lib/site";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",

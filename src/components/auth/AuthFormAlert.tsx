@@ -1,4 +1,4 @@
-import { Alert } from "@/components/ui/alert";
+import { Alert } from "@/shared/ui/alert";
 import { FIELD_ERROR_BANNER } from "@/lib/auth-validation";
 
 /**

@@ -1,6 +1,6 @@
 # 08 — What every frontend feature shares becomes `shared/`
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -44,3 +44,28 @@ Move the parts no single feature owns into `src/shared/`, renamed to kebab-case.
 ## Out of Scope
 
 - Any feature folder.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 29 files, 237 passed (with
+  `--maxWorkers=2`, for the machine-load reason in ticket 07); harness 37
+  passed; `next build` compiled; Playwright 24 passed.
+- Design sync: `bunx tsc -p .design-sync/tsconfig.dts.json --noEmit` passes
+  over `src/shared/ui/`, and `node .design-sync/prepare-css.mjs` compiles the
+  CSS from the fresh build. `config.json`, `ds-entry.ts`, `tsconfig.dts.json`
+  and `NOTES.md` name `src/shared/ui/`.
+- `lib/api.ts` is split: `apiFetch`, `authFetch` and the single-flight refresh
+  moved (with history) to `shared/lib/api.ts`; the auth and settings request
+  functions stay in `src/lib/api.ts`, importing from it, until tickets 09 and 14. `ErrorResponse` was not moved: nothing imports it.
+- **Deviation:** `query.ts` and `query-provider.tsx` sit directly in
+  `shared/lib/`, not in a `shared/lib/query/` folder, to avoid
+  `@/shared/lib/query/query`.
+- **Fixed along the way, missed in ticket 01:** the harness decides whether a
+  change needs E2E from `UI_PATHS` in `harness/src/config.ts`, which still
+  listed `app/`, `components/`, `hooks/` and `middleware.ts`. After the move
+  into `src/` no path matched, so the harness would have skipped E2E for every
+  UI change. `UI_PATHS` is now `['src/']`, the harness prompt says so, and
+  `harness/tests/gate.test.ts` uses real `src/` paths — its old inputs were
+  why the tests did not notice.

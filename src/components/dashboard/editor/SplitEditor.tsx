@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import MarkdownToolbar from "./MarkdownToolbar";
 import MarkdownEditor from "./MarkdownEditor";
 import MarkdownPreview from "./MarkdownPreview";

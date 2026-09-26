@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { getProfileRequest, updateProfileRequest } from "@/lib/api";
 import { toast } from "sonner";
 

@@ -8,7 +8,7 @@ import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthResult } from "@/components/auth/AuthResult";
 import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
-import { Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/shared/ui/spinner";
 
 type Phase = "verifying" | "verified" | "failed";
 

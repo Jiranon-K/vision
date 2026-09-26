@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { BlogPost } from "@/types/types";
 import CreatorByline from "@/components/blog/CreatorByline";
-import { initialsOf } from "@/lib/utils";
+import { initialsOf } from "@/shared/lib/utils";
 
 const FeaturedCard = ({ post }: { post: BlogPost }) => (
   <Link

@@ -136,18 +136,19 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // Data fetching lives in hooks/ and lib/. Everything else consumes it.
-    // Without this, components grow their own fetches one at a time and the
-    // credential and caching decisions in lib/api.ts and lib/posts.ts quietly
-    // stop being the only ones.
-    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}"],
+    // Data fetching lives in shared/lib/ and in a feature's api.ts, server.ts
+    // and hooks/. Everything else consumes it. Without this, components grow
+    // their own fetches one at a time and the credential and caching decisions
+    // in shared/lib/api.ts quietly stop being the only ones.
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+    ignores: ["src/features/*/api.ts", "src/features/*/server.ts", "src/features/*/hooks/**"],
     rules: {
       "no-restricted-syntax": [
         "error",
         {
           selector: "CallExpression[callee.name='fetch']",
           message:
-            "Call the API through hooks/ or lib/, not directly. They own credentials, caching, and the 401 refresh.",
+            "Call the API through shared/lib/ or a feature's api.ts, server.ts or hooks/, not directly. They own credentials, caching, and the 401 refresh.",
         },
         ...[
           "MemberExpression[property.name='role']",

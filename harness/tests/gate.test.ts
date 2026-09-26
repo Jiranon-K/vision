@@ -10,10 +10,10 @@ function result(output: string, code = 1): CommandResult {
 
 describe('slow-tier gating by path', () => {
   it('runs E2E when the diff touches the UI', () => {
-    expect(touchesUi(['app/blog/page.tsx'])).toBe(true);
-    expect(touchesUi(['components/Footer.tsx'])).toBe(true);
-    expect(touchesUi(['hooks/useAuth.ts'])).toBe(true);
-    expect(touchesUi(['middleware.ts'])).toBe(true);
+    expect(touchesUi(['src/app/blog/page.tsx'])).toBe(true);
+    expect(touchesUi(['src/shared/layout/footer.tsx'])).toBe(true);
+    expect(touchesUi(['src/hooks/useAuth.ts'])).toBe(true);
+    expect(touchesUi(['src/middleware.ts'])).toBe(true);
   });
 
   it('skips E2E for server-only work', () => {

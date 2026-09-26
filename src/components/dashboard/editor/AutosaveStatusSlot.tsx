@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 
 export type AutosaveStatus = "new" | "writing" | "saving" | "saved";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { comingSoonToast } from "@/lib/toast";
+import { comingSoonToast } from "@/shared/lib/toast";
 
 const socials = [
   {

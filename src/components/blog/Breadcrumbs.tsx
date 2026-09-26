@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL } from "@/shared/lib/site";
 
 type Crumb = { name: string; href: string };
 

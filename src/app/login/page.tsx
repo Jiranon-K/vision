@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/shared/lib/api";
 import { setRememberMe, getRememberMe } from "@/lib/auth";
 import {
   isValidEmail,
@@ -16,8 +16,8 @@ import { AuthResult } from "@/components/auth/AuthResult";
 import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
 
 export default function LoginPage() {
   const { checking, serviceError } = useRedirectIfAuthenticated();

@@ -2,9 +2,9 @@
 
 import { useId } from "react";
 import { categories } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
+import { Button } from "@/shared/ui/button";
+import { Label } from "@/shared/ui/label";
+import { Alert } from "@/shared/ui/alert";
 import SlideOverPanel from "./SlideOverPanel";
 
 export interface PublishChecklistItem {

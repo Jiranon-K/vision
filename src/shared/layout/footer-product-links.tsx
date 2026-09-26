@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { comingSoonToast } from "@/lib/toast";
+import { comingSoonToast } from "@/shared/lib/toast";
 
 // href: null = page doesn't exist yet — renders a button that toasts instead of a dead link.
 const productLinks: { name: string; href: string | null }[] = [

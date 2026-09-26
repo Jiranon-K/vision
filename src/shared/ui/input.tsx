@@ -1,8 +1,8 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
-import { FieldMessage, hasFieldMessage } from "@/components/ui/field-message";
+import { cn } from "@/shared/lib/utils";
+import { Label } from "@/shared/ui/label";
+import { FieldMessage, hasFieldMessage } from "@/shared/ui/field-message";
 
 const inputVariants = cva(
   "flex w-full rounded-xl border-2 bg-surface text-foreground transition-all placeholder:text-text-faint disabled:cursor-not-allowed disabled:opacity-[var(--state-disabled-opacity)] read-only:bg-surface-muted read-only:text-text-secondary",

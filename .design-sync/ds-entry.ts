@@ -4,12 +4,12 @@
  * Vision is an app, not a published package, so it has no barrel of its own —
  * this file is that barrel, and it exists only for the sync. Everything
  * exported here lands on `window.VisionDS` and becomes buildable by the
- * Claude Design agent, so adding a component to `src/components/ui/` means adding
+ * Claude Design agent, so adding a component to `src/shared/ui/` means adding
  * it here too.
  */
-export { Alert } from "../src/components/ui/alert";
-export { Badge } from "../src/components/ui/badge";
-export { Button } from "../src/components/ui/button";
+export { Alert } from "../src/shared/ui/alert";
+export { Badge } from "../src/shared/ui/badge";
+export { Button } from "../src/shared/ui/button";
 export {
   Card,
   CardHeader,
@@ -17,19 +17,19 @@ export {
   CardTitle,
   CardDescription,
   CardContent,
-} from "../src/components/ui/card";
-export { Checkbox } from "../src/components/ui/checkbox";
-export { default as ConfirmDialog } from "../src/components/ui/ConfirmDialog";
-export { FieldMessage } from "../src/components/ui/field-message";
-export { Input } from "../src/components/ui/input";
-export { Label } from "../src/components/ui/label";
+} from "../src/shared/ui/card";
+export { Checkbox } from "../src/shared/ui/checkbox";
+export { default as ConfirmDialog } from "../src/shared/ui/confirm-dialog";
+export { FieldMessage } from "../src/shared/ui/field-message";
+export { Input } from "../src/shared/ui/input";
+export { Label } from "../src/shared/ui/label";
 export {
   Skeleton,
   StatsCardSkeleton,
   RecentPostSkeleton,
   PostRowSkeleton,
-} from "../src/components/ui/Skeleton";
-export { Spinner } from "../src/components/ui/spinner";
+} from "../src/shared/ui/skeleton";
+export { Spinner } from "../src/shared/ui/spinner";
 
 export {
   DashboardIcon,
@@ -46,4 +46,4 @@ export {
   PlusIcon,
   UploadIcon,
   ChartIcon,
-} from "../src/components/ui/Icons";
+} from "../src/shared/ui/icons";

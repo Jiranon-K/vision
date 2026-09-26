@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { DURATION_SLOW, EASE_OUT } from "@/lib/motion";
-import { Badge } from "@/components/ui/badge";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { DURATION_SLOW, EASE_OUT } from "@/shared/lib/motion";
+import { Badge } from "@/shared/ui/badge";
 
 export interface PostStatusSlotProps {
   status: "Draft" | "Published";

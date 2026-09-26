@@ -1,6 +1,6 @@
 "use client";
 
-import Markdown from "@/components/markdown/Markdown";
+import Markdown from "@/shared/markdown/markdown";
 
 const PostContent = ({ content }: { content: string }) => (
   <div className="max-w-none">

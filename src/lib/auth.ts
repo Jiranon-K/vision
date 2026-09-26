@@ -1,4 +1,4 @@
-import { authFetch } from "@/lib/api";
+import { authFetch } from "@/shared/lib/api";
 
 const REMEMBER_ME_KEY = 'rememberMe';
 
@@ -37,7 +37,7 @@ export interface CurrentUser {
 
 export const getCurrentUser = async (): Promise<CurrentUser | null> => {
   try {
-    const { authFetch } = await import('@/lib/api');
+    const { authFetch } = await import('@/shared/lib/api');
     const res = await authFetch('/api/auth/me');
     if (!res.ok) return null;
     return (await res.json()) as CurrentUser;

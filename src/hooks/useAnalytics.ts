@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { FRESH_FOR, queryFetch, queryKeys } from "@/lib/query";
+import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
 import type { DashboardStat, ViewsDataPoint } from "@/types/types";
 
 interface AnalyticsData {

@@ -3,14 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
 import { toast } from "sonner";
-import { apiFetch, authFetch } from "@/lib/api";
-import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
-import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { DURATION_BASE, EASE_OUT } from "@/lib/motion";
+import { apiFetch, authFetch } from "@/shared/lib/api";
+import { cn } from "@/shared/lib/utils";
+import { Spinner } from "@/shared/ui/spinner";
+import { Button } from "@/shared/ui/button";
+import { Alert } from "@/shared/ui/alert";
+import ConfirmDialog from "@/shared/ui/confirm-dialog";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { DURATION_BASE, EASE_OUT } from "@/shared/lib/motion";
 import type { MetadataFormProps } from "./types";
 
 // Below this, a "summary" would just echo the content back — the button stays

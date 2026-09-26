@@ -6,9 +6,9 @@ import {
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
-import { authFetch } from "@/lib/api";
+import { authFetch } from "@/shared/lib/api";
 import { asWirePage, toPostRow } from "@/lib/post-contract";
-import { ApiError, FRESH_FOR, queryFetch, queryKeys } from "@/lib/query";
+import { ApiError, FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
 import type { PostRow } from "@/types/types";
 
 // A traversal has to terminate on its own even if the server keeps offering a

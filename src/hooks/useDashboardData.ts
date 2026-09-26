@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { asWirePage, toDashboardPost } from "@/lib/post-contract";
-import { FRESH_FOR, queryFetch, queryKeys } from "@/lib/query";
+import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
 import { useStats, useViewsTrend } from "@/hooks/useAnalytics";
 import type { DashboardPost } from "@/types/types";
 

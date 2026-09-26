@@ -12,7 +12,7 @@ import {
   LogoIcon, 
   LogoutIcon, 
   HomeIcon 
-} from "@/components/ui/Icons";
+} from "@/shared/ui/icons";
 
 function getIcon(iconName: string, className?: string) {
   switch (iconName) {

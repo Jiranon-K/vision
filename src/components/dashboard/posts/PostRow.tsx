@@ -4,12 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PostRow as PostRowType } from "@/types/types";
 import { allows } from "@/lib/post-contract";
-import { cn } from "@/lib/utils";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
-import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LockIcon } from "@/components/ui/Icons";
+import { cn } from "@/shared/lib/utils";
+import ConfirmDialog from "@/shared/ui/confirm-dialog";
+import { Alert } from "@/shared/ui/alert";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { LockIcon } from "@/shared/ui/icons";
 
 interface PostRowProps {
   post: PostRowType;

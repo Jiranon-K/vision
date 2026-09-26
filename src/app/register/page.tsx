@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { apiFetch } from "@/lib/api";
+import { apiFetch } from "@/shared/lib/api";
 import { passwordMeetsPolicy } from "@/lib/password";
 import { isValidEmail, SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
 import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
@@ -13,7 +13,7 @@ import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert"
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 
 export default function RegisterPage() {
   const { checking, serviceError } = useRedirectIfAuthenticated();

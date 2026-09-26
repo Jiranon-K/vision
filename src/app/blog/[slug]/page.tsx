@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/shared/layout/navbar";
+import Footer from "@/shared/layout/footer";
 import PostContent from "@/components/blog/PostContent";
 import ReadingProgress from "@/components/blog/ReadingProgress";
 import Breadcrumbs from "@/components/blog/Breadcrumbs";
@@ -10,10 +10,10 @@ import ShareButtons from "@/components/blog/ShareButtons";
 import RelatedPosts from "@/components/blog/RelatedPosts";
 import ViewTracker from "@/components/blog/ViewTracker";
 import CreatorByline from "@/components/blog/CreatorByline";
-import { initialsOf } from "@/lib/utils";
+import { initialsOf } from "@/shared/lib/utils";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
 import type { PostSummary } from "@/lib/post-contract";
-import { SITE_URL, SITE_NAME } from "@/lib/site";
+import { SITE_URL, SITE_NAME } from "@/shared/lib/site";
 
 export const revalidate = 300;
 

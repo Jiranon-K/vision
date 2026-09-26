@@ -11,7 +11,7 @@ import {
   QuoteIcon,
   CodeIcon,
   HorizontalRuleIcon,
-} from "@/components/ui/Icons";
+} from "@/shared/ui/icons";
 import type { SlashMenuOption } from "./types";
 
 // Block-level insertions only, matching direction 1b's toolbar rule from the

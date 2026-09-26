@@ -8,7 +8,7 @@ import PostsTable from "@/components/dashboard/posts/PostsTable";
 import { useAuth } from "@/hooks/useAuth";
 import { usePosts } from "@/hooks/usePosts";
 import { toast } from "sonner";
-import { PostRowSkeleton } from "@/components/ui/Skeleton";
+import { PostRowSkeleton } from "@/shared/ui/skeleton";
 
 export default function PostsPage() {
   const { posts, isLoading: isDataLoading, deletePost } = usePosts();

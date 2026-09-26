@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Alert } from "@/shared/ui/alert";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Spinner } from "@/components/ui/spinner";
-import { EyeIcon, HomeIcon } from "@/components/ui/Icons";
+} from "@/shared/ui/card";
+import { Checkbox } from "@/shared/ui/checkbox";
+import { Input } from "@/shared/ui/input";
+import { Label } from "@/shared/ui/label";
+import { Spinner } from "@/shared/ui/spinner";
+import { EyeIcon, HomeIcon } from "@/shared/ui/icons";
 
 /* Written out in full: Tailwind scans source text, so a class built
    by interpolation is never generated. */

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { EyeIcon, EyeOffIcon } from "@/components/ui/Icons";
+import { cn } from "@/shared/lib/utils";
+import { EyeIcon, EyeOffIcon } from "@/shared/ui/icons";
 
 // Returns the input `type` plus a ready-made toggle button, so it drops into
 // both the raw <input> auth forms and the styled <Input> primitive without

@@ -10,9 +10,9 @@
     "plugins": []
   },
   "include": [
-    "../src/components/ui/**/*.ts",
-    "../src/components/ui/**/*.tsx",
-    "../src/lib/utils.ts"
+    "../src/shared/ui/**/*.ts",
+    "../src/shared/ui/**/*.tsx",
+    "../src/shared/lib/utils.ts"
   ],
   "exclude": ["../node_modules", "../server", "../harness"]
 }

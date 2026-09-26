@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import type { EditorMode } from "./types";
 
 export interface EditorModeSwitchSlotProps {
