@@ -19,6 +19,10 @@ export const notFound = (message = 'Not found'): HttpError =>
 export const forbidden = (message: string): HttpError =>
   new HttpError(403, message);
 
+// A link that worked once and never will again: used, or past its expiry.
+export const gone = (message: string): HttpError =>
+  new HttpError(410, message);
+
 export const badRequest = (message: string, details?: unknown): HttpError =>
   new HttpError(400, message, details);
 

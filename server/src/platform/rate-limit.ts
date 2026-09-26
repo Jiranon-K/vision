@@ -105,3 +105,27 @@ export const suggestExcerptLimiter = rateLimit({
   skip: skipInTest,
   keyGenerator: perCreatorKey,
 });
+
+// Following sends an email to whatever address is typed, so it is budgeted per
+// client and, separately, per address: neither a script nor a determined
+// person can use the form to flood one inbox with confirmations.
+export const followLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 20,
+  message: { error: 'Too many follow requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(FAIL_CLOSED),
+  skip: skipInTest,
+});
+
+export const followAddressLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { error: 'Too many follow requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: createStore(FAIL_CLOSED),
+  skip: skipInTest,
+  keyGenerator: (req) => `follow:${String(req.body?.email ?? '').trim().toLowerCase()}`,
+});

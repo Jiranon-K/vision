@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { categories } from "@/features/posts";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
@@ -27,6 +27,8 @@ export interface PublishSheetProps {
   confirmLabel: string;
   pending: boolean;
   onConfirm: () => void;
+  /** Whether and how this publish reaches the Creator's Followers. */
+  deliverSection?: ReactNode;
 }
 
 // Publish opens this rather than firing a request directly (ticket 04): the
@@ -55,6 +57,7 @@ export default function PublishSheet({
   confirmLabel,
   pending,
   onConfirm,
+  deliverSection,
 }: PublishSheetProps) {
   const categoryLabelId = useId();
   const missing = checklist.filter((item) => !item.done);
@@ -149,6 +152,8 @@ export default function PublishSheet({
           ))}
         </div>
       </div>
+
+      {deliverSection}
 
       {/* One line, not a checklist of ticks: what stands between this Post
           and Publishing, said plainly — and it says so whether or not the

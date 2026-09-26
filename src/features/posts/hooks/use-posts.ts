@@ -51,6 +51,8 @@ export function invalidatePostData(client: QueryClient): Promise<void> {
   return Promise.all([
     client.invalidateQueries({ queryKey: queryKeys.posts }),
     client.invalidateQueries({ queryKey: queryKeys.analytics }),
+    // A publish may deliver, and a Delivery changes what the Followers screens show.
+    client.invalidateQueries({ queryKey: queryKeys.followers }),
   ]).then(() => undefined);
 }
 

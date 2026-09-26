@@ -1,6 +1,6 @@
 # 02 — Growth Analytics belongs to one Creator
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -116,3 +116,9 @@ the strongest argument for fixing it rather than relabelling the cards.
 Removing Subscribers and Engagement from the Hub is a visible product change.
 It is the honest one: both are currently platform figures presented as personal
 ones, and neither has a per-Creator definition to fall back on.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `88f2112` (feat(analytics): report Growth Analytics per Creator, behind a session) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

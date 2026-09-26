@@ -1,6 +1,6 @@
 # 08 — The whole platform ships as images, not just half of it
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -131,3 +131,9 @@ assembly; implemented before, it needs placeholders that then get rewritten.
 The frontend image's existing port and host configuration should be left alone
 unless the composition genuinely conflicts with it. It is currently correct and
 changing it would break whatever is already deployed from it.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `07d2ad2` (feat(ops): a shared rate limit store and a container for the API) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

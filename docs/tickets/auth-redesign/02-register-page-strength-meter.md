@@ -10,7 +10,7 @@ The session check, inline banner and Show/Hide password control are the shared o
 
 **Blocked by:** 01 — Login page rebuilt on the new auth shell.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] `/register` renders inside the shared auth shell with the design's register copy, on desktop and mobile
 - [ ] The form has Full name, Email and Password only; the Repeat password field and its mismatch check are gone
@@ -21,3 +21,9 @@ The session check, inline banner and Show/Hide password control are the shared o
 - [ ] No `pop-stagger` / anime.js entrance animation remains on this page
 - [ ] The shell, banner and password field are reused from ticket 01 without forking them
 - [ ] `e2e/auth.spec.ts` registers a fresh Creator through the new form and reaches the dashboard
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `defed11` (feat(auth): rebuild the auth screens on the design system); `f4d6240` (refactor(auth): address the review of the auth redesign) via PR #14 (feat/auth-redesign).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

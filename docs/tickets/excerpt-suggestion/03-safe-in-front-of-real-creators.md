@@ -14,7 +14,7 @@ This ticket also locks down the invariant from the ADR with a test. The invarian
 
 **Blocked by:** 02 — the module, route, and button must exist before their failure states can.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Asking for a suggestion when the Excerpt field is non-empty prompts for confirmation; declining leaves the Creator's text untouched
 - [ ] When the provider fails or times out the request still succeeds, the derived Excerpt is returned, and the response distinguishes it from a provider-produced suggestion
@@ -24,3 +24,9 @@ This ticket also locks down the invariant from the ADR with a test. The invarian
 - [ ] Tests cover: provider throws, provider times out, limit exceeded, oversized content, and confirmation declined
 - [ ] A test asserts that creating and updating a Post reach no provider, and fails if that ever changes
 - [ ] No test performs a real network call
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `bb86686` (feat: handle the three ways an Excerpt Suggestion goes wrong) via main.
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

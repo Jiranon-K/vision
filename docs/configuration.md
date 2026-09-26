@@ -39,6 +39,8 @@ cp server/.env.example server/.env
 | `RESEND_API_KEY`               | yes      | [Resend](https://resend.com) API key — verification and password-reset email                                               |
 | `EMAIL_FROM`                   | yes      | Sender address for outgoing email                                                                                          |
 | `EMAIL_FROM_NAME`              | no       | Sender display name                                                                                                        |
+| `DELIVERY_DAILY_LIMIT`         | no       | Delivery emails the platform sends per UTC day; the rest wait for the next day (default `100`, Resend's free daily quota)  |
+| `PUBLIC_API_URL`               | no       | This API's public origin, for the one-click stop link in every Delivery (default `http://localhost:$PORT`)                 |
 | `ADMIN_EMAILS`                 | no       | Bootstrap only: a listed address registering on a deployment with no Admin becomes the first Admin. See [Admins](#admins)  |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | no       | Google AI Studio API key. When set, Excerpt Suggestions are backed by Gemini                                               |
 | `AI_EXCERPT_MODEL`             | no       | Overrides the Gemini model used for Excerpt Suggestions (default `gemini-3.1-flash-lite`)                                  |

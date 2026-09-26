@@ -1,7 +1,8 @@
 import type { Request } from 'express';
 import type { Types } from 'mongoose';
 import { isDuplicateKeyError } from '../../platform/duplicate-key';
-import PostView, { startOfUtcDay } from './post-view.model';
+import PostView from './post-view.model';
+import { startOfUtcDay } from '../../platform/time';
 import ViewRecord from './view-record.model';
 import {
   VIEW_DEDUPE_WINDOW_HOURS,
@@ -20,7 +21,14 @@ interface ViewedPost {
 export async function recordView(
   post: ViewedPost,
   req: Request,
-  now = new Date()
+  {
+    now = new Date(),
+    fromDelivery = false,
+  }: {
+    now?: Date;
+    /** The Reader arrived by the link in a Delivery. */
+    fromDelivery?: boolean;
+  } = {}
 ): Promise<boolean> {
   // Indexing is not readership. Answered as success so a crawler learns
   // nothing from the difference.
@@ -45,7 +53,10 @@ export async function recordView(
   // which is what the Creator's weekly trend is made of.
   await PostView.updateOne(
     { post: post._id, day: startOfUtcDay(now) },
-    { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
+    {
+      $inc: { count: 1, fromDelivery: fromDelivery ? 1 : 0 },
+      $setOnInsert: { owner: post.owner },
+    },
     { upsert: true }
   );
   return true;

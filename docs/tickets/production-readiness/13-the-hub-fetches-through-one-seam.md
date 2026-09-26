@@ -1,6 +1,6 @@
 # 13 — The Smart Creator Hub fetches through one seam
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -145,3 +145,9 @@ problem, which makes it worth doing and easy to defer forever.
 It is best done after the pagination ticket. Pagination changes what the list
 hooks fetch, and reimplementing them on a query layer first would mean
 reimplementing them again a week later.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `8821395` (refactor(dashboard): the Hub fetches through one seam) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

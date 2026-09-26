@@ -14,6 +14,10 @@ export const postSchema = z.object({
   // readTime is computed server-side (Thai-aware) — not accepted from the client.
   featured: z.boolean().optional(),
   coverImage: z.string().optional(),
+  // Deliver this Post to the Creator's Followers as it is published. Only the
+  // publish itself can ask; a Post that is already Published is never
+  // delivered later (CONTEXT.md: Delivery).
+  deliver: z.boolean().optional(),
 });
 
 export const updatePostSchema = postSchema.partial();

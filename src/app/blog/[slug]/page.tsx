@@ -16,6 +16,7 @@ import { initialsOf } from "@/shared/lib/utils";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/features/blog/server";
 import { type PostSummary } from "@/features/posts";
 import { SITE_URL, SITE_NAME } from "@/shared/lib/site";
+import { FollowCard } from "@/features/followers";
 
 export const revalidate = 300;
 
@@ -186,6 +187,7 @@ export default async function BlogPostPage({
           <article className="min-w-0">
             <PostContent content={post.content} />
             <ShareButtons url={url} />
+            <FollowCard postId={post.id} creator={post.author} />
           </article>
 
           <aside className="hidden lg:block">

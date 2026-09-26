@@ -5,11 +5,14 @@ const API_BASE_URL =
 
 // Fire-and-forget view counter (client-side beacon). Swallows all errors —
 // a failed view ping must never surface to the reader.
-export async function incrementPostViews(id: string): Promise<void> {
+export async function incrementPostViews(id: string, source?: "delivery"): Promise<void> {
   try {
     await fetch(`${API_BASE_URL}/api/posts/${encodeURIComponent(id)}/view`, {
       method: "POST",
       keepalive: true,
+      ...(source
+        ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify({ source }) }
+        : {}),
     });
   } catch {
     // ignore

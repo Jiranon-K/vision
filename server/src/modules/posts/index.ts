@@ -2,7 +2,13 @@
 // posts.routes.ts for mounting, is internal to the module.
 export { syncCreatorByline } from './post.model';
 export { safeSlice, stripMarkdown, EXCERPT_MAX } from './content';
-export { creatorTotals, publishedPostIds, currentExcerpts } from './posts.queries';
+export {
+  creatorTotals,
+  publishedPostIds,
+  currentExcerpts,
+  readablePostForFollowing,
+  isReadableByReaders,
+} from './posts.queries';
 
 // The model itself, for data migrations and operator scripts only: they rewrite
 // stored documents below the rules. Another module asks through the functions

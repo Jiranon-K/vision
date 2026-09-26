@@ -377,6 +377,22 @@
 
   --animate-panel-in: panel-in var(--duration-slow) var(--ease-out) both;
 
+  /* Followers (ADR 0009): a check or a line drawing itself in, a bar growing
+     from its baseline, and a row rising into a list. Each is paired with a
+     motion-safe: variant at the call site, so reduced motion shows the end
+     state at once. */
+  --animate-draw: draw var(--duration-slow) var(--ease-out) forwards;
+  --animate-rise-in: rise-in var(--duration-slow) var(--ease-out) both;
+
+  @keyframes draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   @keyframes panel-in {
     from { opacity: 0; transform: translateX(1rem); }
     to { opacity: 1; transform: translateX(0); }

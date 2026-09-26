@@ -12,7 +12,7 @@ All seven are stroke SVG icons on `currentColor`, one weight, one grid.
 
 **Blocked by:** 02 — the toolbar belongs to the writing surface, and its placement depends on the mode switch.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Seven buttons: Bold, Italic, Link, Image, Code, Quote, List
 - [ ] Every icon is a stroke SVG on `currentColor` — no emoji, no bare letters, no ASCII glyphs
@@ -23,3 +23,9 @@ All seven are stroke SVG icons on `currentColor`, one weight, one grid.
 - [ ] The toolbar is usable at mobile width without wrapping into a second row of half-width targets
 - [ ] Both themes render correctly; tokens only, no literals
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `dbe3449` (feat(dashboard): give the toolbar one icon language and one rule) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

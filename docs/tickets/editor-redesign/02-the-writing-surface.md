@@ -14,7 +14,7 @@ The switch's motion: the thumb translates, and the arriving pane fades in from a
 
 **Blocked by:** 01 — the mode switch lives in a slot the frame provides.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] A long title wraps onto further lines and is never truncated or scrolled horizontally
 - [ ] The title field grows and shrinks with its content without the caret jumping
@@ -25,3 +25,9 @@ The switch's motion: the thumb translates, and the arriving pane fades in from a
 - [ ] Switching modes animates as described, with a defined reduced-motion state, and never resizes a pane mid-transition
 - [ ] Both themes render correctly; tokens only, no literals
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `b607d4f` (feat(dashboard): make the writing surface adapt to the Creator, not the window) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

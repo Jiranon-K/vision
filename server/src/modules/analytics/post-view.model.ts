@@ -9,6 +9,8 @@ export interface IPostView extends Document {
   owner: mongoose.Types.ObjectId;
   day: Date;
   count: number;
+  /** Of `count`, the Views whose Reader arrived from a Delivery. */
+  fromDelivery: number;
 }
 
 const PostViewSchema = new Schema<IPostView>({
@@ -17,6 +19,7 @@ const PostViewSchema = new Schema<IPostView>({
   // UTC midnight of the day the Views were recorded.
   day: { type: Date, required: true },
   count: { type: Number, default: 0 },
+  fromDelivery: { type: Number, default: 0 },
 });
 
 PostViewSchema.index({ post: 1, day: 1 }, { unique: true });
@@ -24,8 +27,3 @@ PostViewSchema.index({ owner: 1, day: 1 });
 
 export default mongoose.model<IPostView>('PostView', PostViewSchema);
 
-export function startOfUtcDay(at: Date): Date {
-  return new Date(
-    Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate())
-  );
-}

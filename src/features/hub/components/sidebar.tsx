@@ -11,7 +11,8 @@ import {
   SettingsIcon, 
   LogoIcon, 
   LogoutIcon, 
-  HomeIcon 
+  HomeIcon,
+  FollowersIcon,
 } from "@/shared/ui/icons";
 
 function getIcon(iconName: string, className?: string) {
@@ -22,6 +23,8 @@ function getIcon(iconName: string, className?: string) {
       return <PostsIcon className={className} />;
     case "analytics":
       return <AnalyticsIcon className={className} />;
+    case "followers":
+      return <FollowersIcon className={className} />;
     case "settings":
       return <SettingsIcon className={className} />;
     default:

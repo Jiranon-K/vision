@@ -9,5 +9,5 @@ export interface NavItem {
   id: string;
   label: string;
   href: string;
-  icon: "dashboard" | "posts" | "analytics" | "settings";
+  icon: "dashboard" | "posts" | "followers" | "analytics" | "settings";
 }

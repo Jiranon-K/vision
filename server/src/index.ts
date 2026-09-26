@@ -16,6 +16,8 @@ import postsRoutes from './modules/posts/posts.routes';
 import analyticsRoutes from './modules/analytics/analytics.routes';
 import settingsRoutes from './modules/creators/creators.routes';
 import capabilitiesRoutes from './modules/excerpt-suggestion/capabilities.routes';
+import followersRoutes from './modules/followers/followers.routes';
+import { startDeliveryQueue } from './modules/followers';
 
 export const app = express();
 const PORT = process.env.PORT || 3001;
@@ -52,6 +54,7 @@ app.use('/api/posts', postsRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/capabilities', capabilitiesRoutes);
+app.use('/api/followers', followersRoutes);
 
 // Liveness: the process is up. Deliberately says nothing about the database —
 // blending the two makes an orchestrator restart healthy processes in a loop
@@ -85,6 +88,7 @@ if (require.main === module) {
     app.listen(PORT, () => {
       logger.info({ port: PORT }, 'Server listening');
     });
+    startDeliveryQueue();
   });
 }
 
