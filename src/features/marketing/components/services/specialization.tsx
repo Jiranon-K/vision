@@ -24,11 +24,12 @@ const Specialization = () => {
           </h2>
         </div>
         <p className="text-xl font-normal leading-relaxed text-brand-dark/80 max-w-[620px]">
-          The internet is full of blog tools. Vision is the only one built to{" "}
+          The internet is full of blog tools. Vision is built so the Readers
+          you earn{" "}
           <span className="font-bold text-brand-dark border-b-2 border-brand-lime">
-            write, sync, and grow
+            stay yours
           </span>{" "}
-          — all from one place.
+          — by email, exportable, with no algorithm in between.
         </p>
       </div>
 
@@ -138,7 +139,7 @@ const Specialization = () => {
             Vision
           </span>
           <span className="flex items-center justify-center text-sm font-semibold text-brand-dark/50">
-            Others
+            Social page
           </span>
         </div>
 

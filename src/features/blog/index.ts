@@ -6,7 +6,7 @@ export { default as BlogList } from "./components/blog-list";
 export { default as Breadcrumbs } from "./components/breadcrumbs";
 export { default as CreatorByline } from "./components/creator-byline";
 export { default as FeaturedCard } from "./components/featured-card";
-export { default as NewsletterCta } from "./components/newsletter-cta";
+export { default as CreatorCta } from "./components/creator-cta";
 export { default as PostContent } from "./components/post-content";
 export { default as ReadingProgress } from "./components/reading-progress";
 export { default as RelatedPosts } from "./components/related-posts";

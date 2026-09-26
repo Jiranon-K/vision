@@ -25,8 +25,8 @@ const Footer = () => (
             <span className="text-3xl font-bold tracking-tight">Vision</span>
           </Link>
           <p className="text-white/60 text-base leading-relaxed max-w-sm">
-            Write your story, broadcast it everywhere, and grow your audience —
-            the infrastructure for modern creators.
+            Write your story, publish it, and keep the Readers who follow you —
+            by email, with no algorithm in between.
           </p>
           <SocialLinks />
         </div>

@@ -4,26 +4,26 @@ export const steps = [
     icon: "/services/s-2.png",
     title: "Create Your Account",
     description:
-      "Sign up in seconds — no credit card needed. Set up your public profile, pick your topics, and you're ready to start writing immediately.",
+      "Sign up in seconds — no credit card needed. Confirm your email address and you're ready to start writing.",
     tag: "Get Started",
     highlight: true,
   },
   {
     number: "02",
     icon: "/as-03.png",
-    title: "Write Your Blog",
+    title: "Write Your Post",
     description:
-      "Use Vision's intuitive rich-text editor to craft compelling posts. Add images, format headings, and preview exactly how readers will see your work.",
+      "Write in Vision's distraction-free editor. It saves as you go, and an optional suggestion can draft your Excerpt for you.",
     tag: "Create",
     highlight: false,
   },
   {
     number: "03",
     icon: "/as-06.png",
-    title: "Publish & Sync to Social",
+    title: "Publish & Deliver",
     description:
-      "Hit publish and Vision instantly broadcasts your post to Facebook, X (Twitter), and all your connected platforms — reaching your entire audience in one click.",
-    tag: "Share",
+      "Publish, and choose to deliver the Post to your Followers by email. Share its link anywhere you like — Vision never posts on a social channel for you.",
+    tag: "Deliver",
     highlight: true,
   },
   {
@@ -31,7 +31,7 @@ export const steps = [
     icon: "/services/s-3.png",
     title: "Grow Your Audience",
     description:
-      "Track real-time analytics, understand what resonates, reply to comments, and watch your readership expand. Vision turns every post into an opportunity.",
+      "Readers who enjoy a Post follow you from the end of it. Growth Analytics shows your Views, your Followers week by week, and the Views your Deliveries brought back.",
     tag: "Grow",
     highlight: false,
   },

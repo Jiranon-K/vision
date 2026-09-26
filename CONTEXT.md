@@ -1,6 +1,6 @@
 # Vision
 
-Vision is a publishing platform for content creators: write a piece once, broadcast it to social channels, and grow an audience with built-in discovery and analytics. This repo holds the public marketing site, the blog, and the creator's dashboard.
+Vision is a publishing platform for content creators: write a Post, let Readers follow its Creator by email, and deliver each new Post straight to them, with built-in discovery and analytics. This repo holds the public marketing site, the blog, and the creator's dashboard.
 
 ## Language
 
@@ -92,23 +92,26 @@ _Avoid_: Paying user, Customer, Member
 Whether a Plan is priced monthly or yearly. Yearly is the discounted rate for the same Plan.
 _Avoid_: Billing cycle, Term, Interval
 
-**Capabilities** are the named units of value a Plan grants. They are the product's marketed vocabulary and must be used verbatim on the pricing and services pages:
+**Capabilities** are the named units of value a Plan grants. They are the product's marketed vocabulary and must be used verbatim on the pricing and services pages. The marketing site names only these four, and a test keeps the retired ones off it (Jiranon-K/vision#35):
 
 **Smart Creator Hub**:
-The dashboard where a Creator writes, manages, and publishes Posts.
+The dashboard where a Creator writes, manages, and publishes Posts, and sees their Followers.
 
 **Search Visibility**:
 Making a Creator's Published Posts discoverable through search.
 
 **Audience Connect**:
-Reaching and retaining a Creator's Audience directly.
-
-**Content Boosting**:
-Amplifying the reach of a Published Post beyond its organic Audience.
-
-**Multi-Channel Sync**:
-Preparing one Published Post for each social channel so its Creator can share it there in one click: per-channel text, a share link that opens the channel with that text filled in, and a tracked link so Growth Analytics can say which channel brought each View. Vision never posts on a channel itself; the Creator does (ADR 0008).
-_Avoid_: Auto-post, Cross-post, Broadcast
+Reaching and retaining a Creator's Audience directly, by email: a Reader follows a Creator, a Delivery brings each new Post to every Follower, and the Creator can export the list (ADR 0009).
+_Avoid_: Subscriber list, Newsletter
 
 **Growth Analytics**:
 Reporting on Views and Audience growth back to the Creator.
+
+**Retired Capabilities** were marketed once and are not part of Vision. They stay here so nobody brings them back without a new decision:
+
+**Content Boosting** (retired):
+Amplifying the reach of a Published Post beyond its organic Audience. Nothing was ever built; reaching Readers directly replaced it (ADR 0009).
+
+**Multi-Channel Sync** (retired):
+Publishing, or preparing, one Post for each social channel. ADR 0008 ruled out posting on a channel for the Creator, and ADR 0009 superseded the share kit that replaced it; neither was built.
+_Avoid_: Auto-post, Cross-post, Broadcast, Social Sync

@@ -1,17 +1,17 @@
 export const usps = [
   {
     icon: "/as-04.png",
-    title: "Real-time Social Sync",
+    title: "Readers Who Are Yours",
     description:
-      "Publish once and Vision instantly pushes your post to Facebook, X, and every connected platform — no third-party scheduler required.",
+      "Readers follow you by email, with no account to create. Every new Post you deliver lands in their inbox, not in a feed that decides who gets to see it.",
     highlight: true,
     wide: true,
   },
   {
     icon: "/services/s-1.png",
-    title: "AI Writing Insights",
+    title: "Excerpt Suggestions",
     description:
-      "Get smart suggestions on SEO, readability, and tone as you type — so every post performs at its peak before you hit publish.",
+      "Stuck on the summary? Ask for a suggested Excerpt drawn from your Post, then keep it, edit it, or ignore it.",
     highlight: false,
     wide: false,
   },
@@ -19,23 +19,23 @@ export const usps = [
     icon: "/as-03.png",
     title: "Creator-First Editor",
     description:
-      "Beautiful, distraction-free writing built for humans — not developers. Zero plugins, zero setup, 100% focus.",
+      "Distraction-free writing built for humans, not developers. Markdown, autosave, zero plugins, zero setup.",
     highlight: false,
     wide: false,
   },
   {
     icon: "/as-06.png",
-    title: "Owner-Driven Growth",
+    title: "Leave Anytime, Keep Everyone",
     description:
-      "Full ownership of everything you write. No algorithm suppression, no hidden feed penalties — your voice, amplified.",
+      "Export your Followers as a CSV whenever you like. Owning your Audience means being free to take it with you.",
     highlight: true,
     wide: false,
   },
   {
     icon: "/services/s-6.png",
-    title: "Deep Analytics",
+    title: "Honest Analytics",
     description:
-      "Understand where your readers come from, what keeps them engaged, and how to scale — all in one dashboard.",
+      "Views per Post, Followers week by week, and the Views each Delivery brought back — all in one dashboard.",
     highlight: false,
     wide: false,
   },
@@ -43,17 +43,16 @@ export const usps = [
     icon: "/as-01.png",
     title: "Fast Publishing",
     description:
-      "From draft to live in seconds. Our infrastructure means zero downtime and instant indexing for every reader.",
+      "From draft to live in one step. Every Published Post gets its own page, search metadata, and a link preview.",
     highlight: false,
     wide: false,
   },
 ];
 
+// Vision against a page on a social platform: only rows Vision can defend.
 export const comparisons = [
-  { feature: "One-click social broadcasting", vision: true, others: false },
-  { feature: "Built-in SEO optimisation", vision: true, others: false },
-  { feature: "AI writing insights", vision: true, others: false },
-  { feature: "Full content ownership", vision: true, others: true },
-  { feature: "Real-time analytics", vision: true, others: false },
-  { feature: "No algorithm suppression", vision: true, others: false },
+  { feature: "Readers follow with just an email address", vision: true, others: false },
+  { feature: "Every Follower can receive every new Post", vision: true, others: false },
+  { feature: "No algorithm deciding who sees your Post", vision: true, others: false },
+  { feature: "Export your Followers whenever you like", vision: true, others: false },
 ];

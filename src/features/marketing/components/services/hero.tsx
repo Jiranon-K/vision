@@ -16,17 +16,17 @@ const Hero = () => {
             <div className="lg:col-span-7 flex flex-col justify-center space-y-10 animate-in fade-in slide-in-from-left-10 duration-1000">
               <div className="space-y-6">
                 <h1 className="text-5xl font-black tracking-tight sm:text-6xl md:text-7xl lg:text-8xl text-brand-dark leading-[0.95]">
-                  Connect your voice{" "}
+                  Your words,{" "}
                   <div className="inline-block relative">
                     <span className="relative z-10 bg-brand-lime px-4 py-1 rounded-[20px] shadow-[6px_6px_0px_0px_#191A23] -rotate-2 inline-block mt-2">
-                      with the world
+                      your Readers
                     </span>
                   </div>
                 </h1>
                 <p className="max-w-[620px] text-brand-dark/80 text-xl md:text-2xl font-medium leading-relaxed">
-                  Vision is the ultimate infrastructure for modern creators.
-                  Write, sync, and scale your influence across the entire social
-                  ecosystem.
+                  Vision is where you write, publish, and build an Audience you
+                  keep. Readers follow you by email, and every new Post can reach
+                  them with no algorithm in between.
                 </p>
               </div>
 
@@ -94,8 +94,8 @@ const Hero = () => {
             </h2>
           </div>
           <p className="text-xl md:text-2xl font-medium leading-relaxed text-brand-dark/70 max-w-[650px]">
-            Everything you need to write, grow, and share — built for creators
-            who refuse to be invisible in a crowded digital space.
+            Everything you need to write, publish, and keep your Readers —
+            nothing to connect, and nothing an algorithm can take away.
           </p>
         </div>
 

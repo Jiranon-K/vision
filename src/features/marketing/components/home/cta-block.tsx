@@ -65,13 +65,13 @@ const Ctablock = () => {
             Ready to share your vision?
           </h2>
           <p className="text-lg text-brand-dark max-w-md mx-auto md:mx-0 font-light leading-relaxed opacity-0">
-            Connect with experts and enthusiasts. Post your insights, engage
-            with readers, and grow your digital influence with our powerful
-            sharing tools.
+            Write your first Post today. Readers who enjoy it can follow you by
+            email, and your next Post goes straight to them. Free while Vision
+            is in beta.
           </p>
           <div className="opacity-0">
             <button onClick={() => router.push('/dashboard')} className="bg-brand-dark text-white px-10 py-5 rounded-2xl text-xl font-medium hover:bg-brand-lime hover:text-brand-dark transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg">
-              Join the community
+              Start writing free
             </button>
           </div>
         </div>

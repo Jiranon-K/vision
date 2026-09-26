@@ -4,8 +4,9 @@
 
 **Refracting ideas into digital reality.**
 
-A publishing platform for content creators: write a Post once, broadcast it to
-every social channel, and grow an Audience with built-in discovery and analytics.
+A publishing platform for content creators: write a Post, let Readers follow you
+by email, and deliver each new Post straight to them, with built-in discovery and
+analytics. Free during the beta.
 This repository holds the marketing site, the blog, and the Smart Creator Hub.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -39,13 +40,14 @@ This repository holds the marketing site, the blog, and the Smart Creator Hub.
   reaches a Reader before you say so
 - **Smart Creator Hub** — one dashboard for every Post you own, with search,
   Category and status filters
-- **Multi-Channel Sync** — one publish action, a coordinated release everywhere
-  your Audience already reads
-- **Growth Analytics** — Views per Post and a weekly trend, so a decision rests
-  on a number rather than a feeling
+- **Audience Connect** — Readers follow a Creator by email from the end of a
+  Post, each new Post can be delivered to every Follower, and the Creator can
+  export the list at any time
+- **Growth Analytics** — Views per Post, a weekly trend, Followers week by week,
+  and the Views Deliveries brought back
 - **Search Visibility** — readable Slugs, honest Excerpts, and SEO metadata
   generated from the Post itself
-- **Plans** — tiered capabilities with a monthly or yearly billing period
+- **Free beta** — no Plan is sold yet; every Creator has every Capability
 
 ## Quick start
 

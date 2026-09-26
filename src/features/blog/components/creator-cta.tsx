@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 
-const NewsletterCta = () => {
+// The blog index is read by people who are not Creators yet: invite them to
+// become one. Following a Creator happens at the end of each Post instead.
+const CreatorCta = () => {
   const ctaRef = useRef<HTMLElement>(null);
   const didAnimate = useRef(false);
 
@@ -49,22 +52,20 @@ const NewsletterCta = () => {
         <div className="relative z-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
           <div className="flex-1">
             <h2 className="cta-anim opacity-0 text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-              Never miss an insight
+              Start writing, free during the beta
             </h2>
             <p className="cta-anim opacity-0 text-white/50 text-lg max-w-md">
-              Get the latest articles, tips, and creator strategies delivered
-              straight to your inbox every week.
+              Publish your own Posts on Vision. Readers who enjoy them follow you by
+              email, and your next Post goes straight to their inbox.
             </p>
           </div>
-          <div className="cta-anim opacity-0 w-full lg:w-auto flex flex-col sm:flex-row gap-3">
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 lg:w-72 bg-white/10 border border-white/10 text-white placeholder:text-white/30 px-6 py-4 rounded-2xl text-base outline-none focus:border-brand-lime/50 transition-colors duration-300"
-            />
-            <button className="bg-brand-lime text-brand-dark px-8 py-4 rounded-2xl text-base font-semibold hover:brightness-110 transition-all duration-300 active:scale-95 whitespace-nowrap cursor-pointer">
-              Subscribe
-            </button>
+          <div className="cta-anim opacity-0 w-full lg:w-auto">
+            <Link
+              href="/dashboard"
+              className="block bg-brand-lime text-brand-dark px-8 py-4 rounded-2xl text-base font-semibold text-center hover:brightness-110 transition-all duration-300 active:scale-95 whitespace-nowrap"
+            >
+              Start writing free
+            </Link>
           </div>
         </div>
       </div>
@@ -72,4 +73,4 @@ const NewsletterCta = () => {
   );
 };
 
-export default NewsletterCta;
+export default CreatorCta;

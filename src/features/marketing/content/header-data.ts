@@ -1,8 +1,1 @@
-export const headerWords = [
-  "Share",
-  "Your",
-  "Vision",
-  "Reach",
-  "Every",
-  "Screen",
-];
+export const headerWords = ["Write.", "Publish.", "Keep", "Your", "Readers."];

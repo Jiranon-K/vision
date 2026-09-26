@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Navbar from "@/shared/layout/navbar";
 import Footer from "@/shared/layout/footer";
-import { NewsletterCta, BlogList } from "@/features/blog";
+import { CreatorCta, BlogList } from "@/features/blog";
 import { getPublishedPosts } from "@/features/blog/server";
 import { type PostSummary } from "@/features/posts";
 
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Tips, strategies, and deep dives to help you grow your audience and " +
-    "amplify your content across every platform.",
+    "Tips, strategies, and deep dives to help you grow an Audience you " +
+    "keep, and reach your Readers directly.",
   alternates: { canonical: "/blog" },
 };
 
@@ -27,7 +27,7 @@ export default async function BlogPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       <BlogList posts={posts} />
-      <NewsletterCta />
+      <CreatorCta />
       <Footer />
     </main>
   );
