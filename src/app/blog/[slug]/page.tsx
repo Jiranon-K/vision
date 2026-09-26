@@ -16,6 +16,9 @@ import { initialsOf } from "@/shared/lib/utils";
 import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/features/blog/server";
 import { type PostSummary } from "@/features/posts";
 import { SITE_URL, SITE_NAME } from "@/shared/lib/site";
+// PROTOTYPE — Followers design variants (prototype/followers branch only).
+import { FollowCardPrototype } from "@/features/followers";
+import { PrototypeSwitcher } from "@/shared/ui/prototype-switcher";
 
 export const revalidate = 300;
 
@@ -82,10 +85,13 @@ export async function generateMetadata({
 
 export default async function BlogPostPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ variant?: string }>;
 }) {
   const { slug } = await params;
+  const variant = ((await searchParams).variant ?? "A").toUpperCase();
 
   let post = null;
   try {
@@ -186,6 +192,14 @@ export default async function BlogPostPage({
           <article className="min-w-0">
             <PostContent content={post.content} />
             <ShareButtons url={url} />
+            <FollowCardPrototype
+              variant={variant}
+              creator={{
+                name: post.author.name,
+                byline: post.author.byline,
+                initials: initialsOf(post.author.name),
+              }}
+            />
           </article>
 
           <aside className="hidden lg:block">
@@ -197,6 +211,7 @@ export default async function BlogPostPage({
       </div>
 
       <Footer />
+      <PrototypeSwitcher />
     </main>
   );
 }

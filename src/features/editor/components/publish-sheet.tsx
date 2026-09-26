@@ -6,6 +6,9 @@ import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { Alert } from "@/shared/ui/alert";
 import SlideOverPanel from "./slide-over-panel";
+// PROTOTYPE — Followers design variants (prototype/followers branch only).
+import { DeliverSectionPrototype } from "@/features/followers";
+import { PrototypeSwitcher, usePrototypeVariant } from "@/shared/ui/prototype-switcher";
 
 export interface PublishChecklistItem {
   id: string;
@@ -57,6 +60,7 @@ export default function PublishSheet({
   onConfirm,
 }: PublishSheetProps) {
   const categoryLabelId = useId();
+  const variant = usePrototypeVariant();
   const missing = checklist.filter((item) => !item.done);
   const canConfirm = missing.length === 0 && !pending;
 
@@ -149,6 +153,9 @@ export default function PublishSheet({
           ))}
         </div>
       </div>
+
+      {status === "Published" && <DeliverSectionPrototype variant={variant} />}
+      {open && <PrototypeSwitcher />}
 
       {/* One line, not a checklist of ticks: what stands between this Post
           and Publishing, said plainly — and it says so whether or not the

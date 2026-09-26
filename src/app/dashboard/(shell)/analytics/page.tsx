@@ -11,6 +11,9 @@ import {
 } from "@/features/analytics";
 import { useAuth } from "@/features/auth";
 import { StatsCardSkeleton } from "@/shared/ui/skeleton";
+// PROTOTYPE — Followers design variants (prototype/followers branch only).
+import { GrowthFollowersPrototype } from "@/features/followers";
+import { PrototypeSwitcher, usePrototypeVariant } from "@/shared/ui/prototype-switcher";
 
 const AnalyticsChart = dynamic(
   () => import("@/features/analytics").then((m) => m.AnalyticsChart),
@@ -30,6 +33,7 @@ export default function AnalyticsPage() {
   const { stats, viewsData, isLoading: isDataLoading } = useAnalytics(isAuthed);
 
   const showSkeleton = isAuthLoading || isDataLoading;
+  const variant = usePrototypeVariant();
 
   useEffect(() => {
     if (!isAuthed || showSkeleton) {
@@ -96,6 +100,9 @@ export default function AnalyticsPage() {
           Track your content performance and engagement metrics.
         </p>
       </div>
+
+        <GrowthFollowersPrototype variant={variant} />
+        <PrototypeSwitcher />
 
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
           {showSkeleton ? (
