@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { features } from "@/components/data/hero-data";
+import { features } from "../../content/hero-data";
 
 const Hero = () => {
   return (

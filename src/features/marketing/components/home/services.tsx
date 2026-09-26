@@ -27,7 +27,7 @@ const ArrowIcon = ({
     />
   </svg>
 );
-import { servicesData } from "@/components/data/services-data";
+import { servicesData } from "../../content/services-data";
 
 const Services = () => {
   const router = useRouter();

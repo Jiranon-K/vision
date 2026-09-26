@@ -1,6 +1,6 @@
 # 16 — Marketing becomes a feature, and `types/` goes
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -33,3 +33,27 @@ Gather marketing into `src/features/marketing/`, and remove `types/`.
 ## Out of Scope
 
 - Any change to marketing copy or layout.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another, after both commits: typecheck (frontend, server, harness); lint 0
+  errors (2 pre-existing warnings); server tests 237 passed (`--maxWorkers=2`,
+  see ticket 07); harness 37 passed; `next build` compiled; Playwright 24
+  passed, including `marketing.spec.ts` (3).
+- The featured-Posts section fetches while it renders, so marketing has a
+  `server.ts` (with `server-only`) that exports it; every other section is
+  exported from `index.ts`. The two `Hero` components are exported as
+  `PricingHero` and `ServicesHero`; the pages import them under their old
+  local names, so no JSX changed.
+- **Deleted, decided with the owner:** `src/types/types.ts` (by then only
+  `AuthUser`, the auth request and response types, and `ErrorResponse`) and
+  `src/lib/schemas.ts` (six auth zod schemas). Nothing imported either. The
+  deletion is its own commit.
+- `src/` now contains `app/`, `features/`, `shared/` and `middleware.ts` only.
+- Still unused and not deleted, because the decision above covered only those
+  two files: `EngagementData` in `features/analytics/types.ts`, and the server's
+  `modules/analytics/analytics.model.ts` (ticket 04).
+- Found along the way: the frontend imports `zod` without declaring it; it
+  resolves only through `eslint-plugin-react-hooks`, a dev dependency. Raised
+  as a separate task.

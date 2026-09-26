@@ -1,5 +1,5 @@
 import Navbar from "@/shared/layout/navbar";
-import Hero from "@/components/pricing/Hero";
+import { PricingHero as Hero } from "@/features/marketing";
 import Footer from "@/shared/layout/footer";
 
 const PricingPage = () => {

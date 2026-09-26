@@ -1,7 +1,5 @@
 import Navbar from "@/shared/layout/navbar";
-import Hero from "@/components/services/Hero";
-import Process from "@/components/services/Process";
-import Specialization from "@/components/services/Specialization";
+import { ServicesHero as Hero, Process, Specialization } from "@/features/marketing";
 import Footer from "@/shared/layout/footer";
 
 export default function ServicesPage() {

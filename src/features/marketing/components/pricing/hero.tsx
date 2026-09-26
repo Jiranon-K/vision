@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import { plans, pricingFeatures } from "@/components/data/pricing-data";
+import { plans, pricingFeatures } from "../../content/pricing-data";
 
 const Hero = () => {
   const [isYearly, setIsYearly] = useState(false);

@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import { steps } from "@/components/data/process-data";
+import { steps } from "../../content/process-data";
 
 const Process = () => {
   return (
