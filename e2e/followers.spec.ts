@@ -58,6 +58,26 @@ test('a Reader follows the Creator from the end of a Post', async ({ page, reque
 test.describe('the Creator publishing', () => {
   test.use({ storageState: STORAGE_STATE });
 
+  // Regression: the pill read window.scrollY, which stays 0 because <body> is
+  // this app's scroll container, so it never appeared.
+  test('a Follow pill joins the Reader partway down a long Post', async ({ page, request }) => {
+    const long = Array.from({ length: 40 }, (_, i) => `Paragraph ${i + 1}. ${'Worth reading slowly. '.repeat(12)}`).join('\n\n');
+    const created = await request.post(`${API_URL}/api/posts`, {
+      data: { title: 'A Long Post to Follow From', content: long, category: 'SEO', status: 'Published' },
+    });
+    const { slug } = await created.json();
+
+    await page.goto(`/blog/${slug}`);
+    const pill = page.getByRole('button', { name: /^Follow E2E$/ });
+    await expect(pill).toHaveCount(0);
+
+    await page.evaluate(() => document.body.scrollTo(0, document.body.scrollHeight * 0.45));
+    await expect(pill).toBeVisible();
+
+    await pill.click();
+    await expect(page.getByRole('textbox', { name: 'Email address' })).toBeFocused();
+  });
+
   test('sees the Delivery choice, on by default, with how many Followers it reaches', async ({ page, request }) => {
     const post = await seededPost(request);
     await confirmFollower(request, post._id, 'e2e.first@example.com');

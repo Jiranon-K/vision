@@ -33,20 +33,26 @@ export default function FollowCard({ postId, creator }: FollowCardProps) {
 
   // The pill appears once the Reader is well into the Post and the card is
   // still below them; it goes away when the card is in view or they followed.
+  //
+  // The app makes <body> the scroll container (html{overflow:hidden}), so
+  // window.scrollY stays 0: read body.scrollTop, and listen in the capture
+  // phase to catch the body's scroll events (as ReadingProgress does).
   useEffect(() => {
     if (phase === "sent") return;
     const update = () => {
       const card = cardRef.current;
       if (!card) return;
-      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollable > 0 ? window.scrollY / scrollable : 0;
+      const body = document.body;
+      const scrollTop = body.scrollTop || document.documentElement.scrollTop || window.scrollY;
+      const scrollable = (body.scrollHeight || document.documentElement.scrollHeight) - window.innerHeight;
+      const progress = scrollable > 0 ? scrollTop / scrollable : 0;
       setPillShown(progress > 0.35 && card.getBoundingClientRect().top > window.innerHeight);
     };
     update();
-    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("scroll", update, { capture: true, passive: true });
     window.addEventListener("resize", update);
     return () => {
-      window.removeEventListener("scroll", update);
+      window.removeEventListener("scroll", update, { capture: true } as EventListenerOptions);
       window.removeEventListener("resize", update);
     };
   }, [phase]);
