@@ -1,6 +1,6 @@
 # ADR 0008: Vision prepares a Post for each channel; the Creator shares it, and nothing is sold yet
 
-Status: Accepted
+Status: Accepted. The share-kit decision is superseded by ADR 0009; the other two decisions stand.
 
 ## Context
 
