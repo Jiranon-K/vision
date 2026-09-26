@@ -13,7 +13,7 @@ import {
 } from "@/features/hub";
 import { StatsCardSkeleton, RecentPostSkeleton } from "@/shared/ui/skeleton";
 
-const AnalyticsChart = dynamic(() => import("@/components/dashboard/AnalyticsChart"), {
+const AnalyticsChart = dynamic(() => import("@/features/analytics").then((m) => m.AnalyticsChart), {
   loading: () => <div className="bg-white rounded-[28px] border-2 border-brand-dark p-8 h-[280px] animate-pulse" />,
 });
 

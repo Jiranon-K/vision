@@ -1,6 +1,6 @@
 "use client";
 
-import type { TrafficSource } from "@/types/types";
+import type { TrafficSource } from "../types";
 
 interface TrafficSourcesProps {
   sources: TrafficSource[];

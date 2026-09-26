@@ -1,6 +1,6 @@
 "use client";
 
-import type { DashboardStat } from "@/types/types";
+import type { DashboardStat } from "../types";
 
 interface MetricCardProps {
   stat: DashboardStat;
