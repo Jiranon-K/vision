@@ -280,6 +280,6 @@ export const webEnv: Record<string, string> = {
   // Keeps the E2E run off the developer's `.next` lock (see next.config.ts).
   NEXT_DIST_DIR: '.next-e2e',
   // The suite seeds the database after the web server is up, so ISR must be off
-  // or every page renders the listing as it was before the seed (see src/lib/posts.ts).
+  // or every page renders the listing as it was before the seed (see src/features/blog/server.ts).
   POSTS_REVALIDATE: '0',
 };

@@ -1,5 +1,5 @@
 import { type PostSummary } from "@/features/posts";
-import BlogCard from "./BlogCard";
+import BlogCard from "./blog-card";
 
 // BlogCard ships with `opacity-0` (revealed by BlogList's anime.js stagger).
 // There's no animator on the article page, so force the cards visible here.

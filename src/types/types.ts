@@ -1,17 +1,4 @@
-import { type PostCreator } from "@/features/posts";
 import { type AccountRole } from "@/features/auth";
-
-export interface BlogPost {
-  id: string;
-  title: string;
-  excerpt: string;
-  category: string;
-  slug: string;
-  author: PostCreator;
-  date: string;
-  readTime: string;
-  featured: boolean;
-}
 
 export interface AuthUser {
   id: string;

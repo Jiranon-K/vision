@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { incrementPostViews } from "@/lib/posts";
+import { incrementPostViews } from "../api";
 
 // Fire-and-forget view ping on mount. In dev, React Strict Mode may invoke this
 // twice; in production it runs once per page load.

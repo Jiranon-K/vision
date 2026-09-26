@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { API_URL, CREATOR, SEEDED_PUBLISHED_POST, STORAGE_STATE } from './config';
 
-// Guards the contract between src/lib/posts.ts and the API: this path is a
+// Guards the contract between src/features/blog/server.ts and the API: this path is a
 // server-side fetch at render time, so a shape change breaks the page rather
 // than surfacing as a type error.
 test('blog lists a published post and its detail page renders', async ({ page }) => {

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
-import FeaturedCard from "@/components/blog/FeaturedCard";
-import BlogCard from "@/components/blog/BlogCard";
+import FeaturedCard from "./featured-card";
+import BlogCard from "./blog-card";
 import { categories, type PostSummary } from "@/features/posts";
 
 const BlogList = ({ posts }: { posts: PostSummary[] }) => {

@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Navbar from "@/shared/layout/navbar";
 import Footer from "@/shared/layout/footer";
-import PostContent from "@/components/blog/PostContent";
-import ReadingProgress from "@/components/blog/ReadingProgress";
-import Breadcrumbs from "@/components/blog/Breadcrumbs";
-import TableOfContents from "@/components/blog/TableOfContents";
-import ShareButtons from "@/components/blog/ShareButtons";
-import RelatedPosts from "@/components/blog/RelatedPosts";
-import ViewTracker from "@/components/blog/ViewTracker";
-import CreatorByline from "@/components/blog/CreatorByline";
+import {
+  PostContent,
+  ReadingProgress,
+  Breadcrumbs,
+  TableOfContents,
+  ShareButtons,
+  RelatedPosts,
+  ViewTracker,
+  CreatorByline,
+} from "@/features/blog";
 import { initialsOf } from "@/shared/lib/utils";
-import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/lib/posts";
+import { getPostBySlug, getPublishedPosts, isMovedPost } from "@/features/blog/server";
 import { type PostSummary } from "@/features/posts";
 import { SITE_URL, SITE_NAME } from "@/shared/lib/site";
 
