@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sidebarNavItems } from "@/lib/constants";
+import { sidebarNavItems } from "@/features/hub";
 import {
   DashboardIcon,
   PostsIcon,

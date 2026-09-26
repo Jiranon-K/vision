@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { QuickAction } from "@/types/types";
+import type { QuickAction } from "../types";
 import { PlusIcon, UploadIcon, ChartIcon, SettingsIcon } from "@/shared/ui/icons";
 
 interface QuickActionButtonProps {

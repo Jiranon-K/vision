@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { sidebarNavItems } from "@/lib/constants";
+import { sidebarNavItems } from "../navigation";
 import { logoutRequest } from "@/features/auth";
 import { 
   DashboardIcon, 

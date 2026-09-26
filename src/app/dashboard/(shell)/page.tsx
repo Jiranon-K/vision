@@ -4,11 +4,13 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "@/features/auth";
 import { animate, stagger } from "animejs";
 import dynamic from "next/dynamic";
-import StatsCard from "@/components/dashboard/StatsCard";
-import RecentPostCard from "@/components/dashboard/RecentPostCard";
-import QuickActionButton from "@/components/dashboard/QuickActionButton";
-import { quickActions } from "@/lib/constants";
-import { useDashboardData } from "@/hooks/useDashboardData";
+import {
+  StatsCard,
+  RecentPostCard,
+  QuickActionButton,
+  quickActions,
+  useDashboardData,
+} from "@/features/hub";
 import { StatsCardSkeleton, RecentPostSkeleton } from "@/shared/ui/skeleton";
 
 const AnalyticsChart = dynamic(() => import("@/components/dashboard/AnalyticsChart"), {

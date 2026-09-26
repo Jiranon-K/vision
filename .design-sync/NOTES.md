@@ -93,7 +93,7 @@ Popover:
 `LogoIcon` hardcoded `fill="#b9ff66"` while every other icon uses `currentColor`,
 so it painted lime-on-lime and vanished on brand surfaces. Changed to
 `fill="currentColor"`, with `className="text-brand-lime"` added at its only call
-site (`src/components/dashboard/Sidebar.tsx`) to preserve the existing appearance.
+site (`src/features/hub/components/sidebar.tsx`) to preserve the existing appearance.
 
 ## Known render warns
 

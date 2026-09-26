@@ -1,6 +1,6 @@
 # 12 — The Smart Creator Hub's frame becomes a feature
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -33,3 +33,20 @@ the URL stays `/dashboard`.
 
 - Analytics (ticket 13) and settings (ticket 14), which are rendered inside the
   Hub but are their own features.
+
+## Evidence
+
+- Every step of `bun run verify:full` exited 0 on 2026-09-26, run one after
+  another: typecheck (frontend, server, harness); lint 0 errors (2
+  pre-existing warnings); server tests 237 passed (`--maxWorkers=2`, see
+  ticket 07); harness 37 passed; `next build` compiled; Playwright 24 passed,
+  including `hub-data` (3).
+- `lib/constants.ts` held only the Hub's navigation after ticket 10, so it
+  moved whole to `features/hub/navigation.ts`; `NavItem` and `QuickAction`
+  moved to `features/hub/types.ts`. The editor's rail imports
+  `sidebarNavItems` from `@/features/hub`.
+- **Deviation:** `DashboardStat` did not move here. It is the shape the
+  analytics API returns and Analytics' `MetricCard` uses it too; the Hub
+  already depends on Analytics (`useDashboardData` calls `useStats` and
+  `useViewsTrend`), so ticket 13 moves it into Analytics and the Hub imports
+  it from there.

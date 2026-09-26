@@ -1,4 +1,4 @@
-import type { QuickAction, NavItem } from "@/types/types";
+import type { QuickAction, NavItem } from "./types";
 
 export const sidebarNavItems: NavItem[] = [
   { id: "1", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
