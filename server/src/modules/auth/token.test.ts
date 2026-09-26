@@ -4,7 +4,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 process.env.JWT_SECRET = 'test-secret-for-vitest';
 process.env.JWT_REFRESH_SECRET = 'test-secret-for-vitest-refresh';
 
-const { hashToken } = await import('../../src/utils/token');
+const { hashToken } = await import('./token');
 
 beforeAll(() => {
   process.env.JWT_SECRET = 'test-secret-for-vitest';

@@ -1,16 +1,14 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from './post.model';
-import User from '../../models/User';
+import { User, READER, type AuthRequest } from '../auth';
 import { recordView, forgetViews } from '../analytics';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
 } from '../excerpt-suggestion';
-import { AuthRequest } from '../../middleware/auth';
 import { badRequest, notFound, validationFailed } from '../../platform/errors';
 import {
-  READER,
   actionsForUpdate,
   advertisedActions,
   authorize,

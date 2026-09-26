@@ -2,7 +2,7 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 import { Post } from '../posts';
 import PostView, { startOfUtcDay } from './post-view.model';
-import { AuthRequest } from '../../middleware/auth';
+import type { AuthRequest } from '../auth';
 
 const TREND_DAYS = 7;
 

@@ -10,9 +10,9 @@ import {
   resetPassword,
   verifyEmail,
   resendVerification,
-} from '../controllers/auth.controller';
-import { auth } from '../middleware/auth';
-import { loginLimiter, registerLimiter, forgotPasswordLimiter, resendVerificationLimiter } from '../platform/rate-limit';
+} from './auth.controller';
+import { auth } from './require-session';
+import { loginLimiter, registerLimiter, forgotPasswordLimiter, resendVerificationLimiter } from '../../platform/rate-limit';
 
 const router = Router();
 

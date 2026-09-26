@@ -12,7 +12,7 @@ import {
   withholdPost,
   restorePost,
 } from './posts.controller';
-import { auth, optionalAuth } from '../../middleware/auth';
+import { auth, optionalAuth } from '../auth';
 import { recordViewLimiter, suggestExcerptLimiter } from '../../platform/rate-limit';
 
 const router = Router();

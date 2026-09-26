@@ -9,7 +9,7 @@ export interface EditorMeterSlotProps {
 }
 
 // Fills the slot ticket 01 left empty. Reading time is already computed and
-// shown wherever a Post appears (see server/src/utils/postContent.ts) — the
+// shown wherever a Post appears (see server/src/modules/posts/content.ts) — the
 // Creator writing it is the one person who can't see it until now.
 export default function EditorMeterSlot({ content, className = "" }: EditorMeterSlotProps) {
   const { words, readTime } = useMemo(() => {

@@ -3,7 +3,7 @@
 // server dir:  bun run backfill-owner
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import User from '../src/models/User';
+import { User } from '../src/modules/auth';
 import { Post } from '../src/modules/posts';
 
 async function findAdmin() {

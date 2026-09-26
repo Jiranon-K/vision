@@ -1,22 +1,22 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import User from '../models/User';
-import { AuthRequest } from '../middleware/auth';
-import { logger } from '../platform/logger';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken, newSessionId } from '../utils/token';
-import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../platform/cookies';
-import { validatePasswordStrength } from '../utils/password';
-import { trackFailedLogin, resetFailedLogin, isAccountLocked } from '../middleware/loginSecurity';
+import User from './user.model';
+import { AuthRequest } from './require-session';
+import { logger } from '../../platform/logger';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, hashToken, newSessionId } from './token';
+import { setAccessTokenCookie, setRefreshTokenCookie, clearAuthCookies } from '../../platform/cookies';
+import { validatePasswordStrength } from './password';
+import { trackFailedLogin, resetFailedLogin, isAccountLocked } from './login-security';
 import {
   registerSchema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
   verifyEmailSchema,
-} from '../schemas/auth';
-import { sendResetPasswordEmail, sendVerificationEmail } from '../platform/emails/send';
-import { bootstrapsFirstAdmin } from '../utils/roles';
-import { isRole } from '../authz/roles';
+} from './auth.schema';
+import { sendResetPasswordEmail, sendVerificationEmail } from '../../platform/emails/send';
+import { bootstrapsFirstAdmin } from './admin-bootstrap';
+import { isRole } from './roles';
 
 const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
 const REMEMBER_ME_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;

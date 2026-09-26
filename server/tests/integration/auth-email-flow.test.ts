@@ -105,7 +105,7 @@ describe('Forgot → Reset flow', () => {
 
     const token = tokenFromResetCall();
 
-    const User = (await import('../../src/models/User')).default;
+    const User = (await import('../../src/modules/auth/user.model')).default;
     await User.updateOne(
       { email: 'expire@test.local' },
       { resetPasswordExpiry: new Date(Date.now() - 1000) }
@@ -138,7 +138,7 @@ describe('Register → Verify flow', () => {
       .send({ token });
     expect(res.status).toBe(200);
 
-    const User = (await import('../../src/models/User')).default;
+    const User = (await import('../../src/modules/auth/user.model')).default;
     const user = await User.findOne({ email: 'verify@test.local' });
     expect(user?.emailVerified).toBe(true);
   });
@@ -171,7 +171,7 @@ describe('Resend verification flow', () => {
     const reg = await registerUser('alreadyverified@test.local');
     const cookies = reg.headers['set-cookie'];
 
-    const User = (await import('../../src/models/User')).default;
+    const User = (await import('../../src/modules/auth/user.model')).default;
     await User.updateOne(
       { email: 'alreadyverified@test.local' },
       { emailVerified: true, verificationToken: undefined, verificationTokenExpiry: undefined }

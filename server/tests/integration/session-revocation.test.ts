@@ -164,7 +164,7 @@ describe('Resetting a password', () => {
     // same way the controller does.
     const crypto = await import('crypto');
     const rawToken = 'a-known-reset-token';
-    const User = (await import('../../src/models/User')).default;
+    const User = (await import('../../src/modules/auth/user.model')).default;
     await User.updateOne(
       { email: 'resetter@test.local' },
       {

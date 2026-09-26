@@ -1,4 +1,4 @@
-import User from '../models/User';
+import User from './user.model';
 
 const LOCKOUT_DURATION = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 5;
