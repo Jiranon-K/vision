@@ -48,7 +48,7 @@ test.beforeAll(async () => {
   }
 
   // Views and the weekly chart are written straight to Mongo because the product
-  // has no write path for them: routes/analytics.ts is GET-only, and Post.views
+  // has no write path for them: modules/analytics/analytics.routes.ts is GET-only, and Post.views
   // moves solely through POST /api/posts/:id/view — thousands of calls to reach
   // numbers that look like a real Creator's.
   const client = new MongoClient(E2E_MONGODB_URI);

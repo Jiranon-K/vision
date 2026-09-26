@@ -13,7 +13,7 @@ import { errorHandler, notFoundHandler } from './platform/middleware/error-handl
 
 import authRoutes from './routes/auth';
 import postsRoutes from './modules/posts/posts.routes';
-import analyticsRoutes from './routes/analytics';
+import analyticsRoutes from './modules/analytics/analytics.routes';
 import settingsRoutes from './routes/settings';
 import capabilitiesRoutes from './routes/capabilities';
 
