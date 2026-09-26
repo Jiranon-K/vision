@@ -44,7 +44,7 @@ A machine gate runs after you finish, outside your control:
 - Fast tier, every iteration: \`bun run typecheck\`, \`bun run typecheck:server\`,
   \`bun run lint\`, \`bun run test:server\`
 - Slow tier, once before the PR: \`bun run build\`, and \`bun run test:e2e\` when
-  the diff touches app/, components/, hooks/, or middleware.ts
+  the diff touches src/
 
 Failures come back to you as a message. Do not run the gate yourself and do not
 add your own checking passes; the loop handles that.

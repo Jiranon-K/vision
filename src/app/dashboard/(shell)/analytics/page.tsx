@@ -8,7 +8,7 @@ import TrafficSources from "@/components/dashboard/analytics/TrafficSources";
 import PopularPosts from "@/components/dashboard/analytics/PopularPosts";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
-import { StatsCardSkeleton } from "@/components/ui/Skeleton";
+import { StatsCardSkeleton } from "@/shared/ui/skeleton";
 
 const AnalyticsChart = dynamic(
   () => import("@/components/dashboard/AnalyticsChart"),

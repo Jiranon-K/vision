@@ -9,7 +9,7 @@ import {
   AnalyticsIcon,
   SettingsIcon,
   LogoIcon,
-} from "@/components/ui/Icons";
+} from "@/shared/ui/icons";
 
 // The editor keeps the dashboard's navigation, collapsed to icons — the
 // design shows the 72px rail beside the writing surface at every width above

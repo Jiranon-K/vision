@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useLayoutEffect, useRef } from "react";
-import { BoldIcon, ItalicIcon, LinkIcon, ImageIcon, CodeIcon, QuoteIcon, ListIcon } from "@/components/ui/Icons";
+import { BoldIcon, ItalicIcon, LinkIcon, ImageIcon, CodeIcon, QuoteIcon, ListIcon } from "@/shared/ui/icons";
 import { applyWrap } from "./markdownOps";
 import type { ToolbarButton, MarkdownToolbarProps } from "./types";
 

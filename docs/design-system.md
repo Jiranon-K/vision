@@ -5,7 +5,7 @@ every token and every component state in both themes, and it is the page to chec
 a change against.
 
 Source of truth: [`app/globals.css`](../app/globals.css) for tokens,
-[`components/ui/`](../components/ui) for components.
+[`src/shared/ui/`](../src/shared/ui) for components.
 
 ## The three layers
 
@@ -122,7 +122,7 @@ them to the control with `aria-describedby`. Forms should pass `label` / `error`
 rather than composing their own markup around a bare input — that is what keeps the
 wiring correct everywhere.
 
-Both share one `FieldMessage` (`components/ui/field-message.tsx`), which fixes the
+Both share one `FieldMessage` (`src/shared/ui/field-message.tsx`), which fixes the
 precedence: error, then success, then hint. A field never shows two at once.
 
 ### Loading blocks interaction

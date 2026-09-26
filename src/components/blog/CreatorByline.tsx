@@ -1,5 +1,5 @@
 import type { PostCreator } from "@/lib/post-contract";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 const VARIANTS = {
   card: { name: "font-medium text-foreground", byline: "text-text-muted" },

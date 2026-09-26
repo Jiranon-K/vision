@@ -1,6 +1,6 @@
 import Link from "next/link";
-import SocialLinks from "@/components/SocialLinks";
-import FooterProductLinks from "@/components/FooterProductLinks";
+import SocialLinks from "@/shared/layout/social-links";
+import FooterProductLinks from "@/shared/layout/footer-product-links";
 
 const Footer = () => (
   <footer className="bg-brand-dark text-white rounded-t-[45px] mt-20">

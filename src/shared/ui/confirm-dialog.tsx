@@ -2,9 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import { animate, set } from "animejs";
-import { Button } from "@/components/ui/button";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { DURATION_BASE, EASE_OUT } from "@/lib/motion";
+import { Button } from "@/shared/ui/button";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { DURATION_BASE, EASE_OUT } from "@/shared/lib/motion";
 
 interface ConfirmDialogProps {
   open: boolean;

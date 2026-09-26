@@ -1,4 +1,4 @@
-import { authFetch } from "@/lib/api";
+import { authFetch } from "@/shared/lib/api";
 
 /**
  * The Hub's data-fetching seam. Every screen used to hold its own loading flag,

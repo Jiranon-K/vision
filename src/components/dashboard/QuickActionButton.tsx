@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { QuickAction } from "@/types/types";
-import { PlusIcon, UploadIcon, ChartIcon, SettingsIcon } from "@/components/ui/Icons";
+import { PlusIcon, UploadIcon, ChartIcon, SettingsIcon } from "@/shared/ui/icons";
 
 interface QuickActionButtonProps {
   action: QuickAction;

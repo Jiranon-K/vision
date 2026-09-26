@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useRef } from "react";
 import { animate, set } from "animejs";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { DURATION_SLOW, EASE_OUT } from "@/lib/motion";
-import { Button } from "@/components/ui/button";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { DURATION_SLOW, EASE_OUT } from "@/shared/lib/motion";
+import { Button } from "@/shared/ui/button";
 
 export interface SlideOverPanelProps {
   open: boolean;

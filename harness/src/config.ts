@@ -41,8 +41,11 @@ export const LABELS = {
   needsTriage: 'needs-triage',
 };
 
-/** Paths whose modification means the slow gate tier must run. */
-export const UI_PATHS = ['app/', 'components/', 'hooks/', 'middleware.ts'];
+/**
+ * Paths whose modification means the slow gate tier must run. The whole
+ * frontend lives under src/ (ADR 0007), so any change there can reach a page.
+ */
+export const UI_PATHS = ['src/'];
 
 export const BRANCH_PREFIXES = ['feat', 'fix', 'chore', 'docs', 'refactor'] as const;
 export type BranchPrefix = (typeof BRANCH_PREFIXES)[number];

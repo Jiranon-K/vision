@@ -1,4 +1,4 @@
-import QueryProvider from "@/components/dashboard/QueryProvider";
+import QueryProvider from "@/shared/lib/query-provider";
 
 // Wraps every screen under /dashboard, not just the ones inside the (shell)
 // group: the editor lives outside it and still has to invalidate the Posts list

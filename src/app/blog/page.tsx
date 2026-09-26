@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import Navbar from "@/shared/layout/navbar";
+import Footer from "@/shared/layout/footer";
 import NewsletterCta from "@/components/blog/NewsletterCta";
 import BlogList from "@/components/blog/BlogList";
 import { getPublishedPosts } from "@/lib/posts";

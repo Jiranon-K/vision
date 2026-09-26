@@ -12,7 +12,7 @@ Sessions are httpOnly cookies. `src/middleware.ts` gates `/dashboard/*` on cooki
 presence for the redirect, and `src/hooks/useAuth.ts` confirms with `GET /api/auth/me`
 once the page mounts — the cookie check is a fast path, not the authorization.
 
-The Smart Creator Hub fetches through one seam. `src/lib/query.ts` decides cache
+The Smart Creator Hub fetches through one seam. `src/shared/lib/query.ts` decides cache
 keys, freshness windows, retry policy and what a change to a Post invalidates;
 the hooks in `src/hooks/` are the interface every screen consumes, and no screen
 knows a query library is behind them. Session expiry is answered once, at the

@@ -9,7 +9,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthResult } from "@/components/auth/AuthResult";
 import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/shared/ui/input";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

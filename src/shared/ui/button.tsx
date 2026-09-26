@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/shared/lib/utils";
+import { Spinner } from "@/shared/ui/spinner";
 
 const buttonVariants = cva(
   "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl font-medium transition-all disabled:pointer-events-none disabled:opacity-[var(--state-disabled-opacity)] aria-busy:cursor-progress",

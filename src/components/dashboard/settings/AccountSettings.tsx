@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
 import { changePasswordRequest, logoutEverywhereRequest } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import ConfirmDialog from "@/shared/ui/confirm-dialog";
 import { usePasswordToggle } from "@/hooks/usePasswordToggle";
 
 interface PasswordInputProps {

@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate, set } from "animejs";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { PUBLISH_TRANSITION_MS } from "@/lib/motion";
+import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
+import { PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
 import DetailsAction from "./DetailsAction";
 import PublishAction from "./PublishAction";
 import PostStatusSlot from "./PostStatusSlot";

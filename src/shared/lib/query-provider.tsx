@@ -7,7 +7,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { ApiError, retryPolicy } from "@/lib/query";
+import { ApiError, retryPolicy } from "@/shared/lib/query";
 
 // Several requests can be in flight when a session expires, and each one comes
 // back refused. Without this the Creator would be redirected once per request.

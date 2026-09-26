@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogoIcon } from "@/components/ui/Icons";
+import { LogoIcon } from "@/shared/ui/icons";
 
 const BRAND_FACETS = ["Posts", "Analytics", "Editor"];
 

@@ -1,6 +1,6 @@
 import * as React from "react";
-import { cn } from "@/lib/utils";
-import { FieldMessage, hasFieldMessage } from "@/components/ui/field-message";
+import { cn } from "@/shared/lib/utils";
+import { FieldMessage, hasFieldMessage } from "@/shared/ui/field-message";
 
 export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "size"> {
