@@ -2,13 +2,7 @@ import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Post from './post.model';
 import User from '../../models/User';
-import PostView, { startOfUtcDay } from '../../models/PostView';
-import ViewRecord from '../../models/ViewRecord';
-import {
-  VIEW_DEDUPE_WINDOW_HOURS,
-  deriveReader,
-  looksLikeCrawler,
-} from '../../utils/readerIdentity';
+import { recordView, forgetViews } from '../analytics';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
@@ -38,7 +32,6 @@ import {
   saveWithUniqueSlug,
   slugIsTaken,
 } from './slug';
-import { isDuplicateKeyError } from '../../platform/duplicate-key';
 import {
   encodeCursor,
   readCursor,
@@ -480,40 +473,10 @@ export const incrementViews = async (
     return;
   }
 
-  // Indexing is not readership. Answered as success so a crawler learns
-  // nothing from the difference.
-  if (looksLikeCrawler(req)) {
-    res.status(204).end();
-    return;
+  // Whether this was a View is Analytics' question; the Post only keeps the total.
+  if (await recordView(post, req)) {
+    await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
   }
-
-  const now = new Date();
-  const reader = deriveReader(req, now);
-  const expiresAt = new Date(
-    now.getTime() + VIEW_DEDUPE_WINDOW_HOURS * 60 * 60 * 1000
-  );
-
-  try {
-    await ViewRecord.create({ post: post._id, reader, expiresAt });
-  } catch (error) {
-    // The unique index rejecting the row is the deduplication: this Reader has
-    // already been counted for this Post inside the window. Accepted and
-    // ignored rather than refused, so the client needs no logic to interpret it.
-    if (isDuplicateKeyError(error)) {
-      res.status(204).end();
-      return;
-    }
-    throw error;
-  }
-
-  await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
-  // The Post's counter answers "how many"; the daily rollup answers "when",
-  // which is what the Creator's weekly trend is made of.
-  await PostView.updateOne(
-    { post: post._id, day: startOfUtcDay(now) },
-    { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
-    { upsert: true }
-  );
   res.status(204).end();
 };
 
@@ -576,8 +539,6 @@ export const deletePost = async (
   authorize(req.actor!, 'delete', post);
 
   await post.deleteOne();
-  // Totals describe Posts that exist, so the rollup goes with the Post.
-  await PostView.deleteMany({ post: post._id });
-  await ViewRecord.deleteMany({ post: post._id });
+  await forgetViews(post._id);
   res.json({ message: 'Post deleted successfully' });
 };

@@ -1,6 +1,6 @@
 # 04 — Analytics becomes a module, and owns the View
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -49,3 +49,22 @@ The route `POST /api/posts/:id/view` keeps its URL; its handler in Posts calls
 
 - Changing what counts as a View.
 - The Posts service (ticket 18).
+
+## Evidence
+
+- `bun run verify:full` exited 0 on 2026-09-26: lint 0 errors (2 pre-existing
+  warnings), `npx eslint server/src server/scripts` reports nothing; server
+  tests 29 files, 237 passed with no test edited beyond one import path in
+  `view-integrity.test.ts`; harness 37 passed; `next build` compiled;
+  Playwright 24 passed.
+- `recordView(post, req)` returns whether a new View was counted; the Posts
+  handler moves `Post.views` only when it was. `forgetViews(postId)` replaces
+  the two rollup deletes in the Posts delete handler. The one change in order:
+  the daily rollup is now written before `Post.views` is incremented rather
+  than after. Neither write was in a transaction before, so no reader could
+  depend on the order.
+- `analytics.model.ts` (was `models/Analytics.ts`) is imported by nothing in
+  `server/`. It moved as planned and was not deleted; whether it is dead is a
+  separate decision.
+- The Analytics controller reads Posts through `modules/posts` (`Post`), which
+  is in ticket 03's list for ticket 18.

@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
-import { Post } from '../modules/posts';
-import PostView, { startOfUtcDay } from '../models/PostView';
-import { AuthRequest } from '../middleware/auth';
+import { Post } from '../posts';
+import PostView, { startOfUtcDay } from './post-view.model';
+import { AuthRequest } from '../../middleware/auth';
 
 const TREND_DAYS = 7;
 

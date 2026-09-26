@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getStats, getViewsData } from '../controllers/analytics.controller';
-import { auth } from '../middleware/auth';
+import { getStats, getViewsData } from './analytics.controller';
+import { auth } from '../../middleware/auth';
 
 const router = Router();
 

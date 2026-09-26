@@ -9,14 +9,14 @@ process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 
 let mongo: MongoMemoryServer;
 let app: import('express').Express;
-let ViewRecord: typeof import('../../src/models/ViewRecord').default;
+let ViewRecord: typeof import('../../src/modules/analytics/view-record.model').default;
 
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongo.getUri();
   await mongoose.connect(process.env.MONGODB_URI);
   app = (await import('../../src/index')).app;
-  ViewRecord = (await import('../../src/models/ViewRecord')).default;
+  ViewRecord = (await import('../../src/modules/analytics/view-record.model')).default;
   await ViewRecord.syncIndexes();
 });
 
