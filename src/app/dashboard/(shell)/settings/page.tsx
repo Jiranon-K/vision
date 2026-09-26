@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { animate, stagger } from "animejs";
 import Link from "next/link";
-import SettingsTabs from "@/components/dashboard/settings/SettingsTabs";
-import ProfileSettings from "@/components/dashboard/settings/ProfileSettings";
-import AccountSettings from "@/components/dashboard/settings/AccountSettings";
-import NotificationSettings from "@/components/dashboard/settings/NotificationSettings";
+import {
+  SettingsTabs,
+  ProfileSettings,
+  AccountSettings,
+  NotificationSettings,
+} from "@/features/creators";
 import { useAuth } from "@/features/auth";
 
 export default function SettingsPage() {

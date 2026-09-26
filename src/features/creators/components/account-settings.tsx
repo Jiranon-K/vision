@@ -5,7 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/ui/card";
 import { logoutEverywhereRequest, usePasswordToggle } from "@/features/auth";
-import { changePasswordRequest } from "@/lib/api";
+import { changePasswordRequest } from "../api";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import ConfirmDialog from "@/shared/ui/confirm-dialog";

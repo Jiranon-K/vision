@@ -1,5 +1,5 @@
-// Endpoint calls for settings, until ticket 14 moves them into the Creators
-// feature. The credential-carrying fetch itself is in @/shared/lib/api.
+// A Creator's own settings: profile, password and notification preferences.
+// The credential-carrying fetch itself is in @/shared/lib/api.
 import { authFetch } from "@/shared/lib/api";
 
 // Settings / Profile
