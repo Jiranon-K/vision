@@ -44,3 +44,30 @@ export async function currentExcerpts(
     .lean();
   return new Map(posts.map((p) => [String(p._id), p.excerpt]));
 }
+
+/** What following needs to know about a Post a Reader can read: whose it is, and how to link back to it. */
+export async function readablePostForFollowing(postId: string): Promise<
+  | {
+      owner: string;
+      slug: string;
+      title: string;
+      author: { name: string; byline?: string };
+    }
+  | undefined
+> {
+  if (!mongoose.isValidObjectId(postId)) return undefined;
+  const post = await Post.findOne({
+    _id: postId,
+    status: 'Published',
+    withheld: { $ne: true },
+  })
+    .select('owner slug title author')
+    .lean();
+  if (!post) return undefined;
+  return {
+    owner: String(post.owner),
+    slug: post.slug,
+    title: post.title,
+    author: { name: post.author.name, byline: post.author.byline },
+  };
+}

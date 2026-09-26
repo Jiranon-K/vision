@@ -17,10 +17,14 @@ interface ViewedPost {
 // Records that a Reader read a Post the caller has already confirmed is
 // readable. Returns whether it counted as a new View, so the caller can move
 // the Post's own total.
+/** Where a View came from, when the Reader arrived by a link that says. */
+export type ViewSource = 'delivery';
+
 export async function recordView(
   post: ViewedPost,
   req: Request,
-  now = new Date()
+  now = new Date(),
+  source?: ViewSource
 ): Promise<boolean> {
   // Indexing is not readership. Answered as success so a crawler learns
   // nothing from the difference.
@@ -45,7 +49,10 @@ export async function recordView(
   // which is what the Creator's weekly trend is made of.
   await PostView.updateOne(
     { post: post._id, day: startOfUtcDay(now) },
-    { $inc: { count: 1 }, $setOnInsert: { owner: post.owner } },
+    {
+      $inc: { count: 1, fromDelivery: source === 'delivery' ? 1 : 0 },
+      $setOnInsert: { owner: post.owner },
+    },
     { upsert: true }
   );
   return true;

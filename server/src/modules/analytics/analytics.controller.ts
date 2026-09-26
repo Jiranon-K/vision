@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
 import { creatorTotals } from '../posts';
+import { deliveryFigures } from '../followers';
 import PostView, { startOfUtcDay } from './post-view.model';
 import type { AuthRequest } from '../auth';
 
@@ -69,4 +70,24 @@ export const getViewsData = async (
       value: byDay.get(day.getTime()) ?? 0,
     }))
   );
+};
+
+// Growth Analytics' Followers band: the Audience a Creator reaches directly,
+// what they delivered to it, and how many Views came back (ADR 0009).
+export const getFollowerFigures = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  const owner = new mongoose.Types.ObjectId(req.user!.id);
+  const since = startOfUtcDay(new Date(Date.now() - (TREND_DAYS - 1) * 24 * 60 * 60 * 1000));
+
+  const [figures, views] = await Promise.all([
+    deliveryFigures(req.user!.id),
+    PostView.aggregate<{ total: number }>([
+      { $match: { owner, day: { $gte: since } } },
+      { $group: { _id: null, total: { $sum: '$fromDelivery' } } },
+    ]),
+  ]);
+
+  res.json({ ...figures, viewsFromDeliveries: views[0]?.total ?? 0 });
 };

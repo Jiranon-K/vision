@@ -78,7 +78,9 @@ export const incrementViews = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  await posts.viewPost(String(req.params.id), req);
+  // Where the read came from, when the link said: only a Delivery says so.
+  const source = req.body?.source === 'delivery' ? 'delivery' : undefined;
+  await posts.viewPost(String(req.params.id), req, source);
   res.status(204).end();
 };
 

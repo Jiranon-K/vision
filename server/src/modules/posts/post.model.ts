@@ -31,6 +31,8 @@ export interface IPost extends Document {
     liftedBy?: mongoose.Types.ObjectId;
     liftedAt?: Date;
   }[];
+  /** Set once, when the Post is delivered to its Creator's Followers. */
+  delivery?: { followers: number; at: Date };
   /** Supplied by `timestamps: true`; declared so the cursor can read it. */
   createdAt: Date;
   updatedAt: Date;
@@ -60,6 +62,10 @@ const PostSchema = new Schema<IPost>(
     previousSlugs: { type: [String], default: [] },
     coverImage: { type: String },
     withheld: { type: Boolean, default: false },
+    delivery: {
+      type: { _id: false, followers: Number, at: Date },
+      required: false,
+    },
     withholdings: {
       type: [
         {

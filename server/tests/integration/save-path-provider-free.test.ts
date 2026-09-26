@@ -104,4 +104,22 @@ describe('save path stays provider-free (ADR 0002)', () => {
     expect(resolveGenerateTextSpy).not.toHaveBeenCalled();
     expect(suggestExcerptSpy).not.toHaveBeenCalled();
   });
+
+  it('publishing with a Delivery chosen reaches neither, and sends no email on the way', async () => {
+    const cookies = await register('deliver-provider-free@test.local');
+    const res = await request(app)
+      .post('/api/posts')
+      .set('Cookie', cookies)
+      .send({
+        title: 'A delivered post',
+        content: 'Published and delivered, with no provider in the way.',
+        category: 'SEO',
+        status: 'Published',
+        deliver: true,
+      });
+
+    expect(res.status).toBe(201);
+    expect(resolveGenerateTextSpy).not.toHaveBeenCalled();
+    expect(suggestExcerptSpy).not.toHaveBeenCalled();
+  });
 });

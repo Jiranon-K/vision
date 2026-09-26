@@ -2,7 +2,8 @@ import type { Request } from 'express';
 import mongoose from 'mongoose';
 import Post from './post.model';
 import { User, READER, type Actor } from '../auth';
-import { recordView, forgetViews } from '../analytics';
+import { recordView, forgetViews, type ViewSource } from '../analytics';
+import { deliverPost } from '../followers';
 import {
   recordExcerptSuggestion,
   claimOrphanSuggestion,
@@ -316,6 +317,7 @@ export async function createPost(
 
   await saveWithUniqueSlug(post, title);
   await claimOrphanSuggestion(actor.id, post._id as mongoose.Types.ObjectId);
+  await deliverIfChosen(post, validation.data.deliver);
   return present(post, actor);
 }
 
@@ -379,7 +381,35 @@ export async function updatePost(
 
   await post.save();
 
+  const publishing = !wasPublished && post.status === 'Published';
+  if (publishing) await deliverIfChosen(post, data.deliver);
+
   return present(post, actor);
+}
+
+// Delivers a Post that has just become Published, when the Creator chose to.
+// Never fails the publish: the Post is saved first, and a Delivery that could
+// not be queued is logged rather than surfaced (ADR 0002's rule, for email).
+async function deliverIfChosen(post: PostDocument, deliver: boolean | undefined): Promise<void> {
+  if (!deliver || post.status !== 'Published' || post.withheld || post.delivery) return;
+  try {
+    const delivery = await deliverPost({
+      postId: post._id as mongoose.Types.ObjectId,
+      creatorId: String(post.owner),
+      title: post.title,
+      excerpt: post.excerpt,
+      readTime: post.readTime,
+      coverImage: post.coverImage,
+      slug: post.slug,
+      creatorName: post.author.name,
+      byline: post.author.byline,
+    });
+    if (!delivery) return;
+    post.delivery = delivery;
+    await Post.updateOne({ _id: post._id }, { $set: { delivery } });
+  } catch (error) {
+    logger.error({ err: error, post: String(post._id) }, 'Delivery could not be queued');
+  }
 }
 
 export async function deletePost(actor: Actor, id: string): Promise<void> {
@@ -449,7 +479,11 @@ export async function restorePost(
  * Counts a Reader's visit to a Post, when it was one. The request identifies
  * the Reader for deduplication; nothing else is read from it.
  */
-export async function viewPost(id: string, visit: Request): Promise<void> {
+export async function viewPost(
+  id: string,
+  visit: Request,
+  source?: ViewSource
+): Promise<void> {
   // A malformed id is the caller's mistake; a failure to write is the
   // server's. Catching everything and calling it "Invalid id" blended the two.
   if (!mongoose.isValidObjectId(id)) {
@@ -466,7 +500,7 @@ export async function viewPost(id: string, visit: Request): Promise<void> {
   if (!can(READER, 'read', post)) return;
 
   // Whether this was a View is Analytics' question; the Post only keeps the total.
-  if (await recordView(post, visit)) {
+  if (await recordView(post, visit, new Date(), source)) {
     await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
   }
 }
