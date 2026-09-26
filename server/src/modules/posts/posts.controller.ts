@@ -1,479 +1,84 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
-import Post from './post.model';
-import { User, READER, type AuthRequest } from '../auth';
-import { recordView, forgetViews } from '../analytics';
-import {
-  recordExcerptSuggestion,
-  claimOrphanSuggestion,
-} from '../excerpt-suggestion';
-import { badRequest, notFound, validationFailed } from '../../platform/errors';
-import {
-  actionsForUpdate,
-  advertisedActions,
-  authorize,
-  can,
-  listScope,
-  type Actor,
-} from './policy';
-import { logger } from '../../platform/logger';
-import {
-  postSchema,
-  updatePostSchema,
-  suggestExcerptSchema,
-  withholdSchema,
-} from './posts.schema';
-import { computeReadTime, deriveExcerpt } from './content';
-import {
-  normalizeSlug,
-  proposeSlug,
-  saveWithUniqueSlug,
-  slugIsTaken,
-} from './slug';
-import {
-  encodeCursor,
-  readCursor,
-  readLimit,
-  type Cursor,
-} from '../../platform/pagination';
-import { suggestExcerpt, resolveGenerateText } from '../excerpt-suggestion';
+import type { AuthRequest } from '../auth';
+import * as posts from './posts.service';
 
-// The Creator's own text must never be read as syntax: a term is a phrase to
-// match, not an expression to evaluate. `$text` treats a quoted string as a
-// literal phrase, so quoting is both the escaping and the "these words, in this
-// order" behaviour a Creator expects when they type more than one word.
-const asPhrase = (term: string): string => `"${term.replace(/"/g, ' ')}"`;
+// HTTP only: read the request, call the service, write the response. The rules
+// — who may do what, Slugs, derived fields, list scope — live in posts.service.ts.
 
-// A term of one or two characters is an in-progress query, not a search. Left
-// unfiltered it would return the whole collection on every keystroke.
-const MIN_SEARCH_LENGTH = 2;
-
-// The score is sorted by but never returned: it is a ranking mechanism, not
-// part of what a Post is, and MongoDB has allowed a $meta sort without a
-// matching projection since 4.4.
-type SortSpec = Record<string, 1 | -1 | { $meta: 'textScore' }>;
-
-interface ListShape {
-  filter: Record<string, unknown>;
-  sort: SortSpec;
-}
-
-// Category and search narrow a list the same way for both audiences; who may
-// see which Posts is decided by the caller, not here.
-const applyListFilters = (
-  scope: Record<string, unknown>,
-  narrowing: Record<string, unknown>,
-  query: Request['query']
-): ListShape => {
-  const { category, search } = query;
-
-  if (category && category !== 'All') {
-    narrowing = { ...narrowing, category };
-  }
-
-  const collides = Object.keys(narrowing).some((key) => key in scope);
-  const filter: Record<string, unknown> = collides
-    ? { $and: [scope, narrowing] }
-    : { ...scope, ...narrowing };
-
-  const term = typeof search === 'string' ? search.trim() : '';
-  if (term.length < MIN_SEARCH_LENGTH) {
-    return { filter, sort: { createdAt: -1 } };
-  }
-
-  // Relevance orders the result; recency breaks ties. Relevance alone makes two
-  // equally good matches arbitrary; recency alone is what the old behaviour got
-  // wrong.
-  filter.$text = { $search: asPhrase(term) };
-  return {
-    filter,
-    sort: { score: { $meta: 'textScore' }, createdAt: -1 },
-  };
-};
-
-// The listing representation, named rather than "the full Post with fields
-// removed": naming it makes an accidental addition visible, where subtracting
-// from a full record invites the next person to add one back. `content` is
-// excluded at the database — projecting is what makes the request cheap;
-// loading and discarding only makes the response smaller.
-const LISTING_FIELDS = '-content -coverImage';
-
-const ACCESS_FIELDS = 'owner status withheld';
-
-type PostDocument = InstanceType<typeof Post>;
-
-function present(post: PostDocument, actor: Actor): Record<string, unknown> {
-  const permissions = advertisedActions(actor, post);
-  const { withheld, ...body } = post.toJSON() as Record<string, unknown>;
-  return permissions ? { ...body, withheld, permissions } : body;
-}
-
-/**
- * One page of a listing, plus how to ask for the next. No total count: counting
- * the whole collection on every page defeats the purpose of paginating it.
- */
-async function listPage(
-  filter: Record<string, unknown>,
-  sort: SortSpec,
-  select: string,
-  limit: number,
-  cursor?: Cursor
-): Promise<{ items: PostDocument[]; nextCursor?: string }> {
-  const searching = 'score' in sort;
-
-  const query = Post.find(searching ? filter : withCursor(filter, cursor))
-    .select(select)
-    .sort(sort)
-    // One more than asked for, so "is there another page" needs no second query.
-    .limit(limit + 1);
-
-  if (searching && cursor?.kind === 'offset') {
-    query.skip(cursor.offset);
-  }
-
-  const rows = await query;
-  const hasMore = rows.length > limit;
-  const items = hasMore ? rows.slice(0, limit) : rows;
-
-  if (!hasMore) {
-    return { items };
-  }
-
-  if (searching) {
-    const offset = (cursor?.kind === 'offset' ? cursor.offset : 0) + limit;
-    return { items, nextCursor: encodeCursor({ kind: 'offset', offset }) };
-  }
-
-  const last = items[items.length - 1];
-  return {
-    items,
-    nextCursor: encodeCursor({
-      kind: 'created',
-      createdAt: last.createdAt as Date,
-      id: String(last._id),
-    }),
-  };
-}
-
-// Newest first, with the id breaking a tie, so a cursor is unambiguous even
-// when two Posts share a creation timestamp.
-function withCursor(
-  filter: Record<string, unknown>,
-  cursor?: Cursor
-): Record<string, unknown> {
-  if (cursor?.kind !== 'created') return filter;
-  return {
-    ...filter,
-    $or: [
-      { createdAt: { $lt: cursor.createdAt } },
-      { createdAt: cursor.createdAt, _id: { $lt: cursor.id } },
-    ],
-  };
-}
-
-// The Smart Creator Hub's list: the Posts this Creator owns, Draft and
-// Published alike. Ownership is a filter rather than a check — a filter applied
-// after the query has already pulled every Creator's Drafts into the process.
 export const getPosts = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const narrowing: Record<string, unknown> = {};
-
-  const { status } = req.query;
-  if (status && status !== 'All') {
-    narrowing.status = status;
-  }
-
-  const actor = req.actor!;
-  const shape = applyListFilters(listScope(actor), narrowing, req.query);
-
-  const page = await listPage(
-    shape.filter,
-    shape.sort,
-    LISTING_FIELDS,
-    readLimit(req.query),
-    readCursor(req.query)
-  );
-  res.json({ ...page, items: page.items.map((post) => present(post, actor)) });
+  res.json(await posts.listPosts(req.actor!, req.query));
 };
 
-// The Reader's list. It takes no session into account at all: branching on
-// whether one happened to be present is what let a signed-in Creator read every
-// other Creator's Drafts. Owner ids never cross this boundary.
 export const getPublicPosts = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const shape = applyListFilters(listScope(READER), {}, req.query);
-
-  res.json(
-    await listPage(
-      shape.filter,
-      shape.sort,
-      `${LISTING_FIELDS} -owner -withheld`,
-      readLimit(req.query),
-      readCursor(req.query)
-    )
-  );
+  res.json(await posts.listPublishedPosts(req.query));
 };
 
 export const getPost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const post = await Post.findById(req.params.id);
-  authorize(req.actor!, 'read', post);
-  res.json(present(post, req.actor!));
+  res.json(await posts.getPost(req.actor!, String(req.params.id)));
 };
 
 export const getPostBySlug = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const post = await Post.findOne({
-    ...listScope(READER),
-    slug: req.params.slug,
-  });
-  if (post) {
-    res.json(present(post, READER));
+  const found = await posts.getPublishedBySlug(String(req.params.slug));
+  if ('post' in found) {
+    res.json(found.post);
     return;
   }
 
-  // A retained address answers with a permanent redirect rather than failing,
-  // so a bookmark or a link already broadcast to a channel keeps working and
-  // search engines learn the new address.
-  const moved = await Post.findOne({
-    ...listScope(READER),
-    previousSlugs: req.params.slug,
-  }).select('slug');
-  if (moved) {
-    res
-      .status(301)
-      .location(`/api/posts/slug/${encodeURIComponent(moved.slug)}`)
-      .json({ slug: moved.slug });
-    return;
-  }
-
-  throw notFound('Post not found');
+  // A permanent redirect rather than a failure, so search engines learn the
+  // new address.
+  res
+    .status(301)
+    .location(`/api/posts/slug/${encodeURIComponent(found.movedTo)}`)
+    .json({ slug: found.movedTo });
 };
 
 export const createPost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const validation = postSchema.safeParse(req.body);
-  if (!validation.success) {
-    throw validationFailed(validation.error.issues);
-  }
-
-  const { title, excerpt, content, category, status, featured, coverImage } =
-    validation.data;
-
-  const [slug, creator] = await Promise.all([
-    validation.data.slug
-      ? normalizeSlug(validation.data.slug)
-      : proposeSlug(title),
-    User.findById(req.user!.id).select('profile.byline'),
-  ]);
-  const byline = creator?.profile?.byline;
-
-  const post = new Post({
-    title,
-    excerpt: deriveExcerpt(content, excerpt),
-    content,
-    category,
-    status,
-    readTime: computeReadTime(content),
-    featured: featured || false,
-    coverImage,
-    slug,
-    owner: req.user!.id,
-    author: {
-      name: req.user?.name || 'Unknown Creator',
-      ...(byline ? { byline } : {}),
-    },
-  });
-
-  if (validation.data.slug && (await slugIsTaken(slug))) {
-    throw badRequest('That address is already taken by another Post');
-  }
-
-  await saveWithUniqueSlug(post, title);
-  await claimOrphanSuggestion(
-    req.user!.id,
-    post._id as mongoose.Types.ObjectId
-  );
-  res.status(201).json(present(post, req.actor!));
+  res
+    .status(201)
+    .json(await posts.createPost(req.actor!, req.body, req.user?.name));
 };
 
 export const updatePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const validation = updatePostSchema.safeParse(req.body);
-  if (!validation.success) {
-    throw validationFailed(validation.error.issues);
-  }
-
-  const post = await Post.findById(req.params.id);
-  authorize(req.actor!, 'edit', post);
-
-  const data = validation.data;
-  for (const action of actionsForUpdate(post, data)) {
-    authorize(req.actor!, action, post);
-  }
-  const wasPublished = post.status === 'Published';
-
-  if (data.title !== undefined) {
-    post.title = data.title;
-    // A Draft's address follows its title, because a Draft has no Readers and
-    // no indexed URL. Once Published the two are independent: regenerating the
-    // Slug from a retitled headline threw away every link pointing at it.
-    if (!wasPublished) {
-      post.slug = await proposeSlug(data.title, String(post._id));
-    }
-  }
-
-  // An address a Creator sets deliberately is the one case a Published Slug
-  // moves. The old one is retained so links already shared keep working.
-  if (data.slug !== undefined) {
-    const nextSlug = normalizeSlug(data.slug);
-    if (nextSlug !== post.slug) {
-      if (await slugIsTaken(nextSlug, String(post._id))) {
-        throw badRequest('That address is already taken by another Post');
-      }
-      if (wasPublished) {
-        post.previousSlugs = [...(post.previousSlugs ?? []), post.slug];
-      }
-      post.slug = nextSlug;
-    }
-  }
-  if (data.content !== undefined) post.content = data.content;
-  if (data.category !== undefined) post.category = data.category;
-  if (data.status !== undefined) post.status = data.status;
-  if (data.featured !== undefined) post.featured = data.featured;
-  if (data.coverImage !== undefined) post.coverImage = data.coverImage;
-
-  // Recompute derived fields whenever the source content changes; re-derive the
-  // excerpt when content changed or a new excerpt was supplied (blank → auto).
-  if (data.content !== undefined) {
-    post.readTime = computeReadTime(post.content);
-  }
-  if (data.content !== undefined || data.excerpt !== undefined) {
-    post.excerpt = deriveExcerpt(post.content, data.excerpt);
-  }
-
-  await post.save();
-
-  res.json(present(post, req.actor!));
+  res.json(
+    await posts.updatePost(req.actor!, String(req.params.id), req.body)
+  );
 };
-
-// A provider that hangs must not hang the Creator's editor with it. 8s is
-// generous for a text summary call but bounds the worst case to "annoying"
-// rather than "stuck forever". Overridable so tests can exercise the timeout
-// path without actually waiting 8s.
-const SUGGESTION_TIMEOUT_MS =
-  Number(process.env.AI_SUGGESTION_TIMEOUT_MS) || 8_000;
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error('Excerpt suggestion timed out')),
-      ms
-    );
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (error) => {
-        clearTimeout(timer);
-        reject(error);
-      }
-    );
-  });
-}
 
 export const suggestPostExcerpt = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const validation = suggestExcerptSchema.safeParse(req.body);
-  if (!validation.success) {
-    throw validationFailed(validation.error.issues);
-  }
-
-  const { content, postId } = validation.data;
-
-  const generateText = resolveGenerateText();
-  if (!generateText) {
+  const suggestion = await posts.suggestPostExcerpt(req.actor!, req.body);
+  if (!suggestion) {
     res.status(503).json({ error: 'Excerpt suggestions are not available' });
     return;
   }
-
-  try {
-    const excerpt = await withTimeout(
-      suggestExcerpt(content, generateText),
-      SUGGESTION_TIMEOUT_MS
-    );
-    await recordExcerptSuggestion({
-      creatorId: req.user!.id,
-      postId,
-      text: excerpt,
-      source: 'provider',
-    });
-    // "provider": this suggestion came from the injected provider call, as
-    // opposed to the derived fallback below.
-    res.json({ excerpt, source: 'provider' });
-  } catch (error) {
-    // A failing or slow provider must not fail the request (it would just
-    // train the Creator to distrust the button) — fall back to the same
-    // mechanical derivation the save path uses, and say so via "source" so
-    // the editor never passes a truncated string off as the AI's work.
-    logger.error(
-      { err: error },
-      'Suggest excerpt error, falling back to derived excerpt'
-    );
-    const excerpt = deriveExcerpt(content);
-    await recordExcerptSuggestion({
-      creatorId: req.user!.id,
-      postId,
-      text: excerpt,
-      source: 'fallback',
-    });
-    res.json({ excerpt, source: 'fallback' });
-  }
+  res.json(suggestion);
 };
 
 export const incrementViews = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  // A malformed id is the caller's mistake; a failure to write is the
-  // server's. Catching everything and calling it "Invalid id" blended the two.
-  if (!mongoose.isValidObjectId(req.params.id)) {
-    throw badRequest('Invalid id');
-  }
-
-  const post = await Post.findById(req.params.id).select(
-    'owner status withheld'
-  );
-  if (!post) {
-    throw notFound('Post not found');
-  }
-  // A Draft has no Readers, so it accumulates no Views. Previously this
-  // incremented whatever id it was handed, without checking that a Reader
-  // could have read it.
-  if (!can(READER, 'read', post)) {
-    res.status(204).end();
-    return;
-  }
-
-  // Whether this was a View is Analytics' question; the Post only keeps the total.
-  if (await recordView(post, req)) {
-    await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
-  }
+  await posts.viewPost(String(req.params.id), req);
   res.status(204).end();
 };
 
@@ -481,61 +86,22 @@ export const withholdPost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const validation = withholdSchema.safeParse(req.body);
-  if (!validation.success) {
-    throw validationFailed(validation.error.issues);
-  }
-
-  const post = await Post.findById(req.params.id).select(ACCESS_FIELDS);
-  authorize(req.actor!, 'withhold', post);
-
-  await Post.updateOne(
-    { _id: post._id, withheld: { $ne: true } },
-    {
-      $set: { withheld: true },
-      $push: {
-        withholdings: {
-          by: req.user!.id,
-          at: new Date(),
-          reason: validation.data.reason,
-        },
-      },
-    }
+  res.json(
+    await posts.withholdPost(req.actor!, String(req.params.id), req.body)
   );
-  post.withheld = true;
-  res.json(present(post, req.actor!));
 };
 
 export const restorePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const post = await Post.findById(req.params.id).select(ACCESS_FIELDS);
-  authorize(req.actor!, 'restore', post);
-
-  await Post.updateOne(
-    { _id: post._id, withheld: true },
-    {
-      $set: {
-        withheld: false,
-        'withholdings.$[open].liftedBy': req.user!.id,
-        'withholdings.$[open].liftedAt': new Date(),
-      },
-    },
-    { arrayFilters: [{ 'open.liftedAt': { $exists: false } }] }
-  );
-  post.withheld = false;
-  res.json(present(post, req.actor!));
+  res.json(await posts.restorePost(req.actor!, String(req.params.id)));
 };
 
 export const deletePost = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const post = await Post.findById(req.params.id);
-  authorize(req.actor!, 'delete', post);
-
-  await post.deleteOne();
-  await forgetViews(post._id);
+  await posts.deletePost(req.actor!, String(req.params.id));
   res.json({ message: 'Post deleted successfully' });
 };

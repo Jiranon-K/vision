@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import mongoose from 'mongoose';
-import { Post } from '../posts';
+import { creatorTotals } from '../posts';
 import PostView, { startOfUtcDay } from './post-view.model';
 import type { AuthRequest } from '../auth';
 
@@ -14,17 +14,9 @@ export const getStats = async (
   req: AuthRequest,
   res: Response
 ): Promise<void> => {
-  const owner = new mongoose.Types.ObjectId(req.user!.id);
-
-  const [viewAgg, postCount] = await Promise.all([
-    Post.aggregate<{ total: number }>([
-      { $match: { owner, status: 'Published' } },
-      { $group: { _id: null, total: { $sum: '$views' } } },
-    ]),
-    Post.countDocuments({ owner }),
-  ]);
-
-  const totalViews = viewAgg[0]?.total ?? 0;
+  const { views: totalViews, posts: postCount } = await creatorTotals(
+    req.user!.id
+  );
 
   // Subscribers and Engagement are absent on purpose. Neither has a
   // per-Creator definition, and a plausible-looking number that describes
