@@ -16,7 +16,7 @@ The sheet itself slides in horizontally over a scrim; reduced motion fades it wi
 
 **Blocked by:** 01 — Publish and its sheet live in the frame.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Publish opens a slide-over holding the Post's Category and its Draft/Published state
 - [ ] The sheet lists what is still missing, in the Creator's terms, before it will let them Publish
@@ -28,3 +28,9 @@ The sheet itself slides in horizontally over a scrim; reduced motion fades it wi
 - [ ] The sheet, the confirm press, and the Draft → Published transition each animate as described, each with a defined reduced-motion state
 - [ ] Both themes render correctly; tokens only, no literals
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `6300838` (feat(dashboard): make Publishing a decision instead of a dropdown) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

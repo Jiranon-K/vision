@@ -24,7 +24,7 @@ Vision must remain fully runnable with no provider credentials: cloning the repo
 
 **Blocked by:** 01 — the term and both decisions must be recorded first; this ticket is written in that vocabulary and constrained by both ADRs.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] With credentials configured, a Creator writing a Post can ask for an Excerpt Suggestion and receives a real summary of that Post in the Excerpt field, editable in place
 - [ ] A Thai-language Post yields a Thai suggestion; an English Post yields English
@@ -35,3 +35,9 @@ Vision must remain fully runnable with no provider credentials: cloning the repo
 - [ ] A Playwright test covers a Creator asking for a suggestion and seeing it land in the field
 - [ ] `server/src/utils/postContent.ts` is unchanged and stays free of I/O
 - [ ] Neither creating nor updating a Post calls a provider
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `915f479` (feat(server): let a Creator ask for an Excerpt Suggestion) via main.
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

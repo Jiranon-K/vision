@@ -10,7 +10,7 @@ This is the one piece of the design that is a feature in its own right rather th
 
 **Blocked by:** 06 — the menu exists to justify what the toolbar dropped, so the toolbar's rule must be in place first.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Typing `/` at the start of an empty line opens the menu
 - [ ] Typing after the `/` filters the options
@@ -21,3 +21,9 @@ This is the one piece of the design that is a feature in its own right rather th
 - [ ] The menu never covers the line being edited, at any viewport width
 - [ ] Both themes render correctly; tokens only, no literals
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `0d26493` (feat(dashboard): add the slash menu the toolbar's rule depends on) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

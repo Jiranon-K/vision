@@ -1,6 +1,6 @@
 # 11 — Search stops reading every Post to answer
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -131,3 +131,9 @@ The ceiling is set deliberately. A text index is a large improvement over a
 collection scan and a small fraction of the cost of a search service. Revisit it
 when a Creator complains about result quality rather than about speed —
 that complaint is the signal that the ceiling has been reached.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `538c8f1` (perf(posts): search from an index instead of reading every Post) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

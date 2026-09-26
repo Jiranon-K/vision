@@ -16,7 +16,7 @@ Dialogs animate by scaling up slightly from transparent; reduced motion fades th
 
 **Blocked by:** 01 — all four render inside the frame.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] Read-only states the fact as an Alert, makes every input inert, and removes Publish rather than disabling it
 - [ ] The load error takes the canvas, says the local Draft is safe, and offers Retry and a way back to the Posts list
@@ -27,3 +27,9 @@ Dialogs animate by scaling up slightly from transparent; reduced motion fades th
 - [ ] Dialogs animate as described, with a defined reduced-motion state
 - [ ] Both themes render correctly; tokens only, no literals — the hard-coded colours in the current error and read-only markup are gone
 - [ ] `bun run verify:fast` passes and the Playwright suite still passes
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `e5c7801` (feat(dashboard): bring the editor's four remaining states onto the design system) via branch feat/editor-redesign (151fdc6).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

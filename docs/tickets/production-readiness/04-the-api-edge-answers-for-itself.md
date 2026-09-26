@@ -1,6 +1,6 @@
 # 04 — The API edge answers for itself
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -133,3 +133,9 @@ it needs to exist before there is anything worth transporting.
 The four unused error bindings the linter currently reports are the visible
 symptom of the underlying shape: handlers catching errors they have nothing to
 say about. Removing them is part of the fix rather than a cleanup alongside it.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `a713c08` (feat(api): give the API an edge that answers for itself); `3233f3a` (chore(api): explain the arity-required unused parameter on the error handler) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

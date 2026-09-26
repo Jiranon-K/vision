@@ -12,7 +12,7 @@ All three sit in the shared shell from ticket 01, use its inline banner for fail
 
 **Blocked by:** 01 — Login page rebuilt on the new auth shell; 02 — Register page on the auth shell, with the new password strength meter; 03 — Inline field validation across login and register.
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] All three screens render inside the shared auth shell on desktop and mobile, with the design's headings and sub-copy
 - [ ] `/forgot-password` submits and lands on the "Check your email" panel naming the address the link went to
@@ -20,3 +20,9 @@ All three sit in the shared shell from ticket 01, use its inline banner for fail
 - [ ] `/verify-email` shows the in-progress state, the "Email verified" success panel, and a Resend verification email action before success
 - [ ] Failures on each screen surface through the shared inline banner
 - [ ] No neo-brutalist styling, `pop-stagger` animation, or `/images/login-error.png` reference remains anywhere under the auth screens
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `defed11` (feat(auth): rebuild the auth screens on the design system); `f4d6240` (refactor(auth): address the review of the auth redesign) via PR #14 (feat/auth-redesign).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.

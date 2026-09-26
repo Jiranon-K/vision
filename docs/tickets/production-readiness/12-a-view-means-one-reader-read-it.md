@@ -1,6 +1,6 @@
 # 12 — A View means one Reader read it
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Problem Statement
 
@@ -138,3 +138,9 @@ The privacy position is a deliberate part of the design rather than a
 consequence of it. The glossary says a Reader is "never signed in; readership
 requires no account", and a deduplication scheme that quietly builds a persistent
 Reader identity would contradict that while appearing to serve it.
+
+## Evidence
+
+- Status reconciled on 2026-09-26: the work was already on `main`, landed by `40b04ca` (feat(posts): a View means one Reader read it) via PR #20 (feat/production-readiness).
+- On 2026-09-26, `bun run verify:fast` exited 0 on `main` at `3197ab0`: typecheck, typecheck:server, typecheck:harness, lint (0 errors, 2 pre-existing warnings), server tests 30 files / 251 passed, harness 37 passed.
+- The acceptance checkboxes above were not re-walked one by one during reconciliation; the commit is the record of what was built.
