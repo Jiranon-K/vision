@@ -5,7 +5,7 @@ import { animate } from "animejs";
 import PostsHeader from "@/components/dashboard/posts/PostsHeader";
 import FilterBar from "@/components/dashboard/posts/FilterBar";
 import PostsTable from "@/components/dashboard/posts/PostsTable";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 import { usePosts } from "@/hooks/usePosts";
 import { toast } from "sonner";
 import { PostRowSkeleton } from "@/shared/ui/skeleton";

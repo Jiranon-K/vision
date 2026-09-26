@@ -1,7 +1,7 @@
 "use client";
 
 import PostEditorForm from "@/components/dashboard/editor/PostEditorForm";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 
 export default function NewPostPage() {
   const { isLoading, isAuthed } = useAuth();

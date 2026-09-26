@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import MetricCard from "@/components/dashboard/analytics/MetricCard";
 import TrafficSources from "@/components/dashboard/analytics/TrafficSources";
 import PopularPosts from "@/components/dashboard/analytics/PopularPosts";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/features/auth";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { StatsCardSkeleton } from "@/shared/ui/skeleton";
 

@@ -3,16 +3,20 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { apiFetch } from "@/shared/lib/api";
-import { passwordMeetsPolicy } from "@/lib/password";
-import { isValidEmail, SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
-import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
-import { useFieldErrors } from "@/hooks/useFieldErrors";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { AuthResult } from "@/components/auth/AuthResult";
-import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
-import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { PasswordField } from "@/components/auth/PasswordField";
-import { PasswordStrength } from "@/components/auth/PasswordStrength";
+import {
+  passwordMeetsPolicy,
+  isValidEmail,
+  SERVICE_UNAVAILABLE,
+  useRedirectIfAuthenticated,
+  useFieldErrors,
+  AuthShell,
+  AuthResult,
+  AuthFormAlert,
+  type AuthBanner,
+  AuthSubmitButton,
+  PasswordField,
+  PasswordStrength,
+} from "@/features/auth";
 import { Input } from "@/shared/ui/input";
 
 export default function RegisterPage() {

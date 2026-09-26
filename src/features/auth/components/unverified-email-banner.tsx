@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { resendVerificationRequest } from "@/lib/api";
+import { resendVerificationRequest } from "../api";
 
 const DISMISS_KEY = "vision:unverified-banner-dismissed";
 

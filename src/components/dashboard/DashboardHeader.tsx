@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
-import UnverifiedEmailBanner from "./UnverifiedEmailBanner";
+import { useAuth } from "@/features/auth";
+import UnverifiedEmailBanner from "../../features/auth/components/unverified-email-banner";
 
 export default function DashboardHeader() {
   const { user } = useAuth(false);

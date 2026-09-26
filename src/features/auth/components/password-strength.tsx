@@ -1,5 +1,5 @@
 import { cn } from "@/shared/lib/utils";
-import { PASSWORD_RULES, metPasswordRules } from "@/lib/password";
+import { PASSWORD_RULES, metPasswordRules } from "../password";
 
 export interface PasswordStrengthProps {
   password: string;

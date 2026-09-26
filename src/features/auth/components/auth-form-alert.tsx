@@ -1,5 +1,5 @@
 import { Alert } from "@/shared/ui/alert";
-import { FIELD_ERROR_BANNER } from "@/lib/auth-validation";
+import { FIELD_ERROR_BANNER } from "../validation";
 
 /**
  * A message the server gave us, as opposed to one the form raised itself.

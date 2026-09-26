@@ -9,7 +9,7 @@ Two deployables that share nothing but an HTTP contract.
   Creators, sessions and the analytics documents.
 
 Sessions are httpOnly cookies. `src/middleware.ts` gates `/dashboard/*` on cookie
-presence for the redirect, and `src/hooks/useAuth.ts` confirms with `GET /api/auth/me`
+presence for the redirect, and `src/features/auth/hooks/use-auth.ts` confirms with `GET /api/auth/me`
 once the page mounts — the cookie check is a fast path, not the authorization.
 
 The Smart Creator Hub fetches through one seam. `src/shared/lib/query.ts` decides cache

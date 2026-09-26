@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sidebarNavItems } from "@/lib/constants";
-import { logoutRequest } from "@/lib/api";
+import { logoutRequest } from "@/features/auth";
 import { 
   DashboardIcon, 
   PostsIcon, 

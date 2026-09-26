@@ -4,18 +4,20 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { apiFetch } from "@/shared/lib/api";
-import { setRememberMe, getRememberMe } from "@/lib/auth";
 import {
+  setRememberMe,
+  getRememberMe,
   isValidEmail,
   SERVICE_UNAVAILABLE,
-} from "@/lib/auth-validation";
-import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
-import { useFieldErrors } from "@/hooks/useFieldErrors";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { AuthResult } from "@/components/auth/AuthResult";
-import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
-import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { PasswordField } from "@/components/auth/PasswordField";
+  useRedirectIfAuthenticated,
+  useFieldErrors,
+  AuthShell,
+  AuthResult,
+  AuthFormAlert,
+  type AuthBanner,
+  AuthSubmitButton,
+  PasswordField,
+} from "@/features/auth";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Input } from "@/shared/ui/input";
 

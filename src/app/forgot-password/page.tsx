@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { forgotPasswordRequest } from "@/lib/api";
-import { isValidEmail, SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
-import { useFieldErrors } from "@/hooks/useFieldErrors";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { AuthResult } from "@/components/auth/AuthResult";
-import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
-import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import {
+  forgotPasswordRequest,
+  isValidEmail,
+  SERVICE_UNAVAILABLE,
+  useFieldErrors,
+  AuthShell,
+  AuthResult,
+  AuthFormAlert,
+  type AuthBanner,
+  AuthSubmitButton,
+} from "@/features/auth";
 import { Input } from "@/shared/ui/input";
 
 export default function ForgotPasswordPage() {

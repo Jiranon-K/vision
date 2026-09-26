@@ -1,5 +1,5 @@
 import type { PostCreator, PostSummary } from "@/lib/post-contract";
-import type { AccountRole } from "@/lib/auth";
+import { type AccountRole } from "@/features/auth";
 
 export interface BlogPost {
   id: string;

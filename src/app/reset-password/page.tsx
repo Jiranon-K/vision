@@ -3,16 +3,19 @@
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { resetPasswordRequest } from "@/lib/api";
-import { passwordMeetsPolicy } from "@/lib/password";
-import { SERVICE_UNAVAILABLE } from "@/lib/auth-validation";
-import { useFieldErrors } from "@/hooks/useFieldErrors";
-import { AuthShell } from "@/components/auth/AuthShell";
-import { AuthResult } from "@/components/auth/AuthResult";
-import { AuthFormAlert, type AuthBanner } from "@/components/auth/AuthFormAlert";
-import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
-import { PasswordField } from "@/components/auth/PasswordField";
-import { PasswordStrength } from "@/components/auth/PasswordStrength";
+import {
+  resetPasswordRequest,
+  passwordMeetsPolicy,
+  SERVICE_UNAVAILABLE,
+  useFieldErrors,
+  AuthShell,
+  AuthResult,
+  AuthFormAlert,
+  type AuthBanner,
+  AuthSubmitButton,
+  PasswordField,
+  PasswordStrength,
+} from "@/features/auth";
 
 const RESET_CROSS_LINK = {
   note: "Remembered it?",

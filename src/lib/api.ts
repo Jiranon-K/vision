@@ -1,18 +1,6 @@
-// Endpoint calls for auth and settings, until tickets 09 and 14 move them into
-// their features. The credential-carrying fetch itself is in @/shared/lib/api.
-import { apiFetch, authFetch } from "@/shared/lib/api";
-
-export async function logoutRequest(): Promise<Response> {
-  return apiFetch("/api/auth/logout", {
-    method: "POST",
-  });
-}
-
-export async function logoutEverywhereRequest(): Promise<Response> {
-  return authFetch("/api/auth/logout-everywhere", {
-    method: "POST",
-  });
-}
+// Endpoint calls for settings, until ticket 14 moves them into the Creators
+// feature. The credential-carrying fetch itself is in @/shared/lib/api.
+import { authFetch } from "@/shared/lib/api";
 
 // Settings / Profile
 export async function getProfileRequest(): Promise<Response> {
@@ -66,36 +54,5 @@ export async function updateNotificationsRequest(data: {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
-  });
-}
-
-// Auth — public flows
-export async function forgotPasswordRequest(email: string): Promise<Response> {
-  return apiFetch("/api/auth/forgot-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-}
-
-export async function resetPasswordRequest(token: string, newPassword: string): Promise<Response> {
-  return apiFetch("/api/auth/reset-password", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, newPassword }),
-  });
-}
-
-export async function verifyEmailRequest(token: string): Promise<Response> {
-  return apiFetch("/api/auth/verify-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token }),
-  });
-}
-
-export async function resendVerificationRequest(): Promise<Response> {
-  return authFetch("/api/auth/resend-verification", {
-    method: "POST",
   });
 }
