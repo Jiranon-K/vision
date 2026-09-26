@@ -1,4 +1,4 @@
-import User from '../models/User';
+import { User } from '../modules/auth';
 
 export async function renameRole(from: string, to: string): Promise<number> {
   const result = await User.collection.updateMany(

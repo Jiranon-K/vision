@@ -11,7 +11,7 @@ import { requestId } from './platform/middleware/request-id';
 import { httpLogger } from './platform/middleware/http-logger';
 import { errorHandler, notFoundHandler } from './platform/middleware/error-handler';
 
-import authRoutes from './routes/auth';
+import authRoutes from './modules/auth/auth.routes';
 import postsRoutes from './modules/posts/posts.routes';
 import analyticsRoutes from './modules/analytics/analytics.routes';
 import settingsRoutes from './routes/settings';

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken, type TokenPayload } from '../utils/token';
-import { READER, actorFrom, type Actor } from '../authz/actor';
+import { verifyAccessToken, type TokenPayload } from './token';
+import { READER, actorFrom, type Actor } from './actor';
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;

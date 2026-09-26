@@ -1,6 +1,6 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import crypto from 'crypto';
-import type { Role } from '../authz/roles';
+import type { Role } from './roles';
 
 const JWT_SECRET: string = process.env.JWT_SECRET ?? (() => {
   throw new Error('JWT_SECRET is required');

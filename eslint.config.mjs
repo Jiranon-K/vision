@@ -186,13 +186,16 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    // Tests are exempt: seeding a database through a model is setup, not coupling.
+    // Tests are exempt, wherever they sit: seeding a database through a model,
+    // or building an Actor directly, is setup rather than coupling.
     files: ["server/src/**/*.{ts,tsx}", "server/scripts/**/*.ts"],
+    ignores: ["**/*.test.ts"],
     rules: { "no-restricted-imports": [LAYOUT, { patterns: [intoModule] }] },
   },
   {
     // Inside a module, a sibling module is `../other/…`; only its index is public.
     files: ["server/src/modules/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.ts"],
     rules: {
       "no-restricted-imports": [
         LAYOUT,

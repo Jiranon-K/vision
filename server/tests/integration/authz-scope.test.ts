@@ -8,6 +8,7 @@ const { api } = testApp;
 
 let Post: typeof import('../../src/modules/posts/post.model').default;
 let policy: typeof import('../../src/modules/posts/policy');
+let READER: typeof import('../../src/modules/auth/actor').READER;
 
 const commands: CommandStartedEvent[] = [];
 
@@ -17,6 +18,7 @@ beforeAll(async () => {
   });
   Post = (await import('../../src/modules/posts/post.model')).default;
   policy = await import('../../src/modules/posts/policy');
+  ({ READER } = await import('../../src/modules/auth/actor'));
 });
 
 const ALICE = new mongoose.Types.ObjectId();
@@ -61,7 +63,7 @@ describe('the listing scope and the point check agree', () => {
     const everything = await Post.find().lean();
 
     const actors = [
-      policy.READER,
+      READER,
       { kind: 'creator', id: String(ALICE) },
       { kind: 'admin', id: String(BOB) },
     ] as const;
@@ -79,8 +81,8 @@ describe('the listing scope and the point check agree', () => {
   it('agrees for a Reader on reading as well as listing', async () => {
     await seedFixture();
     const everything = await Post.find().lean();
-    const scoped = await Post.find(policy.listScope(policy.READER)).lean();
-    const readable = everything.filter((p) => policy.can(policy.READER, 'read', p));
+    const scoped = await Post.find(policy.listScope(READER)).lean();
+    const readable = everything.filter((p) => policy.can(READER, 'read', p));
     expect(scoped.map((p) => String(p._id)).sort()).toEqual(
       readable.map((p) => String(p._id)).sort()
     );

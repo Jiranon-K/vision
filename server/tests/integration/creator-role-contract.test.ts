@@ -5,14 +5,14 @@ import { PASSWORD, cookiesOf, setupTestApp } from '../support/testApp';
 
 const { api, register } = setupTestApp();
 
-let User: typeof import('../../src/models/User').default;
-let ROLES: typeof import('../../src/authz/roles').ROLES;
+let User: typeof import('../../src/modules/auth/user.model').default;
+let ROLES: typeof import('../../src/modules/auth/roles').ROLES;
 
 const RETIRED_ROLE = 'retired-role';
 
 beforeAll(async () => {
-  User = (await import('../../src/models/User')).default;
-  ({ ROLES } = await import('../../src/authz/roles'));
+  User = (await import('../../src/modules/auth/user.model')).default;
+  ({ ROLES } = await import('../../src/modules/auth/roles'));
 });
 
 const storeRole = (email: string, role: string) =>

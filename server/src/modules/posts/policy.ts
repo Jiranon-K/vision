@@ -1,7 +1,7 @@
 import { forbidden, notFound } from '../../platform/errors';
-import type { Actor } from '../../authz/actor';
+import type { Actor } from '../auth';
 
-export { READER, actorFrom, type Actor } from '../../authz/actor';
+export type { Actor } from '../auth';
 
 type SignedIn = Exclude<Actor, { kind: 'reader' }>;
 

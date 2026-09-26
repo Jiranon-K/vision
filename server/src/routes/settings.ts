@@ -6,9 +6,9 @@ import {
   getNotifications,
   updateNotifications,
 } from '../controllers/settings.controller';
-import { auth } from '../middleware/auth';
+import { auth } from '../modules/auth';
 import { validateBody } from '../platform/middleware/validate';
-import { profileSchema, notificationSchema, changePasswordSchema } from '../schemas/auth';
+import { profileSchema, notificationSchema, changePasswordSchema } from '../modules/auth';
 
 const router = Router();
 

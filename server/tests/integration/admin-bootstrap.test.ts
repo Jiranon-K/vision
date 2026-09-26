@@ -4,10 +4,10 @@ import { PASSWORD, setupTestApp } from '../support/testApp';
 const testApp = setupTestApp({ adminEmails: 'first@test.local, second@test.local' });
 const { api } = testApp;
 
-let User: typeof import('../../src/models/User').default;
+let User: typeof import('../../src/modules/auth/user.model').default;
 
 beforeAll(async () => {
-  User = (await import('../../src/models/User')).default;
+  User = (await import('../../src/modules/auth/user.model')).default;
 });
 
 const register = async (email: string) =>

@@ -1,4 +1,4 @@
-import User from '../models/User';
+import User from './user.model';
 
 function isListedAdminEmail(email: string): boolean {
   const raw = process.env.ADMIN_EMAILS;

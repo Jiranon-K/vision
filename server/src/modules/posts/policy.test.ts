@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { READER, actorFrom } from '../auth/actor';
 import {
-  READER,
-  actorFrom,
   authorize,
   can,
   type Actor,
