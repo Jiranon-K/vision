@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { clearPostAuthorRole } from '../src/migrations/clearPostAuthorRole';
+import { clearPostAuthorRole } from '../src/migrations/clear-post-author-role';
 
 async function main(): Promise<void> {
   const uri = process.env.MONGODB_URI;

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { PASSWORD, setupTestApp } from '../support/testApp';
+import { PASSWORD, setupTestApp } from '../support/test-app';
 
 const testApp = setupTestApp({ adminEmails: 'first@test.local, second@test.local' });
 const { api } = testApp;

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import mongoose from 'mongoose';
 import type { CommandStartedEvent } from 'mongodb';
-import { cookiesOf, setupTestApp } from '../support/testApp';
+import { cookiesOf, setupTestApp } from '../support/test-app';
 
 const testApp = setupTestApp({ connect: { monitorCommands: true }, syncIndexes: true });
 const { api } = testApp;

@@ -58,10 +58,10 @@ exists".
 
 ## Verification tiers
 
-| Tier | When                   | Commands                                                                                           |
-| ---- | ---------------------- | -------------------------------------------------------------------------------------------------- |
-| Fast | every repair iteration | `typecheck`, `typecheck:server`, `typecheck:harness`, `lint`, `test:server`, `test:harness`        |
-| Slow | once, before the PR    | `build`, plus `test:e2e` when the diff touches `app/`, `components/`, `hooks/`, or `middleware.ts` |
+| Tier | When                   | Commands                                                                                    |
+| ---- | ---------------------- | ------------------------------------------------------------------------------------------- |
+| Fast | every repair iteration | `typecheck`, `typecheck:server`, `typecheck:harness`, `lint`, `test:server`, `test:harness` |
+| Slow | once, before the PR    | `build`, plus `test:e2e` when the diff touches `src/`                                       |
 
 Every command is an npm script, so a human and the agent pass through
 byte-identical checks — "green for the agent" means "green for you". `next build`
