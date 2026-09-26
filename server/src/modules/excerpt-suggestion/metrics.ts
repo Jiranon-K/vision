@@ -1,4 +1,4 @@
-import { Post } from '../posts';
+import { currentExcerpts, publishedPostIds } from '../posts';
 import ExcerptSuggestion from './excerpt-suggestion.model';
 
 // The two thresholds fixed before this capability was built (see
@@ -22,13 +22,7 @@ export async function computeAdoption(
   now: Date = new Date()
 ): Promise<AdoptionResult> {
   const since = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
-  const published = await Post.find({
-    status: 'Published',
-    createdAt: { $gte: since, $lte: now },
-  })
-    .select('_id')
-    .lean();
-  const postIds = published.map((p) => p._id);
+  const postIds = await publishedPostIds(since, now);
 
   const postsWithSuggestion = postIds.length
     ? (await ExcerptSuggestion.distinct('post', { post: { $in: postIds } })).length
@@ -66,10 +60,7 @@ export async function computeKeptUnedited(
   }
 
   const postIds = [...new Set(suggestions.map((s) => String(s.post)))];
-  const posts = await Post.find({ _id: { $in: postIds } })
-    .select('excerpt')
-    .lean();
-  const excerptById = new Map(posts.map((p) => [String(p._id), p.excerpt]));
+  const excerptById = await currentExcerpts(postIds);
 
   const keptUnedited = suggestions.filter(
     (s) => excerptById.get(String(s.post)) === s.text

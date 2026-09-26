@@ -205,6 +205,14 @@ const eslintConfig = defineConfig([
           patterns: [
             intoModule,
             { regex: "^\\.\\./[^./][^/]*/(?!index(\\.js)?$)", message: MODULE_ENTRY },
+            {
+              // Exported for migrations and operator scripts. A module asks the
+              // Posts module a question instead of querying its collection.
+              regex: "^\\.\\./posts(/index)?(\\.js)?$",
+              importNames: ["Post"],
+              message:
+                "Ask the Posts module through a function on its entry file, not its model (ticket 18).",
+            },
           ],
         },
       ],
