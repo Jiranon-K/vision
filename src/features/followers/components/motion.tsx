@@ -3,13 +3,15 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { cn } from "@/shared/lib/utils";
+import { DURATION_SLOW } from "@/shared/lib/motion";
 
 // The Followers screens' motion: numbers count up once when they appear, a
 // state change eases its container's height instead of jumping, and a check
 // draws itself. Under reduced motion each shows its end state at once.
 
 /** Counts up to `to` once; the final value at once under reduced motion. */
-export function CountUp({ to, className, duration = 700 }: { to: number; className?: string; duration?: number }) {
+export function CountUp({ to, className }: { to: number; className?: string }) {
+  const duration = DURATION_SLOW;
   const reduced = usePrefersReducedMotion();
   // A hidden tab runs no animation frames, so it starts at the answer rather
   // than showing 0 until the Reader comes back to it.

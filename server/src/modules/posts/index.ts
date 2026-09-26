@@ -7,6 +7,7 @@ export {
   publishedPostIds,
   currentExcerpts,
   readablePostForFollowing,
+  isReadableByReaders,
 } from './posts.queries';
 
 // The model itself, for data migrations and operator scripts only: they rewrite

@@ -4,35 +4,32 @@ import { User, type Actor } from '../auth';
 import { readablePostForFollowing } from '../posts';
 import { gone, notFound, validationFailed } from '../../platform/errors';
 import { logger } from '../../platform/logger';
+import { DAY_MS } from '../../platform/time';
 import { FRONTEND_URL } from '../../platform/emails/client';
 import { sendFollowConfirmationEmail } from '../../platform/emails/send';
-import Follower from './follower.model';
-import Delivery from './delivery.model';
-import DeliverySend from './delivery-send.model';
+import Follower, { type IFollower } from './follower.model';
+import Delivery, { type DeliveryContent } from './delivery.model';
+import QueuedEmail from './queued-email.model';
+import { authorize, ownCreatorId } from './policy';
 import { followSchema, tokenSchema } from './followers.schema';
-import { sendableToday } from './sending';
+import { sendableToday } from './delivery-queue';
 
 // The rules of Followers, with no HTTP in them (ADR 0009): a Reader follows a
 // Creator by email and confirms it; the Creator sees, exports and delivers to
 // their Followers; nobody else sees who they are.
 
-const CONFIRM_TTL_MS = 48 * 60 * 60 * 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
+const CONFIRM_TTL_MS = 2 * DAY_MS;
+const LINK_SPENT = 'This link has already been used or expired';
 
 const newToken = (): string => crypto.randomBytes(32).toString('hex');
-const hash = (token: string): string =>
-  crypto.createHash('sha256').update(token).digest('hex');
+const hash = (token: string): string => crypto.createHash('sha256').update(token).digest('hex');
 
 const confirmedOf = (creatorId: string | mongoose.Types.ObjectId) => ({
   creator: new mongoose.Types.ObjectId(String(creatorId)),
   state: 'confirmed' as const,
 });
 
-// Only a signed-in person asks about Followers, and only about their own.
-function ownerId(actor: Actor): string {
-  if (actor.kind === 'reader') throw notFound('Not found');
-  return actor.id;
-}
+const isDuplicate = (error: unknown) => (error as { code?: number }).code === 11000;
 
 async function creatorProfile(creatorId: string | mongoose.Types.ObjectId) {
   const user = await User.findById(creatorId).select('email profile.name profile.byline');
@@ -41,6 +38,17 @@ async function creatorProfile(creatorId: string | mongoose.Types.ObjectId) {
     byline: user?.profile?.byline || undefined,
     email: user?.email,
   };
+}
+
+/** Whom a Reader followed or stopped following, and where they came from. */
+export interface FollowOutcome {
+  creator: { name: string; byline?: string };
+  post: { slug: string; title: string };
+}
+
+async function outcomeOf(follower: IFollower): Promise<FollowOutcome> {
+  const { name, byline } = await creatorProfile(follower.creator);
+  return { creator: { name, byline }, post: follower.source };
 }
 
 /**
@@ -60,29 +68,30 @@ export async function follow(input: unknown): Promise<void> {
   if (existing?.state === 'confirmed') return;
 
   const token = newToken();
-  const pending = {
-    confirmTokenHash: hash(token),
-    confirmExpiresAt: new Date(Date.now() + CONFIRM_TTL_MS),
-    source: { slug: post.slug, title: post.title },
-  };
-
   try {
     await Follower.updateOne(
       { creator: post.owner, email, state: 'pending' },
-      { $set: pending, $setOnInsert: { stopToken: newToken() } },
+      {
+        $set: {
+          confirmTokenHash: hash(token),
+          confirmExpiresAt: new Date(Date.now() + CONFIRM_TTL_MS),
+          source: { slug: post.slug, title: post.title },
+        },
+        $setOnInsert: { stopToken: newToken() },
+      },
       { upsert: true }
     );
   } catch (error) {
     // Two submissions racing, or one that raced a confirmation: either way the
     // address is already held, and the answer is the same.
-    if ((error as { code?: number }).code === 11000) return;
+    if (isDuplicate(error)) return;
     throw error;
   }
 
   try {
     await sendFollowConfirmationEmail({
       to: email,
-      creatorName: post.author.name,
+      creatorName: post.creator.name,
       confirmUrl: `${FRONTEND_URL}/follow/confirm?token=${token}`,
     });
   } catch (error) {
@@ -92,14 +101,9 @@ export async function follow(input: unknown): Promise<void> {
   }
 }
 
-export interface FollowOutcome {
-  creator: { name: string; byline?: string };
-  post: { slug: string; title: string };
-}
-
 export async function confirm(input: unknown): Promise<FollowOutcome> {
   const validation = tokenSchema.safeParse(input);
-  if (!validation.success) throw gone('This link has already been used or expired');
+  if (!validation.success) throw gone(LINK_SPENT);
 
   const follower = await Follower.findOneAndUpdate(
     {
@@ -113,22 +117,23 @@ export async function confirm(input: unknown): Promise<FollowOutcome> {
     },
     { new: true }
   );
-  if (!follower) throw gone('This link has already been used or expired');
-
-  const { name, byline } = await creatorProfile(follower.creator);
-  return { creator: { name, byline }, post: follower.source };
+  if (!follower) throw gone(LINK_SPENT);
+  return outcomeOf(follower);
 }
 
 /**
- * Stops a Follower, from a link in any Delivery. Nothing already waiting to be
- * sent to them goes out afterwards. Stopping twice is not an error.
+ * Stops a Follower, from the stop link in any Delivery. Nothing already
+ * waiting to be sent to them goes out afterwards. Stopping twice is not an
+ * error, and says nothing about whom the link belonged to.
  */
-export async function stop(token: string): Promise<FollowOutcome | undefined> {
-  const follower = await Follower.findOneAndDelete({ stopToken: token });
+export async function stop(input: unknown): Promise<FollowOutcome | undefined> {
+  const validation = tokenSchema.safeParse(input);
+  if (!validation.success) return undefined;
+
+  const follower = await Follower.findOneAndDelete({ stopToken: validation.data.token });
   if (!follower) return undefined;
-  await DeliverySend.deleteMany({ follower: follower._id, state: { $in: ['pending', 'sending'] } });
-  const { name, byline } = await creatorProfile(follower.creator);
-  return { creator: { name, byline }, post: follower.source };
+  await QueuedEmail.deleteMany({ follower: follower._id, state: { $in: ['waiting', 'claimed'] } });
+  return outcomeOf(follower);
 }
 
 export interface FollowerRow {
@@ -136,14 +141,17 @@ export interface FollowerRow {
   since: Date;
 }
 
-const LIST_CAP = 5000;
+// What a screen shows; the export has no cap, because leaving must take
+// everyone (ADR 0009).
+const SCREEN_CAP = 5000;
+
+const confirmedRows = (creatorId: string) =>
+  Follower.find(confirmedOf(creatorId)).select('email confirmedAt').sort({ confirmedAt: -1 }).lean();
 
 export async function listFollowers(actor: Actor): Promise<FollowerRow[]> {
-  const rows = await Follower.find(confirmedOf(ownerId(actor)))
-    .select('email confirmedAt')
-    .sort({ confirmedAt: -1 })
-    .limit(LIST_CAP)
-    .lean();
+  const creatorId = ownCreatorId(actor);
+  authorize(actor, 'list', creatorId);
+  const rows = await confirmedRows(creatorId).limit(SCREEN_CAP);
   return rows.map((r) => ({ email: r.email, since: r.confirmedAt! }));
 }
 
@@ -155,22 +163,24 @@ const csvCell = (value: string): string => {
 };
 
 export async function exportFollowers(actor: Actor): Promise<string> {
-  const rows = await listFollowers(actor);
-  const lines = rows.map(
-    (r) => `${csvCell(r.email)},${r.since.toISOString().slice(0, 10)}`
-  );
-  return ['email,following_since', ...lines].join('\n') + '\n';
+  const creatorId = ownCreatorId(actor);
+  authorize(actor, 'list', creatorId);
+  const lines = ['email,following_since'];
+  for await (const row of confirmedRows(creatorId).cursor()) {
+    lines.push(`${csvCell(row.email)},${row.confirmedAt!.toISOString().slice(0, 10)}`);
+  }
+  return lines.join('\n') + '\n';
 }
 
-export async function followerCount(creatorId: string): Promise<number> {
-  return Follower.countDocuments(confirmedOf(creatorId));
-}
+const followerCount = (creatorId: string) => Follower.countDocuments(confirmedOf(creatorId));
+
+const followersGainedSince = (creatorId: string, since: Date) =>
+  Follower.countDocuments({ ...confirmedOf(creatorId), confirmedAt: { $gte: since } });
 
 /** How many Followers a Creator has. Only that Creator and an Admin may ask. */
 export async function countFor(actor: Actor, creatorId: string): Promise<number> {
   if (!mongoose.isValidObjectId(creatorId)) throw notFound('Not found');
-  if (actor.kind === 'reader') throw notFound('Not found');
-  if (actor.kind === 'creator' && actor.id !== creatorId) throw notFound('Not found');
+  authorize(actor, 'count', creatorId);
   return followerCount(creatorId);
 }
 
@@ -182,13 +192,10 @@ export interface FollowerSummary {
 }
 
 export async function summary(actor: Actor, now = new Date()): Promise<FollowerSummary> {
-  const id = ownerId(actor);
+  const creatorId = ownCreatorId(actor);
   const [followers, weeklyGain, left] = await Promise.all([
-    followerCount(id),
-    Follower.countDocuments({
-      ...confirmedOf(id),
-      confirmedAt: { $gte: new Date(now.getTime() - 7 * DAY_MS) },
-    }),
+    followerCount(creatorId),
+    followersGainedSince(creatorId, new Date(now.getTime() - 7 * DAY_MS)),
     sendableToday(now),
   ]);
   return { followers, weeklyGain, sendableToday: left };
@@ -197,93 +204,65 @@ export async function summary(actor: Actor, now = new Date()): Promise<FollowerS
 export interface DeliverRequest {
   postId: mongoose.Types.ObjectId;
   creatorId: string;
-  title: string;
-  excerpt: string;
-  readTime: string;
-  coverImage?: string;
-  slug: string;
-  creatorName: string;
-  byline?: string;
+  content: DeliveryContent;
 }
 
 /**
  * Delivers a Post that has just been published to every current Follower of
- * its Creator. Queues the emails and returns; the sending happens elsewhere,
- * so publishing never waits on an email provider. Returns undefined when there
- * was nothing to deliver: no Followers, or the Post was delivered before.
+ * its Creator. Queues the emails and returns; the sending happens in the
+ * Delivery queue, so publishing never waits on an email provider. A Creator
+ * with no Followers still uses the Post's one Delivery: it reached nobody, and
+ * it will not be sent later. Returns undefined when the Post was delivered
+ * before.
  */
 export async function deliverPost(
-  request: DeliverRequest,
+  { postId, creatorId, content }: DeliverRequest,
   now = new Date()
 ): Promise<{ followers: number; at: Date } | undefined> {
-  const followers = await Follower.find(confirmedOf(request.creatorId)).select('_id').lean();
-  if (followers.length === 0) return undefined;
+  const followers = await Follower.find(confirmedOf(creatorId)).select('_id').lean();
+  const { email: replyTo } = await creatorProfile(creatorId);
 
-  const { email: replyTo } = await creatorProfile(request.creatorId);
   let delivery;
   try {
     delivery = await Delivery.create({
-      post: request.postId,
-      creator: request.creatorId,
+      post: postId,
+      creator: creatorId,
       followers: followers.length,
-      email: {
-        creatorName: request.creatorName,
-        byline: request.byline,
-        replyTo,
-        title: request.title,
-        excerpt: request.excerpt,
-        readTime: request.readTime,
-        coverImage: request.coverImage,
-        slug: request.slug,
-      },
+      content,
+      replyTo,
     });
   } catch (error) {
-    if ((error as { code?: number }).code === 11000) return undefined;
+    if (isDuplicate(error)) return undefined;
     throw error;
   }
 
-  await DeliverySend.insertMany(
-    followers.map((f) => ({ delivery: delivery._id, follower: f._id, nextAttemptAt: now })),
-    { ordered: false }
-  );
+  if (followers.length > 0) {
+    await QueuedEmail.insertMany(
+      followers.map((f) => ({ delivery: delivery._id, follower: f._id, creator: creatorId, dueAt: now })),
+      { ordered: false }
+    );
+  }
   return { followers: followers.length, at: delivery.createdAt };
-}
-
-/** Whether, when, and to how many Followers a Post was delivered. */
-export async function deliveryOf(
-  postId: mongoose.Types.ObjectId | string
-): Promise<{ followers: number; at: Date } | undefined> {
-  const found = await Delivery.findOne({ post: postId }).select('followers createdAt').lean();
-  return found ? { followers: found.followers, at: found.createdAt } : undefined;
 }
 
 export interface DeliveryFigures {
   followers: number;
   weeklyGain: number;
-  /** Follower emails queued by Deliveries in the window. */
+  /** Delivery emails actually sent in the window. */
   delivered: number;
   deliveries: number;
   lastDeliveryAt?: Date;
 }
 
-/** Growth Analytics' view of a Creator's Followers over the last seven days. */
-export async function deliveryFigures(creatorId: string, now = new Date()): Promise<DeliveryFigures> {
-  const since = new Date(now.getTime() - 7 * DAY_MS);
+/** Growth Analytics' view of a Creator's Followers, for the window starting at `since`. */
+export async function deliveryFigures(creatorId: string, since: Date): Promise<DeliveryFigures> {
   const creator = new mongoose.Types.ObjectId(creatorId);
-  const [followers, weeklyGain, recent, last] = await Promise.all([
+  const [followers, weeklyGain, delivered, deliveries, last] = await Promise.all([
     followerCount(creatorId),
-    Follower.countDocuments({ ...confirmedOf(creatorId), confirmedAt: { $gte: since } }),
-    Delivery.aggregate<{ delivered: number; deliveries: number }>([
-      { $match: { creator, createdAt: { $gte: since } } },
-      { $group: { _id: null, delivered: { $sum: '$followers' }, deliveries: { $sum: 1 } } },
-    ]),
+    followersGainedSince(creatorId, since),
+    QueuedEmail.countDocuments({ creator, state: 'sent', sentAt: { $gte: since } }),
+    Delivery.countDocuments({ creator, createdAt: { $gte: since } }),
     Delivery.findOne({ creator }).sort({ createdAt: -1 }).select('createdAt').lean(),
   ]);
-  return {
-    followers,
-    weeklyGain,
-    delivered: recent[0]?.delivered ?? 0,
-    deliveries: recent[0]?.deliveries ?? 0,
-    lastDeliveryAt: last?.createdAt,
-  };
+  return { followers, weeklyGain, delivered, deliveries, lastDeliveryAt: last?.createdAt };
 }

@@ -2,7 +2,7 @@ import type { Request } from 'express';
 import mongoose from 'mongoose';
 import Post from './post.model';
 import { User, READER, type Actor } from '../auth';
-import { recordView, forgetViews, type ViewSource } from '../analytics';
+import { recordView, forgetViews } from '../analytics';
 import { deliverPost } from '../followers';
 import {
   recordExcerptSuggestion,
@@ -396,13 +396,15 @@ async function deliverIfChosen(post: PostDocument, deliver: boolean | undefined)
     const delivery = await deliverPost({
       postId: post._id as mongoose.Types.ObjectId,
       creatorId: String(post.owner),
-      title: post.title,
-      excerpt: post.excerpt,
-      readTime: post.readTime,
-      coverImage: post.coverImage,
-      slug: post.slug,
-      creatorName: post.author.name,
-      byline: post.author.byline,
+      content: {
+        creatorName: post.author.name,
+        byline: post.author.byline,
+        title: post.title,
+        excerpt: post.excerpt,
+        readTime: post.readTime,
+        coverImage: post.coverImage,
+        slug: post.slug,
+      },
     });
     if (!delivery) return;
     post.delivery = delivery;
@@ -482,7 +484,7 @@ export async function restorePost(
 export async function viewPost(
   id: string,
   visit: Request,
-  source?: ViewSource
+  { fromDelivery = false }: { fromDelivery?: boolean } = {}
 ): Promise<void> {
   // A malformed id is the caller's mistake; a failure to write is the
   // server's. Catching everything and calling it "Invalid id" blended the two.
@@ -500,7 +502,7 @@ export async function viewPost(
   if (!can(READER, 'read', post)) return;
 
   // Whether this was a View is Analytics' question; the Post only keeps the total.
-  if (await recordView(post, visit, new Date(), source)) {
+  if (await recordView(post, visit, { fromDelivery })) {
     await Post.updateOne({ _id: post._id }, { $inc: { views: 1 } });
   }
 }

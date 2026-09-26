@@ -25,7 +25,7 @@ import {
   type WirePost,
   useInvalidatePostData,
 } from "@/features/posts";
-import { DeliverSection } from "@/features/followers";
+import { DeliverSection, useFollowerSummary } from "@/features/followers";
 import { useAuth } from "@/features/auth";
 import { usePrefersReducedMotion } from "@/shared/hooks/use-prefers-reduced-motion";
 import { DURATION_SLOW, EASE_OUT, PUBLISH_TRANSITION_MS } from "@/shared/lib/motion";
@@ -135,6 +135,15 @@ export default function PostEditorForm({
   // Gates the top bar's entrance — it waits for the writing surface's own
   // animation to start, so the arrival order is never a race.
   const [enterAnimation, setEnterAnimation] = useState(false);
+
+  // The save the Publish sheet is about to make turns a Draft into a Published
+  // Post: the one save that may deliver it. Decided here, once, for the sheet
+  // and for the request.
+  const publishing = status === "Published" && baseline.status !== "Published";
+  // Delivery is asked for only when the Creator could see the choice: a
+  // failed or empty Followers summary shows no checkbox, so it sends nothing.
+  const followerSummary = useFollowerSummary(publishSheetOpen && !delivery);
+  const deliveryOffered = (followerSummary.data?.followers ?? 0) > 0;
 
   const restoreDecided = useRef(false);
   const skipUnload = useRef(false);
@@ -464,13 +473,10 @@ export default function PostEditorForm({
   // Draft -> Published transition, which is the one case that earns the
   // top bar's slow crossfade before leaving.
   const handlePublishConfirm = async () => {
-    const wasPublished = baseline.status === "Published";
-    // Only the save that makes the Post Published may deliver it.
-    const publishing = !wasPublished && status === "Published";
-    if (!(await persist({ deliver: publishing && deliver }))) return;
+    const justPublished = publishing;
+    if (!(await persist({ deliver: justPublished && deliveryOffered && deliver }))) return;
 
     setPublishSheetOpen(false);
-    const justPublished = !wasPublished && status === "Published";
 
     if (justPublished) {
       setStatusAccent(true);
@@ -685,7 +691,7 @@ export default function PostEditorForm({
         pending={saving}
         onConfirm={handlePublishConfirm}
         deliverSection={
-          delivery || (status === "Published" && baseline.status !== "Published") ? (
+          delivery || publishing ? (
             <DeliverSection
               deliver={deliver}
               onDeliverChange={setDeliver}

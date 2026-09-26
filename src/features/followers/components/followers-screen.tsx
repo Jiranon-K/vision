@@ -5,7 +5,8 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Alert } from "@/shared/ui/alert";
-import { downloadFollowersCsv, useFollowers, useFollowerSummary } from "../hooks/use-followers";
+import { downloadFollowersCsv } from "../api";
+import { useFollowers, useFollowerSummary } from "../hooks/use-followers";
 import type { FollowerRow } from "../types";
 import { CountUp, STAGGER_MS } from "./motion";
 
@@ -67,8 +68,8 @@ export default function FollowersScreen() {
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-8 px-8 py-10">
       <div>
-        <h1 className="text-3xl font-black text-brand-dark">Followers</h1>
-        <p className="mt-1 text-brand-dark/50">Readers who asked for your new Posts by email.</p>
+        <h1 className="text-3xl font-black text-foreground">Followers</h1>
+        <p className="mt-1 text-text-muted">Readers who asked for your new Posts by email.</p>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border-2 border-border-strong bg-surface p-5 shadow-hard-sm">

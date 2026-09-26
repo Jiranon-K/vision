@@ -11,9 +11,19 @@ process.env.JWT_REFRESH_SECRET = 'integration-test-secret-refresh';
 // output can't prove (a provider could echo mechanical-looking text back).
 process.env.AI_PROVIDER = 'stub';
 
-const { resolveGenerateTextSpy, suggestExcerptSpy } = vi.hoisted(() => ({
+const { resolveGenerateTextSpy, suggestExcerptSpy, sendDeliverySpy } = vi.hoisted(() => ({
   resolveGenerateTextSpy: vi.fn(() => null),
   suggestExcerptSpy: vi.fn(),
+  sendDeliverySpy: vi.fn(),
+}));
+
+// Email is a provider too. Publishing with a Delivery queues it; the send
+// happens in the Delivery queue, never inside the publish request.
+vi.mock('../../src/platform/emails/send', () => ({
+  sendResetPasswordEmail: vi.fn(),
+  sendVerificationEmail: vi.fn(),
+  sendFollowConfirmationEmail: vi.fn(),
+  sendDeliveryEmail: sendDeliverySpy,
 }));
 
 vi.mock('../../src/modules/excerpt-suggestion/provider', () => ({
@@ -121,5 +131,6 @@ describe('save path stays provider-free (ADR 0002)', () => {
     expect(res.status).toBe(201);
     expect(resolveGenerateTextSpy).not.toHaveBeenCalled();
     expect(suggestExcerptSpy).not.toHaveBeenCalled();
+    expect(sendDeliverySpy).not.toHaveBeenCalled();
   });
 });

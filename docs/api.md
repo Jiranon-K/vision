@@ -78,11 +78,11 @@ different payloads. `GET /:id` and `GET /slug/:slug` still return the full Post.
 
 ## Analytics — `/api/analytics`
 
-| Method | Endpoint     | Auth | Description                                                                                                                 |
-| ------ | ------------ | ---- | --------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/`          | yes  | Stat cards for the signed-in Creator: Total Views, Posts                                                                    |
-| GET    | `/views`     | yes  | The Creator's daily View counts, one point per day for the last seven                                                       |
-| GET    | `/followers` | yes  | `followers`, `weeklyGain`, `delivered` and `deliveries` in the last seven days, `lastDeliveryAt`, and `viewsFromDeliveries` |
+| Method | Endpoint     | Auth | Description                                                                                                                                                                               |
+| ------ | ------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/`          | yes  | Stat cards for the signed-in Creator: Total Views, Posts                                                                                                                                  |
+| GET    | `/views`     | yes  | The Creator's daily View counts, one point per day for the last seven                                                                                                                     |
+| GET    | `/followers` | yes  | Over the same seven UTC days as `/views`: `followers`, `weeklyGain`, `deliveries` (Posts delivered), `delivered` (Delivery emails actually sent), `lastDeliveryAt`, `viewsFromDeliveries` |
 
 > Both routes report on the Posts the signed-in Creator owns. Total Views sums
 > Views across their Published Posts; a Draft accumulates none. Subscribers and

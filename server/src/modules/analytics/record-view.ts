@@ -1,7 +1,8 @@
 import type { Request } from 'express';
 import type { Types } from 'mongoose';
 import { isDuplicateKeyError } from '../../platform/duplicate-key';
-import PostView, { startOfUtcDay } from './post-view.model';
+import PostView from './post-view.model';
+import { startOfUtcDay } from '../../platform/time';
 import ViewRecord from './view-record.model';
 import {
   VIEW_DEDUPE_WINDOW_HOURS,
@@ -17,14 +18,17 @@ interface ViewedPost {
 // Records that a Reader read a Post the caller has already confirmed is
 // readable. Returns whether it counted as a new View, so the caller can move
 // the Post's own total.
-/** Where a View came from, when the Reader arrived by a link that says. */
-export type ViewSource = 'delivery';
-
 export async function recordView(
   post: ViewedPost,
   req: Request,
-  now = new Date(),
-  source?: ViewSource
+  {
+    now = new Date(),
+    fromDelivery = false,
+  }: {
+    now?: Date;
+    /** The Reader arrived by the link in a Delivery. */
+    fromDelivery?: boolean;
+  } = {}
 ): Promise<boolean> {
   // Indexing is not readership. Answered as success so a crawler learns
   // nothing from the difference.
@@ -50,7 +54,7 @@ export async function recordView(
   await PostView.updateOne(
     { post: post._id, day: startOfUtcDay(now) },
     {
-      $inc: { count: 1, fromDelivery: source === 'delivery' ? 1 : 0 },
+      $inc: { count: 1, fromDelivery: fromDelivery ? 1 : 0 },
       $setOnInsert: { owner: post.owner },
     },
     { upsert: true }

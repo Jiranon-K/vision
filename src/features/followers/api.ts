@@ -1,4 +1,4 @@
-import { apiFetch } from "@/shared/lib/api";
+import { apiFetch, authFetch } from "@/shared/lib/api";
 import type { FollowOutcome } from "./types";
 
 // The Reader's side of Followers: no session, so plain fetches. Each answers
@@ -28,31 +28,35 @@ export type LinkResult =
   | { state: "expired" }
   | { state: "failed" };
 
-export async function confirmFollow(token: string): Promise<LinkResult> {
+// Both links in a Follower email spend a one-time token the same way.
+async function spendLink(path: string, token: string): Promise<LinkResult> {
   try {
-    const res = await apiFetch("/api/followers/confirm", {
+    const res = await apiFetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
     });
-    if (res.ok) return { state: "done", outcome: (await res.json()) as FollowOutcome };
-    return res.status === 410 ? { state: "expired" } : { state: "failed" };
-  } catch {
-    return { state: "failed" };
-  }
-}
-
-export async function stopFollowing(token: string): Promise<LinkResult> {
-  try {
-    const res = await apiFetch("/api/followers/stop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
+    if (res.status === 410) return { state: "expired" };
     if (!res.ok) return { state: "failed" };
     const data = await res.json();
     return { state: "done", outcome: data.creator ? (data as FollowOutcome) : undefined };
   } catch {
     return { state: "failed" };
   }
+}
+
+export const confirmFollow = (token: string) => spendLink("/api/followers/confirm", token);
+export const stopFollowing = (token: string) => spendLink("/api/followers/stop", token);
+
+/** Downloads the signed-in Creator's Followers as a CSV file. */
+export async function downloadFollowersCsv(): Promise<boolean> {
+  const res = await authFetch("/api/followers/export");
+  if (!res.ok) return false;
+  const url = URL.createObjectURL(await res.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "followers.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+  return true;
 }

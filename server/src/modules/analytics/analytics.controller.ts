@@ -2,7 +2,8 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 import { creatorTotals } from '../posts';
 import { deliveryFigures } from '../followers';
-import PostView, { startOfUtcDay } from './post-view.model';
+import PostView from './post-view.model';
+import { startOfLastDays, startOfUtcDay } from '../../platform/time';
 import type { AuthRequest } from '../auth';
 
 const TREND_DAYS = 7;
@@ -79,10 +80,12 @@ export const getFollowerFigures = async (
   res: Response
 ): Promise<void> => {
   const owner = new mongoose.Types.ObjectId(req.user!.id);
-  const since = startOfUtcDay(new Date(Date.now() - (TREND_DAYS - 1) * 24 * 60 * 60 * 1000));
+  // One window for every figure in the band, so the share it shows divides
+  // like by like: the same UTC days as the weekly View trend.
+  const since = startOfLastDays(TREND_DAYS);
 
   const [figures, views] = await Promise.all([
-    deliveryFigures(req.user!.id),
+    deliveryFigures(req.user!.id, since),
     PostView.aggregate<{ total: number }>([
       { $match: { owner, day: { $gte: since } } },
       { $group: { _id: null, total: { $sum: '$fromDelivery' } } },

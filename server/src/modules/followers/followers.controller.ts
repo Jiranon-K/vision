@@ -16,8 +16,7 @@ export const confirm = async (req: Request, res: Response): Promise<void> => {
 // Two ways in: the stop page posts the token in the body, and a mail client's
 // one-click unsubscribe (RFC 8058) posts to the link itself.
 export const stop = async (req: Request, res: Response): Promise<void> => {
-  const token = String(req.params.token ?? req.body?.token ?? '');
-  const outcome = /^[0-9a-f]{64}$/.test(token) ? await followers.stop(token) : undefined;
+  const outcome = await followers.stop({ token: req.params.token ?? req.body?.token });
   res.json({ stopped: true, ...(outcome ?? {}) });
 };
 

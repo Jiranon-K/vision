@@ -184,7 +184,7 @@ describe('A Reader follows a Creator and confirms', () => {
 // --- Deliveries ------------------------------------------------------------
 
 const drain = async (now = new Date(), limit?: number) =>
-  (await import('../../src/modules/followers')).drainDeliveries(now, limit ? { limit } : {});
+  (await import('../../src/modules/followers/delivery-queue')).drainDeliveries(now, limit ? { limit } : {});
 
 async function creatorWithFollowers(count: number, email = 'mara@test.local') {
   const cookies = await creator(email);
@@ -472,5 +472,69 @@ describe('Growth Analytics reports Followers and Views from Deliveries', () => {
     }
     const res = await api().get('/api/analytics/followers').set('Cookie', mara);
     expect(res.body.viewsFromDeliveries).toBe(1);
+  });
+});
+
+// --- Review fixes ----------------------------------------------------------
+
+describe('what the review of the first cut found', () => {
+  it('exports every Follower, however many there are', async () => {
+    const mara = await creator();
+    const post = await publish(mara);
+    await followAndConfirm(post.id, 'real@example.com');
+
+    const Follower = (await import('../../src/modules/followers/follower.model')).default;
+    const { creator: owner } = (await Follower.findOne({ email: 'real@example.com' }))!;
+    const confirmedAt = new Date();
+    await Follower.insertMany(
+      Array.from({ length: 5001 }, (_, i) => ({
+        creator: owner,
+        email: `bulk${i}@example.com`,
+        state: 'confirmed',
+        confirmedAt,
+        stopToken: `bulk-${i}`,
+        source: { slug: post.slug, title: 'x' },
+      }))
+    );
+
+    const res = await api().get('/api/followers/export').set('Cookie', mara);
+    expect(res.text.trim().split('\n')).toHaveLength(1 + 5002);
+  });
+
+  it('sends nothing more for a Post an Admin withholds after it was delivered', async () => {
+    const mara = await creatorWithFollowers(2);
+    const staff = cookiesOf(await register('staff@test.local', 'Staff'));
+    const post = await publish(mara, { deliver: true });
+
+    await api().post(`/api/posts/${post.id}/withhold`).set('Cookie', staff).send({ reason: 'Spam' });
+    await drain();
+    expect(sendDelivery).not.toHaveBeenCalled();
+  });
+
+  it('counts a publish with delivery chosen and no Followers as the Post’s one Delivery', async () => {
+    const mara = await creator();
+    const post = await publish(mara, { deliver: true });
+    expect((await api().get(`/api/posts/${post.id}`).set('Cookie', mara)).body.delivery).toMatchObject({
+      followers: 0,
+    });
+
+    const origin = await publish(mara);
+    await followAndConfirm(origin.id, 'late@example.com');
+    await api().put(`/api/posts/${post.id}`).set('Cookie', mara).send({ status: 'Draft' });
+    await api().put(`/api/posts/${post.id}`).set('Cookie', mara).send({ status: 'Published', deliver: true });
+    await drain();
+    expect(sendDelivery).not.toHaveBeenCalled();
+  });
+
+  it('reports as delivered only the emails that were actually sent', async () => {
+    const mara = await creatorWithFollowers(3);
+    await publish(mara, { deliver: true });
+
+    const before = await api().get('/api/analytics/followers').set('Cookie', mara);
+    expect(before.body).toMatchObject({ deliveries: 1, delivered: 0 });
+
+    await drain(new Date(), 2);
+    const after = await api().get('/api/analytics/followers').set('Cookie', mara);
+    expect(after.body.delivered).toBe(2);
   });
 });

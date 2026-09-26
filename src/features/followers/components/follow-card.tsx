@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
-import { cn, initialsOf } from "@/shared/lib/utils";
+import { cn } from "@/shared/lib/utils";
 import { followCreator } from "../api";
+import { CreatorInitials, firstName } from "./creator";
 import { AutoHeight, CheckMark } from "./motion";
 
 // The end of a Published Post (design C, "Progressive", chosen in
@@ -21,22 +22,6 @@ type Phase = "closed" | "open" | "submitting" | "sent";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SMALL_PRINT = "One email per new Post. Stop anytime.";
-
-const firstName = (name: string) => name.split(" ")[0] || name;
-
-function Initials({ name, className }: { name: string; className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid shrink-0 place-items-center rounded-full bg-brand-dark font-bold text-brand-lime",
-        className ?? "size-11 text-sm",
-      )}
-    >
-      {initialsOf(name)}
-    </span>
-  );
-}
 
 export default function FollowCard({ postId, creator }: FollowCardProps) {
   const [phase, setPhase] = useState<Phase>("closed");
@@ -112,7 +97,7 @@ export default function FollowCard({ postId, creator }: FollowCardProps) {
           ) : (
             <div>
               <div className="flex items-center gap-4 p-3">
-                <Initials name={creator.name} />
+                <CreatorInitials name={creator.name} />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-foreground">{creator.name}</p>
                   <p className="text-sm text-text-muted">
@@ -175,7 +160,7 @@ export default function FollowCard({ postId, creator }: FollowCardProps) {
           pillShown ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
         )}
       >
-        <Initials name={creator.name} className="size-8 text-xs" />
+        <CreatorInitials name={creator.name} className="size-8 text-xs" />
         <span className="text-sm font-bold text-foreground">Follow {firstName(creator.name)}</span>
       </button>
     </>

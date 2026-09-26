@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { authFetch } from "@/shared/lib/api";
 import { FRESH_FOR, queryFetch, queryKeys } from "@/shared/lib/query";
 import type { FollowerFigures, FollowerRow, FollowerSummary } from "../types";
 
@@ -30,17 +29,4 @@ export function useFollowerFigures(enabled = true) {
     staleTime: FRESH_FOR.analytics,
     enabled,
   });
-}
-
-/** Downloads the Creator's Followers as a CSV file. */
-export async function downloadFollowersCsv(): Promise<boolean> {
-  const res = await authFetch("/api/followers/export");
-  if (!res.ok) return false;
-  const url = URL.createObjectURL(await res.blob());
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "followers.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-  return true;
 }

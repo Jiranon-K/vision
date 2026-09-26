@@ -12,7 +12,7 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
   const figures = useFollowerFigures(enabled);
 
   if (figures.isPending) {
-    return <Skeleton className="mb-8 h-64 w-full rounded-[28px]" />;
+    return <Skeleton className="mb-8 h-64 w-full rounded-2xl" />;
   }
   if (figures.isError || !figures.data) return null;
 
@@ -31,24 +31,24 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
   ];
 
   return (
-    <section className="mb-8 rounded-[28px] border-2 border-border-strong bg-brand-dark p-8 text-white shadow-hard">
+    <section className="mb-8 rounded-2xl border-2 border-border-strong bg-surface-inverse p-8 text-text-inverse shadow-hard">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-2xl font-black">Your Audience, reached directly</h2>
-        <p className="text-sm text-white/50">Last 7 days</p>
+        <p className="text-sm text-text-inverse/50">Last 7 days</p>
       </div>
 
       <div className="mt-8 grid gap-4 md:grid-cols-3">
         {steps.map((step, i) => (
-          <div key={step.label} className="relative rounded-2xl bg-white/[0.06] p-6">
-            <p className="text-sm text-white/60">{step.label}</p>
-            <p className="mt-1 text-5xl font-black text-brand-lime">
+          <div key={step.label} className="relative rounded-xl bg-text-inverse/5 p-6">
+            <p className="text-sm text-text-inverse/60">{step.label}</p>
+            <p className="mt-1 text-5xl font-black text-accent">
               <CountUp to={step.value} />
             </p>
-            <p className="mt-1 text-xs text-white/50">{step.note}</p>
+            <p className="mt-1 text-xs text-text-inverse/50">{step.note}</p>
             {i < steps.length - 1 && (
               <span
                 aria-hidden
-                className="absolute -right-3 top-1/2 z-10 hidden size-6 -translate-y-1/2 place-items-center rounded-full bg-brand-lime text-sm font-black text-brand-dark md:grid"
+                className="absolute -right-3 top-1/2 z-10 hidden size-6 -translate-y-1/2 place-items-center rounded-full bg-accent text-sm font-black text-accent-foreground md:grid"
               >
                 →
               </span>
@@ -60,7 +60,7 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
       {delivered > 0 ? (
         <>
           <div
-            className="mt-6 h-2 overflow-hidden rounded-full bg-white/10"
+            className="mt-6 h-2 overflow-hidden rounded-full bg-text-inverse/10"
             role="meter"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -68,16 +68,16 @@ export default function FollowersBand({ enabled }: { enabled: boolean }) {
             aria-label="Share of delivered emails that brought a Reader back"
           >
             <div
-              className="h-full origin-left rounded-full bg-brand-lime motion-safe:transition-[width] motion-safe:duration-700 motion-safe:ease-[var(--ease-out)]"
+              className="h-full rounded-full bg-accent motion-safe:transition-[width] motion-safe:duration-[var(--duration-slow)] motion-safe:ease-[var(--ease-out)]"
               style={{ width: `${share}%` }}
             />
           </div>
-          <p className="mt-2 text-sm text-white/60">
+          <p className="mt-2 text-sm text-text-inverse/60">
             {share}% of the emails you delivered brought a Reader back to the Post.
           </p>
         </>
       ) : (
-        <p className="mt-6 text-sm text-white/60">
+        <p className="mt-6 text-sm text-text-inverse/60">
           Deliver your next Post to your Followers when you publish it, and this is where you&rsquo;ll see them read.
         </p>
       )}

@@ -4,6 +4,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
+import type { PostDelivery } from "@/features/posts";
 import { useFollowerSummary } from "../hooks/use-followers";
 import { CheckMark, CountUp } from "./motion";
 
@@ -15,7 +16,7 @@ export interface DeliverSectionProps {
   deliver: boolean;
   onDeliverChange: (deliver: boolean) => void;
   /** The Post's Delivery, when it already had one. */
-  delivery?: { followers: number; at: string };
+  delivery?: PostDelivery;
   creatorName: string;
   title: string;
   excerpt: string;

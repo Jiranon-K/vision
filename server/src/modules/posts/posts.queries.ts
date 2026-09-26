@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
 import Post from './post.model';
+import { listScope } from './policy';
+
+// A Reader, spelled out rather than imported: the auth entry file loads the
+// session module and its secrets, which this file stays free of (see below).
+const READER_SCOPE = listScope({ kind: 'reader' });
 
 // What other modules may know about Posts without reaching the model. Apart
 // from posts.service.ts on purpose: the service needs the auth and
@@ -47,20 +52,11 @@ export async function currentExcerpts(
 
 /** What following needs to know about a Post a Reader can read: whose it is, and how to link back to it. */
 export async function readablePostForFollowing(postId: string): Promise<
-  | {
-      owner: string;
-      slug: string;
-      title: string;
-      author: { name: string; byline?: string };
-    }
+  | { owner: string; slug: string; title: string; creator: { name: string; byline?: string } }
   | undefined
 > {
   if (!mongoose.isValidObjectId(postId)) return undefined;
-  const post = await Post.findOne({
-    _id: postId,
-    status: 'Published',
-    withheld: { $ne: true },
-  })
+  const post = await Post.findOne({ ...READER_SCOPE, _id: postId })
     .select('owner slug title author')
     .lean();
   if (!post) return undefined;
@@ -68,6 +64,11 @@ export async function readablePostForFollowing(postId: string): Promise<
     owner: String(post.owner),
     slug: post.slug,
     title: post.title,
-    author: { name: post.author.name, byline: post.author.byline },
+    creator: { name: post.author.name, byline: post.author.byline },
   };
+}
+
+/** Whether a Reader can read this Post right now: Published, not Withheld, not deleted. */
+export async function isReadableByReaders(postId: mongoose.Types.ObjectId | string): Promise<boolean> {
+  return (await Post.exists({ ...READER_SCOPE, _id: postId })) !== null;
 }
