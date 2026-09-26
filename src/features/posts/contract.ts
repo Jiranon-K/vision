@@ -131,6 +131,7 @@ export function toPostRow(wire: WirePostSummary): PostRow {
     date: formatPostDate(wire.date),
     views: wire.views,
     readTime: wire.readTime,
+    delivery: wire.delivery,
     ...normaliseAccess(wire),
   };
 }

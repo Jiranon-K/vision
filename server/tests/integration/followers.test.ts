@@ -538,3 +538,31 @@ describe('what the review of the first cut found', () => {
     expect(after.body.delivered).toBe(2);
   });
 });
+
+// --- A delivered Post in the Posts list (Jiranon-K/vision#30) ----------------
+
+describe('a delivered Post shows it in the Posts list', () => {
+  it("carries the Delivery on the Creator's listing, and nothing on a quiet Post", async () => {
+    const mara = await creatorWithFollowers(2);
+    const delivered = await publish(mara, { deliver: true });
+    const quiet = await publish(mara);
+
+    const list = await api().get('/api/posts').set('Cookie', mara);
+    const byId = new Map(list.body.items.map((p: { _id: string }) => [p._id, p]));
+    expect((byId.get(delivered.id) as { delivery?: unknown }).delivery).toMatchObject({ followers: 2 });
+    expect((byId.get(quiet.id) as { delivery?: unknown }).delivery).toBeUndefined();
+  });
+
+  it('never tells a Reader how many Followers a Post reached', async () => {
+    const mara = await creatorWithFollowers(2);
+    const delivered = await publish(mara, { deliver: true });
+
+    const publicList = await api().get('/api/posts/public');
+    const listed = publicList.body.items.find((p: { _id: string }) => p._id === delivered.id);
+    expect(listed).toBeDefined();
+    expect(listed.delivery).toBeUndefined();
+
+    expect((await api().get(`/api/posts/slug/${delivered.slug}`)).body.delivery).toBeUndefined();
+    expect((await api().get(`/api/posts/${delivered.id}`)).body.delivery).toBeUndefined();
+  });
+});

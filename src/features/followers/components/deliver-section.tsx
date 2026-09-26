@@ -1,12 +1,12 @@
 "use client";
 
-import { Badge } from "@/shared/ui/badge";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { cn } from "@/shared/lib/utils";
 import type { PostDelivery } from "@/features/posts";
 import { useFollowerSummary } from "../hooks/use-followers";
-import { CheckMark, CountUp } from "./motion";
+import DeliveredBadge from "./delivered-badge";
+import { CountUp } from "./motion";
 
 // The publish sheet's Delivery choice (design C, chosen in Jiranon-K/vision#29):
 // a checkbox, and beneath it the email that will actually go out, so the
@@ -39,9 +39,7 @@ export default function DeliverSection({
   if (delivery) {
     return (
       <div className="flex flex-col gap-2">
-        <Badge tone="success" appearance="subtle" className="w-fit gap-1.5">
-          <CheckMark className="size-3.5" /> Delivered to {delivery.followers} Followers
-        </Badge>
+        <DeliveredBadge delivery={delivery} />
         <p className="text-[13px] leading-snug text-text-secondary">
           This Post reached your Followers on {formatDay(delivery.at)}. Saving changes will not send it again.
         </p>

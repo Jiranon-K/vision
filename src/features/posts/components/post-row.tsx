@@ -10,6 +10,7 @@ import { Alert } from "@/shared/ui/alert";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { LockIcon } from "@/shared/ui/icons";
+import { DeliveredBadge } from "@/features/followers";
 
 interface PostRowProps {
   post: PostRowType;
@@ -61,6 +62,7 @@ export default function PostRow({ post, onDelete }: PostRowProps) {
               </Badge>
               <span>{post.date}</span>
               <span>{post.readTime}</span>
+              {post.delivery && <DeliveredBadge delivery={post.delivery} size="sm" />}
             </div>
           </div>
 
